@@ -15,7 +15,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1245
+        "time_min": 0.124499976967504
       },
       {
         "type": "Labor",
@@ -25,7 +25,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.1499
+        "time_min": 0.149900091588956
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -46,7 +46,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1245
+        "time_min": 0.124499976967504
       },
       {
         "type": "Labor",
@@ -56,7 +56,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -77,7 +77,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.464
+        "time_min": 0.464000519680582
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -98,7 +98,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1305
+        "time_min": 0.13049991909005
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -119,7 +119,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.115
+        "time_min": 0.115000028750007
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -140,7 +140,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.108
+        "time_min": 0.107999991360001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -161,7 +161,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.104
+        "time_min": 0.104000049920024
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -192,7 +192,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.6667
+        "time_min": 0.666671111140741
       },
       {
         "type": "Labor",
@@ -223,7 +223,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -244,7 +244,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0167
+        "time_min": 0.0166999998664
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -286,7 +286,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 1.6828
+        "time_min": 1.6827934371056
       }
     ],
     "product_type": "Other / Intermediate"
@@ -307,7 +307,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 1.234
+        "time_min": 1.23400422029443
       }
     ],
     "product_type": "Other / Intermediate"
@@ -359,7 +359,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.09
+        "time_min": 0.0900000090000009
       },
       {
         "type": "Labor",
@@ -369,7 +369,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.024
+        "time_min": 0.0239999980800002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -442,7 +442,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.067
+        "time_min": 0.067000014070003
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -463,7 +463,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 2.2236
+        "time_min": 2.22355635603584
       }
     ],
     "product_type": "Other / Intermediate"
@@ -484,7 +484,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 2.2236
+        "time_min": 2.22355635603584
       }
     ],
     "product_type": "Other / Intermediate"
@@ -505,7 +505,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 2.2236
+        "time_min": 2.22355635603584
       }
     ],
     "product_type": "Other / Intermediate"
@@ -526,7 +526,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 2.2236
+        "time_min": 2.22355635603584
       }
     ],
     "product_type": "Other / Intermediate"
@@ -547,7 +547,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.151
+        "time_min": 0.150999921480041
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -568,7 +568,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -589,7 +589,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2561
+        "time_min": 0.256119987091553
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -610,7 +610,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2392
+        "time_min": 0.239169793811721
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -631,7 +631,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1037
+        "time_min": 0.103660028278456
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -652,7 +652,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -673,7 +673,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2561
+        "time_min": 0.256119987091553
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -694,7 +694,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1037
+        "time_min": 0.103660028278456
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -715,7 +715,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -736,7 +736,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1111
+        "time_min": 0.111110000011111
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -757,7 +757,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -799,7 +799,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0741
+        "time_min": 0.0740700139399766
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -820,7 +820,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0426
+        "time_min": 0.0425500047656005
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -841,7 +841,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.077
+        "time_min": 0.0770000177100041
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -862,7 +862,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.077
+        "time_min": 0.0770000177100041
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -883,7 +883,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -904,7 +904,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -925,7 +925,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -946,7 +946,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0845
+        "time_min": 0.0844999966200001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -967,7 +967,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0845
+        "time_min": 0.0844999966200001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1029,7 +1029,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.750001875004688
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1060,7 +1060,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1091,7 +1091,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1112,7 +1112,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.464
+        "time_min": 0.464000519680582
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1133,7 +1133,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1305
+        "time_min": 0.13049991909005
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1154,7 +1154,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1152
+        "time_min": 0.115249994525625
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1175,7 +1175,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1076
+        "time_min": 0.107629998202579
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1196,7 +1196,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.103
+        "time_min": 0.102990005849832
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1227,7 +1227,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1248,7 +1248,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -1258,7 +1258,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1320,7 +1320,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       },
       {
         "type": "Labor",
@@ -1361,7 +1361,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       },
       {
         "type": "Labor",
@@ -1497,7 +1497,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -1507,7 +1507,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1528,7 +1528,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.03
+        "time_min": 0.0300000030000003
       },
       {
         "type": "Labor",
@@ -1538,7 +1538,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.03
+        "time_min": 0.0300000030000003
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1559,7 +1559,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1580,7 +1580,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -1590,7 +1590,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1611,7 +1611,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -1621,7 +1621,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1652,7 +1652,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1715,7 +1715,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1736,7 +1736,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1799,7 +1799,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1820,7 +1820,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -1830,7 +1830,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1851,7 +1851,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1893,7 +1893,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       },
       {
         "type": "Labor",
@@ -1903,7 +1903,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1924,7 +1924,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1945,7 +1945,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2392
+        "time_min": 0.239169793811721
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1966,7 +1966,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -1976,7 +1976,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -1997,7 +1997,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2007,7 +2007,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2028,7 +2028,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2038,7 +2038,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2059,7 +2059,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2163,7 +2163,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.7499
+        "time_min": 0.74987814480147
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2194,7 +2194,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.7501
+        "time_min": 0.750120019203072
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2225,7 +2225,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.750001875004688
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2246,7 +2246,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2256,7 +2256,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2308,7 +2308,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.750001875004688
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2329,7 +2329,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2339,7 +2339,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2360,7 +2360,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1131
+        "time_min": 0.113079958838895
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2391,7 +2391,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.7499
+        "time_min": 0.749928756768107
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2412,7 +2412,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2422,7 +2422,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2443,7 +2443,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.0
+        "time_min": 0.999980000399992
       }
     ],
     "product_type": "Base Material (BM)"
@@ -2474,7 +2474,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.13
+        "time_min": 0.129999961000012
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2495,7 +2495,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3889
+        "time_min": 0.388890185189506
       },
       {
         "type": "Labor",
@@ -2505,7 +2505,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       },
       {
         "type": "Labor",
@@ -2557,7 +2557,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1167
+        "time_min": 0.11667005009812
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2609,7 +2609,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2630,7 +2630,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2661,7 +2661,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2671,7 +2671,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2692,7 +2692,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2702,7 +2702,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2733,7 +2733,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.750041252268875
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2785,7 +2785,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.74996812635463
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2806,7 +2806,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2816,7 +2816,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2837,7 +2837,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -2847,7 +2847,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2878,7 +2878,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.750007500075001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2899,7 +2899,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.167
+        "time_min": 0.167000110220073
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2930,7 +2930,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.750001875004688
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -2992,7 +2992,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.7501
+        "time_min": 0.750069381417781
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3013,7 +3013,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -3023,7 +3023,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3044,7 +3044,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -3054,7 +3054,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.06
+        "time_min": 0.0599999880000024
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3075,7 +3075,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3096,7 +3096,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1509
+        "time_min": 0.150870067680312
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3117,7 +3117,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0083
+        "time_min": 0.008329999945022
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3159,7 +3159,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2875
+        "time_min": 0.287500071875018
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3180,7 +3180,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.114
+        "time_min": 0.113989991678731
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3201,7 +3201,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -3211,7 +3211,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3253,7 +3253,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0351
+        "time_min": 0.0351399977510401
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3274,7 +3274,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0178
+        "time_min": 0.017820000883872
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3295,7 +3295,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0087
+        "time_min": 0.008710000195104
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3316,7 +3316,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0016
+        "time_min": 0.00163999999344
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3337,7 +3337,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0413
+        "time_min": 0.0412999915748017
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3358,7 +3358,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0917
+        "time_min": 0.0916700355404728
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3379,7 +3379,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1651
+        "time_min": 0.165079972992916
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3400,7 +3400,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1284
+        "time_min": 0.128370034326147
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3421,7 +3421,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1403
+        "time_min": 0.14027999887776
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3463,7 +3463,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0351
+        "time_min": 0.0351399977510401
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3484,7 +3484,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0176
+        "time_min": 0.0175699988755201
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3505,7 +3505,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0087
+        "time_min": 0.008710000195104
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3526,7 +3526,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0042
+        "time_min": 0.004220000082712
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3547,7 +3547,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3425
+        "time_min": 0.342499768812656
       }
     ],
     "product_type": "Other / Intermediate"
@@ -3568,7 +3568,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 3.2966
+        "time_min": 3.29663084327817
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3589,7 +3589,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2561
+        "time_min": 0.256119987091553
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3610,7 +3610,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0583
+        "time_min": 0.0582999954526004
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3631,7 +3631,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.227
+        "time_min": 0.226999811590156
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3652,7 +3652,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0417
+        "time_min": 0.041660001066496
       }
     ],
     "product_type": "Base Material (BM)"
@@ -3715,7 +3715,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.03
+        "time_min": 0.0300000030000003
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3757,7 +3757,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.2109
+        "time_min": 0.210900164080328
       }
     ],
     "product_type": "Other / Intermediate"
@@ -3788,7 +3788,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1875
+        "time_min": 0.187500117187573
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3809,7 +3809,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.187
+        "time_min": 0.187000125290084
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3830,7 +3830,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.15
+        "time_min": 0.149999925000038
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3872,7 +3872,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166700006668
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -3893,7 +3893,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166700006668
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4007,7 +4007,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4049,7 +4049,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.531
+        "time_min": 0.530999766360103
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4070,7 +4070,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.416
+        "time_min": 1.41600940230243
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4112,7 +4112,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4133,7 +4133,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.072
+        "time_min": 0.0719999942400005
       },
       {
         "type": "Labor",
@@ -4164,7 +4164,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4185,7 +4185,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.031
+        "time_min": 0.0310000043400006
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4248,7 +4248,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       },
       {
         "type": "Labor",
@@ -4258,7 +4258,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.012
+        "time_min": 0.01200000048
       },
       {
         "type": "Labor",
@@ -4268,7 +4268,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4320,7 +4320,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       },
       {
         "type": "Labor",
@@ -4330,7 +4330,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0903
+        "time_min": 0.0902800034306401
       },
       {
         "type": "Labor",
@@ -4340,7 +4340,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4371,7 +4371,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1875
+        "time_min": 0.187500117187573
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4392,7 +4392,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -4402,7 +4402,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0469
+        "time_min": 0.0468600047984645
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4433,7 +4433,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.749979375567172
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4454,7 +4454,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -4464,7 +4464,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0469
+        "time_min": 0.0469000035644003
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4526,7 +4526,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4578,7 +4578,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -4588,7 +4588,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0469
+        "time_min": 0.0468799956495364
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4609,7 +4609,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4630,7 +4630,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2561
+        "time_min": 0.256119987091553
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4651,7 +4651,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4693,7 +4693,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4714,7 +4714,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.031
+        "time_min": 0.0310000043400006
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4735,7 +4735,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4829,7 +4829,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1875
+        "time_min": 0.187480080241474
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4871,7 +4871,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0667
+        "time_min": 0.0667000166750042
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4913,7 +4913,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -4954,7 +4954,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1875
+        "time_min": 0.18748992241667
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -4975,7 +4975,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -4985,7 +4985,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0469
+        "time_min": 0.0468600047984645
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5027,7 +5027,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -5037,7 +5037,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0469
+        "time_min": 0.0468799956495364
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5058,7 +5058,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5079,7 +5079,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -5089,7 +5089,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0469
+        "time_min": 0.0468799956495364
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5120,7 +5120,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.125
+        "time_min": 0.125010000800064
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5141,7 +5141,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -5151,7 +5151,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0312
+        "time_min": 0.0312400031989763
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5213,7 +5213,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.125
+        "time_min": 0.125020003200512
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5234,7 +5234,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.055
+        "time_min": 0.0549999945000006
       },
       {
         "type": "Labor",
@@ -5244,7 +5244,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0313
+        "time_min": 0.0312600032010243
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5265,7 +5265,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5307,7 +5307,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5349,7 +5349,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.583
+        "time_min": 0.582998594973386
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5475,7 +5475,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 0,
-        "time_min": 17.9986
+        "time_min": 17.9985601151908
       }
     ],
     "product_type": "Other / Intermediate"
@@ -5496,7 +5496,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 0,
-        "time_min": 26.9978
+        "time_min": 26.9978401727862
       }
     ],
     "product_type": "Other / Intermediate"
@@ -5517,7 +5517,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.464
+        "time_min": 0.464000519680582
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5559,7 +5559,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 0,
-        "time_min": 26.9978
+        "time_min": 26.9978401727862
       }
     ],
     "product_type": "Other / Intermediate"
@@ -5601,7 +5601,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0667
+        "time_min": 0.0667000166750042
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5622,7 +5622,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       },
       {
         "type": "Labor",
@@ -5632,7 +5632,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.06
+        "time_min": 0.0599999880000024
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5737,7 +5737,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.52
+        "time_min": 0.519999168001331
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5758,7 +5758,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3239
+        "time_min": 0.323900277582538
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5779,7 +5779,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2561
+        "time_min": 0.256119987091553
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5800,7 +5800,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2392
+        "time_min": 0.239169793811721
       },
       {
         "type": "Labor",
@@ -5810,7 +5810,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.9231
+        "time_min": 0.923079763322349
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5852,7 +5852,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.43
+        "time_min": 0.430000258000155
       },
       {
         "type": "Labor",
@@ -5862,7 +5862,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.855
+        "time_min": 0.855000470250259
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5883,7 +5883,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1076
+        "time_min": 0.107629998202579
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5904,7 +5904,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0185
+        "time_min": 0.0185000013875001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5925,7 +5925,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2128
+        "time_min": 0.212779991871804
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5946,7 +5946,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1111
+        "time_min": 0.111100001111
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5967,7 +5967,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -5988,7 +5988,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333300003333
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6009,7 +6009,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.5496
+        "time_min": 1.54957076889702
       },
       {
         "type": "Labor",
@@ -6019,7 +6019,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.15
+        "time_min": 0.149999925000038
       }
     ],
     "product_type": "Base Material (BM)"
@@ -6061,7 +6061,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.9
+        "time_min": 0.9000009000009
       },
       {
         "type": "Labor",
@@ -6071,7 +6071,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.44
+        "time_min": 0.439999472000634
       }
     ],
     "product_type": "Base Material (BM)"
@@ -6092,7 +6092,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.39
+        "time_min": 0.39000039000039
       },
       {
         "type": "Labor",
@@ -6102,7 +6102,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.06
+        "time_min": 0.0599999880000024
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -6123,7 +6123,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 3.2966
+        "time_min": 3.29663084327817
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6186,7 +6186,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 3.2966
+        "time_min": 3.29663084327817
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6207,7 +6207,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.9231
+        "time_min": 0.923079763322349
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6249,7 +6249,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 3.2966
+        "time_min": 3.29663084327817
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6270,7 +6270,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.6365
+        "time_min": 0.636541289250727
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6291,7 +6291,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 3.2966
+        "time_min": 3.29663084327817
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6333,7 +6333,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.22
+        "time_min": 0.22000022000022
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6354,7 +6354,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.4333
+        "time_min": 0.433330011136581
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6375,7 +6375,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.2142
+        "time_min": 0.214200187210964
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6417,7 +6417,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.1167
+        "time_min": 0.11667005009812
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6438,7 +6438,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.0286
+        "time_min": 0.028570000071425
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6480,7 +6480,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.1333
+        "time_min": 0.133339911435631
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6543,7 +6543,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6564,7 +6564,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.057
+        "time_min": 0.05699999886
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6606,7 +6606,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.1333
+        "time_min": 0.133339911435631
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6627,7 +6627,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.6429
+        "time_min": 0.64285943878371
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6648,7 +6648,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.5625
+        "time_min": 0.562499296875879
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6669,7 +6669,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.6429
+        "time_min": 0.64285943878371
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6690,7 +6690,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.22
+        "time_min": 0.22000022000022
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6711,7 +6711,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.242
+        "time_min": 0.242000082280028
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6753,7 +6753,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.0909
+        "time_min": 0.090910000009091
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6774,7 +6774,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3
+        "time_min": 0.3000003000003
       }
     ],
     "product_type": "Base Material (BM)"
@@ -6795,7 +6795,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3
+        "time_min": 0.3000003000003
       }
     ],
     "product_type": "Base Material (BM)"
@@ -6816,7 +6816,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.2333
+        "time_min": 0.233329755610414
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6837,7 +6837,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.405
+        "time_min": 0.40499931150117
       }
     ],
     "product_type": "Base Material (BM)"
@@ -6858,7 +6858,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.814
+        "time_min": 0.814000814000814
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6879,7 +6879,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.228
+        "time_min": 0.228000255360286
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6900,7 +6900,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.228
+        "time_min": 0.228000255360286
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6921,7 +6921,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.114
+        "time_min": 0.11399999772
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6942,7 +6942,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.114
+        "time_min": 0.11399999772
       }
     ],
     "product_type": "Other / Intermediate"
@@ -6963,7 +6963,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.117
+        "time_min": 0.116999980110003
       }
     ],
     "product_type": "Base Material (BM)"
@@ -6984,7 +6984,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0672
+        "time_min": 0.06723999973104
       }
     ],
     "product_type": "Base Material (BM)"
@@ -7026,7 +7026,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7047,7 +7047,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.033
+        "time_min": 0.03300000033
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7068,7 +7068,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.075
+        "time_min": 0.0750000187500047
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7131,7 +7131,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.49
+        "time_min": 0.489960705151447
       }
     ],
     "product_type": "Base Material (BM)"
@@ -7152,7 +7152,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.43
+        "time_min": 0.430000258000155
       }
     ],
     "product_type": "Base Material (BM)"
@@ -7173,7 +7173,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.49
+        "time_min": 0.489960705151447
       }
     ],
     "product_type": "Base Material (BM)"
@@ -7194,7 +7194,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0672
+        "time_min": 0.06723999973104
       }
     ],
     "product_type": "Base Material (BM)"
@@ -7236,7 +7236,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0667
+        "time_min": 0.066670000166675
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7278,7 +7278,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.169
+        "time_min": 0.16899999324
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7299,7 +7299,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.018
+        "time_min": 0.0179999985600001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7341,7 +7341,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.15
+        "time_min": 0.149999925000038
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7362,7 +7362,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0074
+        "time_min": 0.00744000011904
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7383,7 +7383,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0595
+        "time_min": 0.0595199832391727
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7425,7 +7425,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1333
+        "time_min": 0.133329955641124
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7446,7 +7446,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7488,7 +7488,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 5.9999
+        "time_min": 5.99988000239995
       }
     ],
     "product_type": "Other / Intermediate"
@@ -7509,7 +7509,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7530,7 +7530,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7551,7 +7551,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.06
+        "time_min": 0.0599999880000024
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7593,7 +7593,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.464
+        "time_min": 0.464000519680582
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7614,7 +7614,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1305
+        "time_min": 0.13049991909005
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7635,7 +7635,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1152
+        "time_min": 0.115249994525625
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7656,7 +7656,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1076
+        "time_min": 0.107629998202579
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7677,7 +7677,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1037
+        "time_min": 0.103660028278456
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7740,7 +7740,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2262
+        "time_min": 0.22615991767779
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7761,7 +7761,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0583
+        "time_min": 0.0582999954526004
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7782,7 +7782,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0583
+        "time_min": 0.0582999954526004
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7824,7 +7824,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.082
+        "time_min": 0.0820000131200021
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7845,7 +7845,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.077
+        "time_min": 0.0770000177100041
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7866,7 +7866,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0845
+        "time_min": 0.0844999966200001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7887,7 +7887,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0845
+        "time_min": 0.0844999966200001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7908,7 +7908,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.187
+        "time_min": 0.187000125290084
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7929,7 +7929,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7950,7 +7950,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.022
+        "time_min": 0.0219999978000002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7971,7 +7971,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.464
+        "time_min": 0.464000519680582
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -7992,7 +7992,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1305
+        "time_min": 0.130469952769877
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8013,7 +8013,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1152
+        "time_min": 0.115249994525625
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8034,7 +8034,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1076
+        "time_min": 0.107629998202579
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8055,7 +8055,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1037
+        "time_min": 0.103660028278456
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8076,7 +8076,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.2145
+        "time_min": 0.214500214500215
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8097,7 +8097,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1875
+        "time_min": 0.187500117187573
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8118,7 +8118,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.15
+        "time_min": 0.149999925000038
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8139,7 +8139,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0723
+        "time_min": 0.072320018976773
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -8160,7 +8160,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0834
+        "time_min": 0.083410001025943
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8181,7 +8181,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0413
+        "time_min": 0.0412500072187513
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8202,7 +8202,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0417
+        "time_min": 0.041670000266688
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8223,7 +8223,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0713
+        "time_min": 0.071329983201789
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8244,7 +8244,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0208
+        "time_min": 0.020830000533248
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8265,7 +8265,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8275,7 +8275,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8296,7 +8296,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0539
+        "time_min": 0.0539200118192666
       },
       {
         "type": "Labor",
@@ -8306,7 +8306,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1078
+        "time_min": 0.107829965084657
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8327,7 +8327,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8337,7 +8337,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8358,7 +8358,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8368,7 +8368,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8389,7 +8389,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0801
+        "time_min": 0.0801300029167321
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8410,7 +8410,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8420,7 +8420,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8441,7 +8441,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8451,7 +8451,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8472,7 +8472,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.085
+        "time_min": 0.0849999702500104
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8493,7 +8493,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0646
+        "time_min": 0.064599983979204
       },
       {
         "type": "Labor",
@@ -8503,7 +8503,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0646
+        "time_min": 0.064599983979204
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8524,7 +8524,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3994
+        "time_min": 0.399420042098872
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8545,7 +8545,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8555,7 +8555,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8576,7 +8576,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -8586,7 +8586,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8607,7 +8607,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.075
+        "time_min": 0.0750000187500047
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8628,7 +8628,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0855
+        "time_min": 0.0854700124187928
       },
       {
         "type": "Labor",
@@ -8638,7 +8638,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0855
+        "time_min": 0.0854700124187928
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8659,7 +8659,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0972
+        "time_min": 0.0972199942640204
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8680,7 +8680,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.075
+        "time_min": 0.0750000187500047
       },
       {
         "type": "Labor",
@@ -8690,7 +8690,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.03
+        "time_min": 0.0300000030000003
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8732,7 +8732,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.035
+        "time_min": 0.0349999982500001
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8753,7 +8753,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1562
+        "time_min": 0.15625
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8774,7 +8774,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0208
+        "time_min": 0.020830000533248
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8795,7 +8795,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0941
+        "time_min": 0.0941299614726068
       },
       {
         "type": "Labor",
@@ -8805,7 +8805,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0753
+        "time_min": 0.0753000140811026
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8826,7 +8826,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3098
+        "time_min": 0.309829655655321
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8847,7 +8847,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8868,7 +8868,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.4678
+        "time_min": 0.467750913283658
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8889,7 +8889,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1144
+        "time_min": 0.1144499990844
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8910,7 +8910,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.5557
+        "time_min": 1.55574224462491
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8931,7 +8931,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1896
+        "time_min": 0.189579928793779
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8952,7 +8952,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1864
+        "time_min": 0.186420045374639
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8973,7 +8973,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0993
+        "time_min": 0.0993099941605723
       }
     ],
     "product_type": "Base Material (BM)"
@@ -8994,7 +8994,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3015
+        "time_min": 0.301539964599208
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9015,7 +9015,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.107
+        "time_min": 0.107040022264325
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9036,7 +9036,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.07
+        "time_min": 0.0700000210000063
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9057,7 +9057,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.07
+        "time_min": 0.0700000210000063
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9078,7 +9078,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0656
+        "time_min": 0.0656400131017466
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9099,7 +9099,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.4218
+        "time_min": 0.421800328160655
       }
     ],
     "product_type": "Other / Intermediate"
@@ -9120,7 +9120,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0845
+        "time_min": 0.0844999966200001
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9141,7 +9141,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1847
+        "time_min": 0.184670160626106
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9183,7 +9183,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.0273
+        "time_min": 0.0272700027515433
       }
     ],
     "product_type": "Other / Intermediate"
@@ -9204,7 +9204,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0016
+        "time_min": 0.00163999999344
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9225,7 +9225,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.053
+        "time_min": 0.0530000127200031
       },
       {
         "type": "Labor",
@@ -9256,7 +9256,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0622
+        "time_min": 0.0621500177127551
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9277,7 +9277,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.125
+        "time_min": 0.124990000799936
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9298,7 +9298,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0257
+        "time_min": 0.0257199992284
       },
       {
         "type": "Labor",
@@ -9308,7 +9308,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.125
+        "time_min": 0.124950019992003
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9329,7 +9329,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1029
+        "time_min": 0.102909985664639
       },
       {
         "type": "Labor",
@@ -9360,7 +9360,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.051
+        "time_min": 0.0510000081600013
       },
       {
         "type": "Labor",
@@ -9370,7 +9370,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.124
+        "time_min": 0.123999940480029
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9391,7 +9391,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1032
+        "time_min": 0.103190016159557
       },
       {
         "type": "Labor",
@@ -9422,7 +9422,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0267
+        "time_min": 0.0266599981124721
       },
       {
         "type": "Labor",
@@ -9453,7 +9453,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1066
+        "time_min": 0.106630042801299
       },
       {
         "type": "Labor",
@@ -9484,7 +9484,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1161
+        "time_min": 0.116100059675431
       },
       {
         "type": "Labor",
@@ -9515,7 +9515,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1068
+        "time_min": 0.106769963046916
       },
       {
         "type": "Labor",
@@ -9546,7 +9546,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       },
       {
         "type": "Labor",
@@ -9598,7 +9598,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9619,7 +9619,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0667
+        "time_min": 0.066670000166675
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9640,7 +9640,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0667
+        "time_min": 0.066670000166675
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9661,7 +9661,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.0916
+        "time_min": 0.0916299688641366
       }
     ],
     "product_type": "Other / Intermediate"
@@ -9682,7 +9682,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.898
+        "time_min": 0.897996569653104
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9703,7 +9703,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.264
+        "time_min": 0.263999915520027
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9724,7 +9724,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1397
+        "time_min": 0.139699924562041
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9745,7 +9745,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.65
+        "time_min": 0.65000065000065
       },
       {
         "type": "Labor",
@@ -9755,7 +9755,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1463
+        "time_min": 0.1462999998537
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9776,7 +9776,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.65
+        "time_min": 0.65000065000065
       },
       {
         "type": "Labor",
@@ -9786,7 +9786,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1463
+        "time_min": 0.1462999998537
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9807,7 +9807,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.024
+        "time_min": 0.0239999980800002
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9849,7 +9849,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.06
+        "time_min": 0.0599999880000024
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -9891,7 +9891,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.75
+        "time_min": 0.74996812635463
       }
     ],
     "product_type": "Base Material (BM)"
@@ -9912,7 +9912,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1869
+        "time_min": 0.186890037639654
       },
       {
         "type": "Labor",
@@ -9943,7 +9943,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.0273
+        "time_min": 0.0272700027515433
       }
     ],
     "product_type": "Other / Intermediate"
@@ -9964,7 +9964,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       },
       {
         "type": "Labor",
@@ -9995,7 +9995,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.201
+        "time_min": 0.201000176880156
       },
       {
         "type": "Labor",
@@ -10026,7 +10026,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       },
       {
         "type": "Labor",
@@ -10057,7 +10057,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       },
       {
         "type": "Labor",
@@ -10088,7 +10088,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.667
+        "time_min": 0.667000166750042
       },
       {
         "type": "Labor",
@@ -10098,7 +10098,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.063
+        "time_min": 0.0629999836200043
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10119,7 +10119,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1224
+        "time_min": 0.122400069523239
       },
       {
         "type": "Labor",
@@ -10150,7 +10150,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.1666500016665
       },
       {
         "type": "Labor",
@@ -10181,7 +10181,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.25
+        "time_min": 0.250010000400016
       },
       {
         "type": "Labor",
@@ -10222,7 +10222,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1875
+        "time_min": 0.18748992241667
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10243,7 +10243,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2667
+        "time_min": 0.26667022226963
       },
       {
         "type": "Labor",
@@ -10274,7 +10274,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10295,7 +10295,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0834
+        "time_min": 0.0833500033340001
       }
     ],
     "product_type": "Base Material (BM)"
@@ -10316,7 +10316,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2064
+        "time_min": 0.206449908026566
       },
       {
         "type": "Labor",
@@ -10347,7 +10347,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.15
+        "time_min": 0.149999925000038
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10368,7 +10368,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.375
+        "time_min": 0.374999531250586
       }
     ],
     "product_type": "Base Material (BM)"
@@ -10389,7 +10389,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.083
+        "time_min": 0.0830000190900044
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10431,7 +10431,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Other / Intermediate"
@@ -10452,7 +10452,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.8667
+        "time_min": 0.866701334720056
       }
     ],
     "product_type": "Other / Intermediate"
@@ -10473,7 +10473,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.062
+        "time_min": 0.0620000086800012
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10494,7 +10494,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0881
+        "time_min": 0.0880899715733662
       }
     ],
     "product_type": "Base Material (BM)"
@@ -10515,7 +10515,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.0833
+        "time_min": 0.083330000133328
       }
     ],
     "product_type": "Other / Intermediate"
@@ -10536,7 +10536,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.1667
+        "time_min": 1.16667055556852
       },
       {
         "type": "Labor",
@@ -10567,7 +10567,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.996
+        "time_min": 0.995996095695305
       }
     ],
     "product_type": "Other / Intermediate"
@@ -10640,7 +10640,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.2865
+        "time_min": 1.28648801636413
       }
     ],
     "product_type": "Base Material (BM)"
@@ -10671,7 +10671,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10713,7 +10713,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1299
+        "time_min": 0.129850062133255
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10734,7 +10734,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.0635
+        "time_min": 0.0635000060325006
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -10776,7 +10776,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.4917
+        "time_min": 0.491671091706492
       }
     ],
     "product_type": "Base Material (BM)"
@@ -10983,7 +10983,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333300003333
       }
     ],
     "product_type": "Other / Intermediate"
@@ -11004,7 +11004,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1074
+        "time_min": 0.107350042725317
       },
       {
         "type": "Labor",
@@ -11014,7 +11014,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.161
+        "time_min": 0.161019964865444
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11035,7 +11035,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 6.6724
+        "time_min": 6.67244945619537
       }
     ],
     "product_type": "Other / Intermediate"
@@ -11066,7 +11066,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.2499
+        "time_min": 0.249870067564866
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -11087,7 +11087,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 5.9999
+        "time_min": 5.99988000239995
       }
     ],
     "product_type": "Other / Intermediate"
@@ -11108,7 +11108,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0937
+        "time_min": 0.0936799742192711
       },
       {
         "type": "Labor",
@@ -11118,7 +11118,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3833
+        "time_min": 0.383329755588948
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11139,7 +11139,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3833
+        "time_min": 0.383329755588948
       }
     ],
     "product_type": "Other / Intermediate"
@@ -11181,7 +11181,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1944
+        "time_min": 0.19444017756277
       },
       {
         "type": "Labor",
@@ -11212,7 +11212,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Other / Intermediate"
@@ -11254,7 +11254,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.4167
+        "time_min": 0.416670138917824
       },
       {
         "type": "Labor",
@@ -11285,7 +11285,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 2.1667
+        "time_min": 2.16670638961714
       },
       {
         "type": "Labor",
@@ -11316,7 +11316,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Other / Intermediate"
@@ -11337,7 +11337,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.5278
+        "time_min": 0.527779683648858
       },
       {
         "type": "Labor",
@@ -11347,7 +11347,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 1,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11378,7 +11378,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1667
+        "time_min": 0.166670000066668
       },
       {
         "type": "Labor",
@@ -11388,7 +11388,7 @@
         "class_1": "DL",
         "pax": 2,
         "machine": 0,
-        "time_min": 0.3333
+        "time_min": 0.333330000033333
       }
     ],
     "product_type": "Finished Good (FG)"
@@ -11451,7 +11451,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.99
+        "time_min": 0.99000099000099
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11472,7 +11472,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.22
+        "time_min": 0.22000022000022
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11493,7 +11493,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.245
+        "time_min": 0.244979752423462
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11514,7 +11514,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.075
+        "time_min": 0.0750000187500047
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11598,7 +11598,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.76
+        "time_min": 1.76000563201802
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11619,7 +11619,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 1.56
+        "time_min": 1.55998939207213
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11661,7 +11661,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.6
+        "time_min": 0.5999988000024
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11682,7 +11682,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.0375
+        "time_min": 0.0374799950526407
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11703,7 +11703,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1683
+        "time_min": 0.168330048091895
       }
     ],
     "product_type": "Base Material (BM)"
@@ -11724,7 +11724,7 @@
         "class_1": "DL",
         "pax": 1,
         "machine": 1,
-        "time_min": 0.1167
+        "time_min": 0.11667005009812
       }
     ],
     "product_type": "Finished Good (FG)"

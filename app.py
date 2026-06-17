@@ -11,10 +11,12 @@ from flask import Flask
 from flasgger import Swagger
 
 from routes import register_blueprints
+from flask_cors import CORS
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    CORS(app)
 
     app.config["SWAGGER"] = {
         "title": "ACU Routing API",

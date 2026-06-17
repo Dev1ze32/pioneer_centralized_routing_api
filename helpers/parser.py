@@ -30,7 +30,7 @@ SOURCE_COLUMNS = [
     "CLASS.1",
     "Pax",
     "Machine",
-    "Time (min)",
+    "Qty Required",
 ]
 
 # Fields that describe the PRODUCT (one value per Inventory ID)
@@ -52,7 +52,7 @@ ACTIVITY_FIELDS = {
     "CLASS.1": "class_1",
     "Pax": "pax",
     "Machine": "machine",
-    "Time (min)": "time_min",
+    "Qty Required": "time_min",
 }
 
 # --- Classifier Configuration ---

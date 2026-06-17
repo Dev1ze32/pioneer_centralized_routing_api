@@ -137,7 +137,7 @@
                 <div class="space-y-3">
                     <div class="flex items-center">
                         <label class="w-40 font-semibold">Production Line</label>
-                        <select id="prodLine" class="border border-gray-300 rounded px-3 py-1 flex-1 bg-excel-yellow font-medium" onchange="updateLineDescription()">
+                        <select id="prodLine" class="border border-gray-300 rounded px-3 py-1 flex-1 bg-excel-yellow font-medium" onchange="refreshActivityDropdowns()">
                             <option value="" disabled selected>-- Select Production Line --</option>
                             <option value="L01">L01</option>
                             <option value="L02">L02</option>
@@ -297,8 +297,56 @@
     </div>
 
     <script>
-        // --- DATA STATE ---
-        const lineDescriptions = {
+        // ============================================================
+        // API CONFIG
+        // ============================================================
+        const API_BASE = "http://127.0.0.1:5000/api";
+
+        // These are populated at startup from GET /api/production-lines
+        let lineDescriptions = {};
+        let lineActivitiesDB = {};   // { lineCode: [ { id, activity_name, sort_order } ] }
+
+        // ============================================================
+        // STARTUP — load production lines from API
+        // ============================================================
+        async function loadProductionLines() {
+            try {
+                const res = await fetch(`${API_BASE}/production-lines`);
+                if (!res.ok) throw new Error("Failed to fetch production lines");
+                const lines = await res.json();
+
+                // Build lookups
+                lineDescriptions = {};
+                lineActivitiesDB = {};
+                lines.forEach(line => {
+                    const code = line.production_line_code;
+                    const name = line.production_line_name || code;
+                    lineDescriptions[code] = `${code} - ${name}`;
+                    lineActivitiesDB[code] = line.activities || [];
+                });
+
+                // Repopulate the Production Line <select>
+                const select = document.getElementById('prodLine');
+                // Keep the placeholder, clear the rest
+                while (select.options.length > 1) select.remove(1);
+                Object.keys(lineDescriptions).sort().forEach(code => {
+                    const opt = document.createElement('option');
+                    opt.value = code;
+                    opt.text = code;
+                    select.appendChild(opt);
+                });
+
+            } catch (err) {
+                console.error("Could not load production lines:", err);
+                alert("⚠️ Could not reach the API. Make sure your Flask server is running on port 5000.");
+            }
+        }
+
+        // ============================================================
+        // MOCK / FALLBACK (kept only for lineDescriptions hardcoded
+        // in case API is offline during initial testing)
+        // ============================================================
+        const FALLBACK_LINE_DESCRIPTIONS = {
             "L01": "L01 - L1 COATINGS",
             "L02": "L02 - L2 CYANO BOTTLE FILLING",
             "L03": "L03 - L3 CYANO TUBE FILLING",
@@ -318,54 +366,8 @@
             "L14": "L14 - L14 SKIM COAT",
             "SIPS": "SIPS - STRUCTURAL INSULATED PANEL"
         };
-
-        // Mock database for specific line standard activities (Manage view)
-        let lineActivitiesDB = {
-            "L01": ["UNBOXING", "LABELING", "BOX PREPARATION"],
-            "L11": ["UNBOXING", "BATCH CODING", "PLACING OF CODED PAIL STICKER LABEL", "REBOXING"]
-        };
-
-        // Mock database populated with examples from acu_routing_parsed.json
-        const mockRoutingDB = {
-            "1AF2202L": {
-                "inventory_id": "1AF2202L",
-                "revision_descr": "PG ANTI FOULING PAINT RED 4L",
-                "revision": "03",
-                "notes": "CRN RD23-CR055",
-                "production_line": "L01 - L1 COATINGS",
-                "production_line_code": "L01",
-                "activities": [
-                    { "type": "Labor", "item_id": "L01 LABELING/CODING", "activities": "L01 LABELING/CODING", "class": "DL", "pax": 1, "machine": 1, "time_min": 0.1245 },
-                    { "type": "Labor", "item_id": "L01 FILLING", "activities": "L01 FILLING", "class": "DL", "pax": 2, "machine": 1, "time_min": 0.1499 }
-                ],
-                "product_type": "Finished Good (FG)"
-            },
-            "1KPH5A5J01": {
-                "inventory_id": "1KPH5A5J01",
-                "revision_descr": "FG_KOPHENOL HIGHWAY YELLOW",
-                "revision": "00",
-                "notes": "PACKAGING MATERIAL: REUSE THE TIN PAIL OF KOPHENOL CREAM",
-                "production_line": "L01 - L1 COATINGS",
-                "production_line_code": "L01",
-                "activities": [
-                    { "type": "Labor", "item_id": "L01 LABELING/CODING", "activities": "L01 LABELING/CODING", "class": "DL", "pax": 1, "machine": 1, "time_min": 0.1167 }
-                ],
-                "product_type": "Finished Good (FG)"
-            },
-            "1WDG5A6601": {
-                "inventory_id": "1WDG5A6601",
-                "revision_descr": "COMM_PIONEER WOODGLUE D3 4KG",
-                "qty": 4,
-                "production_line_code": "L11",
-                "activities": [
-                    { "activities": "UNBOXING", "pax": 1, "machine": 0, "time_min": 0.1333 },
-                    { "activities": "BATCH CODING", "pax": 1, "machine": 0, "time_min": 0.0333 },
-                    { "activities": "PLACING OF CODED PAIL STICKER LABEL", "pax": 1, "machine": 0, "time_min": 0.1666 },
-                    { "activities": "REBOXING", "pax": 1, "machine": 0, "time_min": 0.1000 }
-                ],
-                "product_type": "Finished Good (FG)"
-            }
-        };
+        // Merge fallback so the UI works even when API is down
+        Object.assign(lineDescriptions, FALLBACK_LINE_DESCRIPTIONS);
 
         let currentMode = 'FG';
         let appState = 'ADD'; // ADD, LOOKUP, UPDATE, MANAGE, ALLDATA
@@ -407,7 +409,7 @@
                 viewManage.classList.add('hidden');
                 viewAllData.classList.remove('hidden');
                 currentPage = 1;
-                renderAllData();
+                loadAllData();
             } else {
                 viewRouting.classList.remove('hidden');
                 viewManage.classList.add('hidden');
@@ -435,59 +437,78 @@
         }
 
         function setFormEditable(isEditable) {
-            // Enable/Disable main inputs
             document.getElementById('itemCode').disabled = !isEditable;
             document.getElementById('skuDesc').disabled = !isEditable;
             document.getElementById('qtyInput').disabled = !isEditable;
             document.getElementById('prodLine').disabled = !isEditable;
-            
-            // Mode buttons
             document.getElementById('btn-fg').disabled = !isEditable;
             document.getElementById('btn-bm').disabled = !isEditable;
 
-            // Table inputs
-            document.querySelectorAll('#tableBody input').forEach(input => {
-                input.disabled = !isEditable;
+            // Handle both <input> and <select> in table rows
+            document.querySelectorAll('#tableBody input, #tableBody select').forEach(el => {
+                el.disabled = !isEditable;
             });
 
-            // Action Columns / Buttons
             document.getElementById('btn-add-row').style.display = isEditable ? 'block' : 'none';
             document.querySelectorAll('.btn-remove-row').forEach(btn => {
                 btn.style.display = isEditable ? 'inline-block' : 'none';
             });
         }
 
-        // --- MOCK DATABASE SEARCH ---
-        function performSearch() {
-            const query = document.getElementById('searchInput').value.trim().toUpperCase();
+        // --- API SEARCH ---
+        // Tracks the item currently loaded (for UPDATE save)
+        let loadedItemCode = null;
+        // Tracks original activities from DB (for UPDATE reconciliation)
+        let loadedActivities = [];
+
+        async function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
             const statusLabel = document.getElementById('search-status');
-            
+
             if (!query) {
                 statusLabel.innerText = "Please enter an item code.";
                 statusLabel.className = "text-sm font-semibold text-red-500 pb-2";
                 return;
             }
 
-            const data = mockRoutingDB[query];
-            
-            if (data) {
-                statusLabel.innerText = `Record found for ${query}.`;
+            statusLabel.innerText = "Searching…";
+            statusLabel.className = "text-sm font-semibold text-gray-500 pb-2";
+
+            try {
+                const res = await fetch(`${API_BASE}/items/${encodeURIComponent(query)}`);
+
+                if (res.status === 404) {
+                    statusLabel.innerText = `No record found for "${query}".`;
+                    statusLabel.className = "text-sm font-semibold text-red-500 pb-2";
+                    clearForm();
+                    setFormEditable(false);
+                    loadedItemCode = null;
+                    loadedActivities = [];
+                    return;
+                }
+
+                if (!res.ok) throw new Error(`Server error ${res.status}`);
+
+                const data = await res.json();
+                loadedItemCode = data.inventory_id;
+                loadedActivities = data.activities || [];
+
+                statusLabel.innerText = `Record found for "${data.inventory_id}".`;
                 statusLabel.className = "text-sm font-semibold text-green-600 pb-2";
-                
+
                 loadDataIntoForm(data);
 
                 if (appState === 'UPDATE') {
                     setFormEditable(true);
-                    // Special case: Make item code readonly even in update to prevent ID changes
-                    document.getElementById('itemCode').disabled = true; 
+                    document.getElementById('itemCode').disabled = true;
                 } else {
                     setFormEditable(false);
                 }
-            } else {
-                statusLabel.innerText = `No record found for ${query}.`;
+
+            } catch (err) {
+                statusLabel.innerText = "Error contacting API. Is the server running?";
                 statusLabel.className = "text-sm font-semibold text-red-500 pb-2";
-                clearForm();
-                setFormEditable(false); // Keep disabled if not found
+                console.error(err);
             }
         }
 
@@ -498,8 +519,13 @@
 
             document.getElementById('itemCode').value = data.inventory_id || "";
             document.getElementById('skuDesc').value = data.revision_descr || "";
-            document.getElementById('qtyInput').value = data.qty || 1;
-            document.getElementById('prodLine').value = data.production_line_code || "";
+            document.getElementById('qtyInput').value = data.quantity || 1;
+
+            // API returns separate fg/bm production line fields; pick the right one
+            const lineCode = isBM
+                ? (data.bm_production_line_code || "")
+                : (data.fg_production_line_code || "");
+            document.getElementById('prodLine').value = lineCode;
             updateLineDescription();
 
             // Clear existing rows
@@ -562,30 +588,50 @@
             calculateAll();
         }
 
+        function getLineActivities() {
+            const lineCode = document.getElementById('prodLine').value;
+            const acts = lineActivitiesDB[lineCode] || [];
+            return acts.map(a => typeof a === 'string' ? a : a.activity_name).filter(Boolean);
+        }
+
+        function buildActivityDropdown(selectedName, isDisabled) {
+            const activities = getLineActivities();
+            const disabledAttr = isDisabled ? 'disabled' : '';
+            const allOptions = new Set(activities);
+            if (selectedName) allOptions.add(selectedName);
+            let options = '<option value="">-- Select Activity --</option>';
+            allOptions.forEach(act => {
+                const sel = act === selectedName ? 'selected' : '';
+                options += `<option value="${act}" ${sel}>${act}</option>`;
+            });
+            return `<select class="excel-input text-left px-1 py-1 activity-input" onchange="syncActivityName(this)" ${disabledAttr} style="width:100%;background:transparent;border:none;outline:none;cursor:pointer;">${options}</select>`;
+        }
+
         function addRow(activityName = "", pax = "", machine = "", time = "") {
             const tbody = document.getElementById('tableBody');
             const tr = document.createElement('tr');
-            
-            const isDisabled = (appState === 'LOOKUP' || (appState === 'UPDATE' && document.getElementById('itemCode').disabled)) ? 'disabled' : '';
+
+            const isDisabled = appState === 'LOOKUP';
+            const disabledAttr = isDisabled ? 'disabled' : '';
             const displayBtn = isDisabled ? 'none' : 'inline-block';
 
             tr.innerHTML = `
-                <td class="bg-excel-yellow p-0"><input type="text" class="excel-input text-left px-2 py-1 activity-input" value="${activityName}" oninput="syncActivityName(this)" ${isDisabled}></td>
-                <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 pax-input" value="${pax}" min="0" oninput="calculateAll()" ${isDisabled}></td>
-                <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 machine-input" value="${machine}" min="0" oninput="calculateAll()" ${isDisabled}></td>
-                <td class="bg-excel-yellow p-0"><input type="number" step="0.0001" class="excel-input py-1 time-input" value="${time}" min="0" oninput="calculateAll()" ${isDisabled}></td>
-                
+                <td class="bg-excel-yellow p-0">${buildActivityDropdown(activityName, isDisabled)}</td>
+                <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 pax-input" value="${pax}" min="0" oninput="calculateAll()" ${disabledAttr}></td>
+                <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 machine-input" value="${machine}" min="0" oninput="calculateAll()" ${disabledAttr}></td>
+                <td class="bg-excel-yellow p-0"><input type="number" step="0.0001" class="excel-input py-1 time-input" value="${time}" min="0" oninput="calculateAll()" ${disabledAttr}></td>
+
                 <td class="bg-gray-50 text-gray-600 run-time-cell">0.00000</td>
                 <td class="bg-gray-50 text-gray-600">UNIT</td>
                 <td class="bg-gray-50 text-gray-600 labor-min-cell">0.00</td>
                 <td class="bg-gray-50 text-gray-600 mc-min-cell border-r-2 border-gray-300">0.00</td>
-                
+
                 <td class="bg-blue-50 text-left pl-2 text-gray-600 sync-activity-cell">${activityName}</td>
                 <td class="bg-blue-50 text-gray-600 dl-units-cell">0</td>
                 <td class="bg-blue-50 text-gray-600 dl-cell">0.00000</td>
                 <td class="bg-blue-50 text-gray-600 voh-cell">0.00000</td>
                 <td class="bg-blue-50 text-gray-600 foh-cell">0.00000</td>
-                
+
                 <td class="text-center action-column">
                     <button onclick="this.closest('tr').remove(); calculateAll();" class="text-red-500 hover:text-red-700 font-bold btn-remove-row text-lg" style="display:${displayBtn}" title="Remove Row">×</button>
                 </td>
@@ -594,10 +640,25 @@
             calculateAll();
         }
 
-        function syncActivityName(input) {
-            const row = input.closest('tr');
+        // Rebuild dropdowns when production line changes (call this instead of bare updateLineDescription)
+        function refreshActivityDropdowns() {
+            updateLineDescription();
+            const isDisabled = appState === 'LOOKUP';
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                const td = row.querySelector('td:first-child');
+                const current = row.querySelector('.activity-input');
+                const currentVal = current ? current.value : '';
+                td.innerHTML = buildActivityDropdown(currentVal, isDisabled);
+                const syncCell = row.querySelector('.sync-activity-cell');
+                if (syncCell) syncCell.innerText = currentVal;
+            });
+        }
+
+        function syncActivityName(el) {
+            const row = el.closest('tr');
             const syncCell = row.querySelector('.sync-activity-cell');
-            syncCell.innerText = input.value;
+            syncCell.innerText = el.value;
+            calculateAll();
         }
 
         function calculateAll() {
@@ -659,14 +720,13 @@
         // --- MANAGE LINES LOGIC ---
         function initManageLines() {
             const select = document.getElementById('manageLineSelect');
-            // Populate if empty
-            if(select.options.length <= 1) {
-                for (const [key, value] of Object.entries(lineDescriptions)) {
+            if (select.options.length <= 1) {
+                Object.keys(lineDescriptions).sort().forEach(key => {
                     const opt = document.createElement('option');
                     opt.value = key;
                     opt.innerText = key;
                     select.appendChild(opt);
-                }
+                });
             }
         }
 
@@ -674,72 +734,145 @@
             const selectedLine = document.getElementById('manageLineSelect').value;
             document.getElementById('manageLineDesc').innerText = lineDescriptions[selectedLine] || "";
             document.getElementById('activityEditorSection').classList.remove('hidden');
-            
+
             const listContainer = document.getElementById('manageActivityList');
             const emptyMsg = document.getElementById('emptyActivitiesMsg');
             listContainer.innerHTML = '';
-            
+
             const activities = lineActivitiesDB[selectedLine] || [];
-            
+
             if (activities.length === 0) {
                 emptyMsg.classList.remove('hidden');
             } else {
                 emptyMsg.classList.add('hidden');
-                activities.forEach((act, index) => {
+                activities.forEach((act) => {
+                    // act is { activity_name, sort_order, id? } from API, or plain string from fallback
+                    const name = typeof act === 'string' ? act : act.activity_name;
+                    const actId = typeof act === 'object' ? act.id : null;
+
                     const li = document.createElement('li');
                     li.className = "flex justify-between items-center bg-white p-2 border border-gray-200 rounded shadow-sm";
+                    li.dataset.actId = actId || '';
                     li.innerHTML = `
-                        <input type="text" class="font-medium text-gray-700 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-300 px-2 w-full mr-4 rounded" value="${act}" onchange="updateActivityName('${selectedLine}', ${index}, this.value)">
-                        <button onclick="removeActivityFromLine('${selectedLine}', ${index})" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors text-sm font-semibold">Delete</button>
+                        <input type="text" class="font-medium text-gray-700 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-300 px-2 w-full mr-4 rounded" value="${name}" onchange="updateActivityName('${selectedLine}', this, '${actId}')">
+                        <button onclick="removeActivityFromLine('${selectedLine}', this, '${actId}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors text-sm font-semibold">Delete</button>
                     `;
                     listContainer.appendChild(li);
                 });
             }
         }
 
-        function addActivityToLine() {
+        async function addActivityToLine() {
             const selectedLine = document.getElementById('manageLineSelect').value;
             const input = document.getElementById('newActivityInput');
             const newAct = input.value.trim().toUpperCase();
-            
-            if (!selectedLine) return;
-            if (!newAct) return;
 
-            if (!lineActivitiesDB[selectedLine]) {
-                lineActivitiesDB[selectedLine] = [];
+            if (!selectedLine || !newAct) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/production-lines/${selectedLine}/activities`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ activity_name: newAct })
+                });
+                const json = await res.json();
+                if (!res.ok) { alert(`Error: ${json.error || res.status}`); return; }
+
+                // Push to local cache
+                if (!lineActivitiesDB[selectedLine]) lineActivitiesDB[selectedLine] = [];
+                lineActivitiesDB[selectedLine].push({ activity_name: newAct, sort_order: json.sort_order, id: json.activity_id });
+
+                input.value = '';
+                renderManageActivities();
+            } catch (err) {
+                alert("Could not add activity. Is the API running?");
+                console.error(err);
             }
-            
-            lineActivitiesDB[selectedLine].push(newAct);
-            input.value = '';
-            renderManageActivities();
         }
 
-        function removeActivityFromLine(line, index) {
-            lineActivitiesDB[line].splice(index, 1);
-            renderManageActivities();
-        }
-
-        function updateActivityName(line, index, newValue) {
-            if(newValue.trim() === '') {
-                removeActivityFromLine(line, index);
-            } else {
-                lineActivitiesDB[line][index] = newValue.trim().toUpperCase();
+        async function removeActivityFromLine(line, btn, actId) {
+            if (!actId || actId === 'null') {
+                // No DB id — just remove locally (fallback mode)
+                const li = btn.closest('li');
+                li.remove();
+                return;
             }
-            renderManageActivities();
+            if (!confirm("Delete this activity?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/production-lines/${line}/activities/${actId}`, { method: 'DELETE' });
+                const json = await res.json();
+                if (!res.ok) { alert(`Error: ${json.error || res.status}`); return; }
+
+                // Remove from local cache
+                if (lineActivitiesDB[line]) {
+                    lineActivitiesDB[line] = lineActivitiesDB[line].filter(a => String(a.id) !== String(actId));
+                }
+                renderManageActivities();
+            } catch (err) {
+                alert("Could not delete activity. Is the API running?");
+                console.error(err);
+            }
         }
 
-        // --- ALL DATA PAGINATION LOGIC ---
+        async function updateActivityName(line, input, actId) {
+            const newValue = input.value.trim().toUpperCase();
+            if (!newValue) { input.value = input.defaultValue; return; }
+
+            if (!actId || actId === 'null') {
+                // No DB id — just update locally
+                input.value = newValue;
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/production-lines/${line}/activities/${actId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ activity_name: newValue })
+                });
+                const json = await res.json();
+                if (!res.ok) { alert(`Error: ${json.error || res.status}`); input.value = input.defaultValue; return; }
+
+                // Update local cache
+                const act = (lineActivitiesDB[line] || []).find(a => String(a.id) === String(actId));
+                if (act) act.activity_name = newValue;
+                input.defaultValue = newValue;
+            } catch (err) {
+                alert("Could not update activity. Is the API running?");
+                input.value = input.defaultValue;
+                console.error(err);
+            }
+        }
+
+        // --- ALL DATA — fetched from API ---
+        let allDataCache = [];   // fetched once per tab visit
+
+        async function loadAllData() {
+            const tbody = document.getElementById('allDataTableBody');
+            tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-400 italic">Loading…</td></tr>';
+            try {
+                const res = await fetch(`${API_BASE}/items?limit=500`);
+                if (!res.ok) throw new Error(`Server error ${res.status}`);
+                allDataCache = await res.json();
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-red-500 italic">Could not load data. Is the API running?</td></tr>';
+                console.error(err);
+                return;
+            }
+            currentPage = 1;
+            renderAllData();
+        }
+
         function renderAllData() {
-            const dbArray = Object.values(mockRoutingDB);
+            const dbArray = allDataCache;
             const totalItems = dbArray.length;
             const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
-            
+
             if (currentPage < 1) currentPage = 1;
             if (currentPage > totalPages) currentPage = totalPages;
 
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-            
+
             const paginatedData = dbArray.slice(startIndex, endIndex);
             const tbody = document.getElementById('allDataTableBody');
             tbody.innerHTML = '';
@@ -750,14 +883,17 @@
                 paginatedData.forEach(item => {
                     const isBM = item.product_type && (item.product_type.includes("Base") || item.product_type === "BM");
                     const typeStr = isBM ? "BM" : "FG";
-                    const itemCode = item.inventory_id || item.itemCode || 'N/A';
-                    
+                    const itemCode = item.inventory_id || 'N/A';
+                    const lineCode = isBM
+                        ? (item.bm_production_line_code || '')
+                        : (item.fg_production_line_code || '');
+
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-gray-100 hover:bg-blue-50 transition-colors";
                     tr.innerHTML = `
                         <td class="p-3 font-bold text-blue-800">${itemCode}</td>
-                        <td class="p-3 text-gray-700">${item.revision_descr || item.skuDesc || ''}</td>
-                        <td class="p-3 text-gray-600">${item.production_line_code || item.prodLine || ''}</td>
+                        <td class="p-3 text-gray-700">${item.revision_descr || ''}</td>
+                        <td class="p-3 text-gray-600">${lineCode}</td>
                         <td class="p-3 text-gray-600 font-medium">
                             <span class="px-2 py-1 rounded text-xs ${isBM ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}">${typeStr}</span>
                         </td>
@@ -785,21 +921,160 @@
             performSearch();
         }
 
-        // --- INIT ---
-        window.onload = () => {
-            // Generate some extra mock data purely for testing pagination
-            for(let i=1; i<=25; i++) {
-                const code = "DUMMY-" + String(i).padStart(3, '0');
-                mockRoutingDB[code] = {
-                    inventory_id: code,
-                    revision_descr: "Dummy Product " + i,
-                    production_line_code: "L0" + ((i % 9) + 1),
-                    product_type: i % 3 === 0 ? "Base Material (BM)" : "Finished Good (FG)",
-                    activities: []
-                };
+        // --- SAVE ROUTING ---
+        async function saveRouting() {
+            const itemCode = document.getElementById('itemCode').value.trim();
+            const skuDesc = document.getElementById('skuDesc').value.trim();
+            const qty = parseFloat(document.getElementById('qtyInput').value) || 1;
+            const lineCode = document.getElementById('prodLine').value;
+            const lineDesc = lineDescriptions[lineCode] || '';
+            const isBM = currentMode === 'BM';
+
+            if (!itemCode) { alert("Item Code is required."); return; }
+            if (!lineCode) { alert("Please select a Production Line."); return; }
+
+            // Collect rows from table
+            const rows = document.querySelectorAll('#tableBody tr');
+            const activities = [];
+            rows.forEach((row, i) => {
+                const name = row.querySelector('.activity-input').value.trim();
+                const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
+                const machine = parseFloat(row.querySelector('.machine-input').value) || 0;
+                const time = parseFloat(row.querySelector('.time-input').value) || 0;
+                if (name || time) {
+                    activities.push({
+                        activity_name: name,
+                        pax, machine, time_min: time,
+                        sort_order: i + 1,
+                        type: "Labor",
+                        class: "DL", class_1: "DL",
+                        item_id: `${lineCode} ${name}`
+                    });
+                }
+            });
+
+            if (appState === 'ADD') {
+                const btn = document.getElementById('btn-save');
+                btn.disabled = true;
+                btn.innerText = 'Saving…';
+                try {
+                    const isBM = currentMode === 'BM';
+                    const createBody = {
+                        inventory_id: itemCode,
+                        revision_descr: skuDesc,
+                        quantity: qty,
+                        product_type: isBM ? "Base Material (BM)" : "Finished Good (FG)",
+                        activities: activities,
+                    };
+                    if (isBM) {
+                        createBody.bm_production_line_code = lineCode;
+                        createBody.bm_production_line = lineDesc;
+                    } else {
+                        createBody.fg_production_line_code = lineCode;
+                        createBody.fg_production_line = lineDesc;
+                    }
+
+                    const res = await fetch(`${API_BASE}/items`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(createBody)
+                    });
+                    const json = await res.json();
+                    if (res.status === 409) {
+                        alert(`⚠️ Item code "${itemCode}" already exists. Use Update Routing to edit it.`);
+                        return;
+                    }
+                    if (!res.ok) throw new Error(json.error || `Create failed (${res.status})`);
+
+                    alert(`✅ "${itemCode}" created successfully! (Revision 00)`);
+                    clearForm();
+                } catch (err) {
+                    alert(`❌ Save failed: ${err.message}`);
+                    console.error(err);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Save Routing Document';
+                }
             }
 
-            switchTab('ADD'); // Start in Add Mode
+            if (appState === 'UPDATE') {
+                if (!loadedItemCode) { alert("No item loaded. Please search first."); return; }
+
+                const btn = document.getElementById('btn-save');
+                btn.disabled = true;
+                btn.innerText = 'Saving…';
+
+                try {
+                    // 1. Update product metadata
+                    const metaBody = {
+                        revision_descr: skuDesc,
+                        quantity: qty,
+                        product_type: isBM ? "Base Material (BM)" : "Finished Good (FG)",
+                    };
+                    if (isBM) {
+                        metaBody.bm_production_line_code = lineCode;
+                        metaBody.bm_production_line = lineDesc;
+                    } else {
+                        metaBody.fg_production_line_code = lineCode;
+                        metaBody.fg_production_line = lineDesc;
+                    }
+
+                    const metaRes = await fetch(`${API_BASE}/items/${encodeURIComponent(loadedItemCode)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(metaBody)
+                    });
+                    if (!metaRes.ok) {
+                        const e = await metaRes.json();
+                        throw new Error(e.error || `Metadata update failed (${metaRes.status})`);
+                    }
+
+                    // 2. Fetch CURRENT activities fresh from DB (prevents duplicate bug)
+                    const freshRes = await fetch(`${API_BASE}/items/${encodeURIComponent(loadedItemCode)}`);
+                    if (!freshRes.ok) throw new Error('Could not fetch current activities before save.');
+                    const freshData = await freshRes.json();
+                    const currentActivities = freshData.activities || [];
+
+                    // 3. Delete every existing activity (skip_revision=1 so only
+                    //    the metadata PATCH above counts as the single revision bump)
+                    for (const act of currentActivities) {
+                        if (!act.id) continue;
+                        await fetch(`${API_BASE}/items/${encodeURIComponent(loadedItemCode)}/activities/${act.id}?skip_revision=1`, { method: 'DELETE' });
+                    }
+
+                    // 4. Re-insert the rows currently shown in the form
+                    for (const act of activities) {
+                        await fetch(`${API_BASE}/items/${encodeURIComponent(loadedItemCode)}/activities?skip_revision=1`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(act)
+                        });
+                    }
+
+                    alert(`✅ "${loadedItemCode}" saved successfully!`);
+                    // Reload to get fresh revision + activity IDs
+                    document.getElementById('searchInput').value = loadedItemCode;
+                    await performSearch();
+
+                } catch (err) {
+                    alert(`❌ Save failed: ${err.message}`);
+                    console.error(err);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'Save Routing Document';
+                }
+            }
+        }
+
+        // --- INIT ---
+        window.onload = async () => {
+            // Wire save button
+            document.getElementById('btn-save').onclick = saveRouting;
+
+            // Load production lines from API (populates dropdown + Manage tab)
+            await loadProductionLines();
+
+            switchTab('ADD'); // Start in Add mode
         };
 
     </script>

@@ -286,7 +286,11 @@ def add_activity(item_code):
         new_id = cur.fetchone()["id"]
 
         old_revision = product["revision"]
-        new_revision = _bump_revision(cur, canonical_id, old_revision)
+        skip_revision = request.args.get("skip_revision", "0") == "1"
+        if not skip_revision:
+            new_revision = _bump_revision(cur, canonical_id, old_revision)
+        else:
+            new_revision = old_revision
 
         conn.commit()
         return jsonify({
@@ -405,7 +409,11 @@ def update_activity(item_code, activity_id):
         )
 
         old_revision = product["revision"]
-        new_revision = _bump_revision(cur, canonical_id, old_revision)
+        skip_revision = request.args.get("skip_revision", "0") == "1"
+        if not skip_revision:
+            new_revision = _bump_revision(cur, canonical_id, old_revision)
+        else:
+            new_revision = old_revision
 
         conn.commit()
         return jsonify({
@@ -479,7 +487,11 @@ def delete_activity(item_code, activity_id):
         )
 
         old_revision = product["revision"]
-        new_revision = _bump_revision(cur, canonical_id, old_revision)
+        skip_revision = request.args.get("skip_revision", "0") == "1"
+        if not skip_revision:
+            new_revision = _bump_revision(cur, canonical_id, old_revision)
+        else:
+            new_revision = old_revision
 
         conn.commit()
         return jsonify({

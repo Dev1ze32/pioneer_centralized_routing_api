@@ -59,8 +59,8 @@ def get_item(item_code):
 
         cur.execute(
             """
-            SELECT type, item_id, activity_name AS activities,
-                   class, class_1, pax, machine, time_min
+            SELECT id, type, item_id, activity_name AS activities,
+                class, class_1, pax, machine, time_min
             FROM activities
             WHERE inventory_id = %s
             ORDER BY sort_order
@@ -76,6 +76,134 @@ def get_item(item_code):
     finally:
         conn.close()
 
+
+@items_bp.post("/items")
+def create_item():
+    """
+    Create a new product with optional activities
+    ---
+    tags:
+      - Items
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [inventory_id, revision_descr, product_type]
+          properties:
+            inventory_id:
+              type: string
+              example: 1AF2202L
+            revision_descr:
+              type: string
+            quantity:
+              type: number
+            product_type:
+              type: string
+              enum: ["Finished Good (FG)", "Base Material (BM)"]
+            fg_production_line:
+              type: string
+            fg_production_line_code:
+              type: string
+            bm_production_line:
+              type: string
+            bm_production_line_code:
+              type: string
+            notes:
+              type: string
+            activities:
+              type: array
+    responses:
+      201:
+        description: Product created
+      400:
+        description: Missing required fields or invalid JSON
+      409:
+        description: Item code already exists
+      500:
+        description: Internal server error
+    """
+    body = request.get_json(force=True, silent=True)
+    if not body:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+
+    inventory_id = (body.get("inventory_id") or "").strip()
+    revision_descr = (body.get("revision_descr") or "").strip()
+    product_type = (body.get("product_type") or "").strip()
+
+    if not inventory_id or not revision_descr or not product_type:
+        return jsonify({"error": "inventory_id, revision_descr, and product_type are required"}), 400
+
+    conn = get_connection()
+    try:
+        cur = get_dict_cursor(conn)
+
+        # Check for duplicate
+        cur.execute(
+            "SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(%s)",
+            (inventory_id,),
+        )
+        if cur.fetchone():
+            return jsonify({"error": "Item code already exists", "inventory_id": inventory_id}), 409
+
+        cur.execute(
+            """
+            INSERT INTO products
+                (inventory_id, revision_descr, revision, quantity, product_type,
+                 fg_production_line, fg_production_line_code,
+                 bm_production_line, bm_production_line_code, notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                inventory_id,
+                revision_descr,
+                "00",
+                body.get("quantity", 1),
+                product_type,
+                body.get("fg_production_line"),
+                body.get("fg_production_line_code"),
+                body.get("bm_production_line"),
+                body.get("bm_production_line_code"),
+                body.get("notes"),
+            ),
+        )
+
+        # Insert activities if provided
+        for i, act in enumerate(body.get("activities", []), start=1):
+            cur.execute(
+                """
+                INSERT INTO activities
+                    (inventory_id, type, item_id, activity_name,
+                     class, class_1, pax, machine, time_min, sort_order)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    inventory_id,
+                    act.get("type", "Labor"),
+                    act.get("item_id", act.get("activity_name", "")),
+                    act.get("activity_name", ""),
+                    act.get("class", "DL"),
+                    act.get("class_1", "DL"),
+                    act.get("pax", 0),
+                    act.get("machine", 0),
+                    act.get("time_min", 0),
+                    i,
+                ),
+            )
+
+        conn.commit()
+        return jsonify({
+            "message": "Product created",
+            "inventory_id": inventory_id,
+            "revision": "00",
+        }), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 @items_bp.get("/items")
 def search_items():
