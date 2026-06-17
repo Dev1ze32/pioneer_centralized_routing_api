@@ -36,6 +36,7 @@ def get_item(item_code):
         cur.execute(
             """
             SELECT inventory_id, revision_descr, revision, notes, product_type,
+                   quantity,
                    bm_production_line, bm_production_line_code,
                    fg_production_line, fg_production_line_code
             FROM products
@@ -109,6 +110,7 @@ def search_items():
             cur.execute(
                 """
                 SELECT inventory_id, revision_descr, revision, product_type,
+                       quantity,
                        bm_production_line, bm_production_line_code,
                        fg_production_line, fg_production_line_code
                 FROM products
@@ -122,6 +124,7 @@ def search_items():
             cur.execute(
                 """
                 SELECT inventory_id, revision_descr, revision, product_type,
+                       quantity,
                        bm_production_line, bm_production_line_code,
                        fg_production_line, fg_production_line_code
                 FROM products
