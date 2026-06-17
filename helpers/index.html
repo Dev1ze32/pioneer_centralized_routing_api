@@ -746,17 +746,27 @@
             } else {
                 emptyMsg.classList.add('hidden');
                 activities.forEach((act) => {
-                    // act is { activity_name, sort_order, id? } from API, or plain string from fallback
+                    // act is { id, activity_name, sort_order } from API, or plain string from fallback
                     const name = typeof act === 'string' ? act : act.activity_name;
-                    const actId = typeof act === 'object' ? act.id : null;
+                    const actId = (typeof act === 'object' && act.id != null) ? act.id : null;
 
                     const li = document.createElement('li');
                     li.className = "flex justify-between items-center bg-white p-2 border border-gray-200 rounded shadow-sm";
-                    li.dataset.actId = actId || '';
-                    li.innerHTML = `
-                        <input type="text" class="font-medium text-gray-700 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-300 px-2 w-full mr-4 rounded" value="${name}" onchange="updateActivityName('${selectedLine}', this, '${actId}')">
-                        <button onclick="removeActivityFromLine('${selectedLine}', this, '${actId}')" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors text-sm font-semibold">Delete</button>
-                    `;
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'font-medium text-gray-700 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-300 px-2 w-full mr-4 rounded';
+                    input.value = name;
+                    input.defaultValue = name;
+                    input.addEventListener('change', () => updateActivityName(selectedLine, input, actId));
+
+                    const btn = document.createElement('button');
+                    btn.className = 'text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors text-sm font-semibold';
+                    btn.textContent = 'Delete';
+                    btn.addEventListener('click', () => removeActivityFromLine(selectedLine, btn, actId));
+
+                    li.appendChild(input);
+                    li.appendChild(btn);
                     listContainer.appendChild(li);
                 });
             }

@@ -38,7 +38,7 @@ def get_production_lines():
 
         cur.execute(
             """
-            SELECT production_line_code, activity_name, sort_order
+            SELECT id, production_line_code, activity_name, sort_order
             FROM line_activities
             ORDER BY production_line_code, sort_order
             """
@@ -59,6 +59,7 @@ def get_production_lines():
             if code in line_map:
                 line_map[code]["activities"].append(
                     {
+                        "id": act["id"],
                         "activity_name": act["activity_name"],
                         "sort_order": act["sort_order"],
                     }
