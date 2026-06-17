@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Routing Template</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles to mimic excel borders and inputs */
+        .excel-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #d1d5db;
+            padding: 4px 8px;
+            text-align: center;
+        }
+        .excel-table th {
+            background-color: #f3f4f6;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        .excel-input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            text-align: center;
+        }
+        .bg-excel-yellow {
+            background-color: #fef08a !important; /* Tailwind yellow-200 */
+        }
+        .bg-excel-yellow:focus-within:not(:disabled) {
+            background-color: #fde047 !important; /* Tailwind yellow-300 */
+            box-shadow: inset 0 0 0 2px #3b82f6;
+        }
+        input.text-left { text-align: left; }
+        
+        /* Disabled state styling */
+        input:disabled, select:disabled {
+            background-color: #f3f4f6 !important; /* Tailwind gray-100 */
+            color: #6b7280; /* Tailwind gray-500 */
+            cursor: not-allowed;
+        }
+        
+        .tab-active {
+            border-bottom: 2px solid #2563eb;
+            color: #2563eb;
+            font-weight: 700;
+        }
+        .tab-inactive {
+            color: #4b5563;
+            font-weight: 500;
+        }
+        .tab-inactive:hover {
+            color: #1f2937;
+            border-bottom: 2px solid #d1d5db;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-6 font-sans text-sm text-gray-800">
+
+    <div class="max-w-7xl mx-auto bg-white p-8 shadow-md rounded-lg">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-gray-900">PIONEER ADHESIVES INC.</h1>
+                <h2 class="text-lg font-semibold text-gray-600">ROUTING TEMPLATE SYSTEM</h2>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex space-x-6 border-b border-gray-200 mb-6">
+            <button id="tab-add" onclick="switchTab('ADD')" class="pb-2 px-1 tab-active transition-colors">Add New Routing</button>
+            <button id="tab-lookup" onclick="switchTab('LOOKUP')" class="pb-2 px-1 tab-inactive transition-colors">Look Up Routing</button>
+            <button id="tab-update" onclick="switchTab('UPDATE')" class="pb-2 px-1 tab-inactive transition-colors">Update Routing</button>
+            <button id="tab-manage" onclick="switchTab('MANAGE')" class="pb-2 px-1 tab-inactive transition-colors">Manage Line Activities</button>
+            <button id="tab-alldata" onclick="switchTab('ALLDATA')" class="pb-2 px-1 tab-inactive transition-colors">View All Data</button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- MAIN ROUTING TEMPLATE VIEW (ADD/LOOKUP/UPDATE) -->
+        <!-- ============================================== -->
+        <div id="view-routing">
+            
+            <!-- Search Bar (For Lookup & Update) -->
+            <div id="search-section" class="hidden mb-6 bg-gray-50 p-4 rounded-md border border-gray-200 flex gap-4 items-end">
+                <div class="flex-1 max-w-md">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Search Database (e.g., 1AF2202L, 1KPH5A5J01)</label>
+                    <div class="flex">
+                        <input type="text" id="searchInput" class="border border-gray-300 rounded-l px-3 py-2 w-full focus:outline-none focus:border-blue-500" placeholder="Enter Item Code (e.g., 1AF2202L)">
+                        <button onclick="performSearch()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r font-semibold transition-colors">Search</button>
+                    </div>
+                </div>
+                <div id="search-status" class="text-sm font-semibold text-gray-600 pb-2"></div>
+            </div>
+
+            <!-- Mode Selector -->
+            <div class="flex justify-between items-end mb-6">
+                <!-- Instructions -->
+                <div class="bg-blue-50 border border-blue-200 p-3 rounded-md flex-1 mr-8">
+                    <h3 class="font-bold text-blue-800 mb-1">INSTRUCTIONS:</h3>
+                    <ul class="list-disc pl-5 text-blue-900 space-y-0.5 text-xs">
+                        <li><span class="font-bold bg-yellow-200 px-1">YELLOW CELLS ONLY</span> - Fill in cells highlighted in YELLOW.</li>
+                        <li><strong>DROPDOWN FIRST:</strong> Select the Production Line first.</li>
+                    </ul>
+                </div>
+
+                <div class="flex gap-4 items-center">
+                    <span class="font-bold text-gray-700">Template Mode:</span>
+                    <div class="flex bg-gray-200 rounded-lg p-1">
+                        <button id="btn-fg" onclick="setMode('FG')" class="px-4 py-2 rounded-md bg-white shadow-sm font-semibold transition-all">FG (Finished Goods)</button>
+                        <button id="btn-bm" onclick="setMode('BM')" class="px-4 py-2 rounded-md font-semibold text-gray-500 hover:text-gray-700 transition-all">BM (Bulk Material)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Form Section -->
+            <div class="grid grid-cols-2 gap-x-12 gap-y-4 mb-8">
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <label class="w-40 font-semibold">ITEM CODE</label>
+                        <input type="text" id="itemCode" class="border border-gray-300 rounded px-3 py-1 flex-1 bg-excel-yellow font-medium" placeholder="Enter Item Code">
+                    </div>
+                    <div class="flex items-center">
+                        <label class="w-40 font-semibold">SKU Description</label>
+                        <input type="text" id="skuDesc" class="border border-gray-300 rounded px-3 py-1 flex-1 bg-excel-yellow font-medium" placeholder="Enter SKU Description">
+                    </div>
+                    <div class="flex items-center mt-6">
+                        <label id="qtyLabel" class="w-40 font-semibold">FG Qty/Unit</label>
+                        <input type="number" id="qtyInput" class="border border-gray-300 rounded px-3 py-1 flex-1 bg-excel-yellow font-medium" value="1" oninput="calculateAll()">
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <label class="w-40 font-semibold">Production Line</label>
+                        <select id="prodLine" class="border border-gray-300 rounded px-3 py-1 flex-1 bg-excel-yellow font-medium" onchange="updateLineDescription()">
+                            <option value="" disabled selected>-- Select Production Line --</option>
+                            <option value="L01">L01</option>
+                            <option value="L02">L02</option>
+                            <option value="L03">L03</option>
+                            <option value="L04A">L04A</option>
+                            <option value="L04B">L04B</option>
+                            <option value="L04C">L04C</option>
+                            <option value="L05">L05</option>
+                            <option value="L06">L06</option>
+                            <option value="L07">L07</option>
+                            <option value="L08">L08</option>
+                            <option value="L09">L09</option>
+                            <option value="L09A">L09A</option>
+                            <option value="L10">L10</option>
+                            <option value="L11">L11</option>
+                            <option value="L12">L12</option>
+                            <option value="L13">L13</option>
+                            <option value="L14">L14</option>
+                            <option value="SIPS">SIPS</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="w-40 font-semibold text-gray-500">Line Description</label>
+                        <input type="text" id="lineDesc" class="border border-gray-200 rounded px-3 py-1 flex-1 bg-gray-50 text-gray-600" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Section -->
+            <div class="overflow-x-auto">
+                <table class="excel-table mb-4" id="routingTable">
+                    <thead>
+                        <tr>
+                            <th colspan="7" class="bg-gray-200 text-left pl-4">ROUTING DETAILS</th>
+                            <th colspan="5" class="bg-blue-100 border-l-2 border-blue-300">ACUMATICA BOM</th>
+                            <th rowspan="2" class="w-10 action-column"></th>
+                        </tr>
+                        <tr>
+                            <th class="w-64 text-left pl-2">Activities</th>
+                            <th class="w-16">Pax</th>
+                            <th class="w-16">Machine</th>
+                            <th class="w-24">Time (min)</th>
+                            <th class="w-24">Run Time</th>
+                            <th class="w-16">Unit</th>
+                            <th class="w-24">Total Labor min</th>
+                            <th class="w-24 border-r-2 border-gray-300">Total MC min</th>
+                            <th class="w-64 text-left pl-2 bg-blue-50">ACTIVITIES</th>
+                            <th class="w-24 bg-blue-50">DL<br>(UNITS/1 MIN)</th>
+                            <th class="w-20 bg-blue-50">DL</th>
+                            <th class="w-20 bg-blue-50">VOH</th>
+                            <th class="w-20 bg-blue-50">FOH</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Rows will be generated by JS -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="font-bold bg-gray-100">
+                            <td class="text-right pr-4">TOTAL</td>
+                            <td id="sumPax">0</td>
+                            <td id="sumMachine">0</td>
+                            <td id="sumTime">0.00</td>
+                            <td id="sumRunTime">0.00000</td>
+                            <td></td>
+                            <td id="sumLaborMin">0.00</td>
+                            <td id="sumMcMin" class="border-r-2 border-gray-300">0.00</td>
+                            <td class="bg-blue-50"></td>
+                            <td class="bg-blue-50"></td>
+                            <td id="sumDL" class="bg-blue-50">0.00000</td>
+                            <td id="sumVOH" class="bg-blue-50">0.00000</td>
+                            <td id="sumFOH" class="bg-blue-50">0.00000</td>
+                            <td class="action-column"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <button id="btn-add-row" onclick="addRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold transition-colors">+ Add Activity Row</button>
+            </div>
+            
+            <div id="save-section" class="mt-8 flex justify-end">
+                <button id="btn-save" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-md font-bold transition-colors">Save Routing Document</button>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- MANAGE LINE ACTIVITIES VIEW                    -->
+        <!-- ============================================== -->
+        <div id="view-manage" class="hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">Line Activity Database</h3>
+            
+            <div class="grid grid-cols-3 gap-8">
+                <!-- Select Line -->
+                <div class="col-span-1 border-r pr-8">
+                    <label class="block font-semibold mb-2">Select Production Line to Edit:</label>
+                    <select id="manageLineSelect" class="w-full border border-gray-300 rounded px-3 py-2 bg-white" onchange="renderManageActivities()">
+                        <option value="" disabled selected>-- Choose Line --</option>
+                        <!-- Populated by JS -->
+                    </select>
+
+                    <div id="manageLineDesc" class="mt-4 text-sm text-gray-500 font-medium"></div>
+                </div>
+
+                <!-- Activities List -->
+                <div class="col-span-2">
+                    <div id="activityEditorSection" class="hidden">
+                        <label class="block font-semibold mb-2">Activities for this Line:</label>
+                        
+                        <div class="bg-gray-50 border border-gray-200 rounded-md p-4 mb-4">
+                            <ul id="manageActivityList" class="space-y-2">
+                                <!-- List populated by JS -->
+                            </ul>
+                            <div id="emptyActivitiesMsg" class="text-gray-500 text-sm italic hidden">No activities found for this line.</div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <input type="text" id="newActivityInput" class="border border-gray-300 rounded px-3 py-2 flex-1" placeholder="Enter new activity name...">
+                            <button onclick="addActivityToLine()" class="bg-gray-800 hover:bg-black text-white px-4 py-2 rounded font-semibold">Add Activity</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- ALL DATA VIEW (PAGINATED)                        -->
+        <!-- ============================================== -->
+        <div id="view-alldata" class="hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">All Routing Records Database</h3>
+            
+            <div class="overflow-x-auto bg-white border border-gray-200 rounded-lg shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-100 text-gray-700">
+                        <tr>
+                            <th class="p-3 border-b font-semibold">Item Code</th>
+                            <th class="p-3 border-b font-semibold">SKU Description</th>
+                            <th class="p-3 border-b font-semibold">Line</th>
+                            <th class="p-3 border-b font-semibold">Type</th>
+                            <th class="p-3 border-b font-semibold text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="allDataTableBody">
+                        <!-- Rows populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="flex justify-between items-center mt-4">
+                <span class="text-sm text-gray-600 font-medium" id="pagination-info">Showing 0 to 0 of 0 entries</span>
+                <div class="space-x-2">
+                    <button onclick="changePage(-1)" id="btn-prev-page" class="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Previous</button>
+                    <button onclick="changePage(1)" id="btn-next-page" class="px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">Next</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- DATA STATE ---
+        const lineDescriptions = {
+            "L01": "L01 - L1 COATINGS",
+            "L02": "L02 - L2 CYANO BOTTLE FILLING",
+            "L03": "L03 - L3 CYANO TUBE FILLING",
+            "L04A": "L04A - L4A ELASTO MIXING",
+            "L04B": "L04B - L4B SEMI AUTO FILLING",
+            "L04C": "L04C - L4C AUTO FILLING",
+            "L05": "L05 - L5 EPOXY CLAY",
+            "L06": "L06 - L6 EPOXY LINE",
+            "L07": "L07 - L7 EPOXY TUBE FILLING",
+            "L08": "L08 - L8",
+            "L09": "L09 - L9 EPS - BLOCKS",
+            "L09A": "L09A - L9A EPS - CUTTING",
+            "L10": "L10 - L10 CONTACT BOND",
+            "L11": "L11 - L11 SILICONE FILLING LINE",
+            "L12": "L12 - L12 SPECIAL PRODUCTS - EPOXY BASED",
+            "L13": "L13 - L13 SPECIAL PRODUCTS - WATER BASED",
+            "L14": "L14 - L14 SKIM COAT",
+            "SIPS": "SIPS - STRUCTURAL INSULATED PANEL"
+        };
+
+        // Mock database for specific line standard activities (Manage view)
+        let lineActivitiesDB = {
+            "L01": ["UNBOXING", "LABELING", "BOX PREPARATION"],
+            "L11": ["UNBOXING", "BATCH CODING", "PLACING OF CODED PAIL STICKER LABEL", "REBOXING"]
+        };
+
+        // Mock database populated with examples from acu_routing_parsed.json
+        const mockRoutingDB = {
+            "1AF2202L": {
+                "inventory_id": "1AF2202L",
+                "revision_descr": "PG ANTI FOULING PAINT RED 4L",
+                "revision": "03",
+                "notes": "CRN RD23-CR055",
+                "production_line": "L01 - L1 COATINGS",
+                "production_line_code": "L01",
+                "activities": [
+                    { "type": "Labor", "item_id": "L01 LABELING/CODING", "activities": "L01 LABELING/CODING", "class": "DL", "pax": 1, "machine": 1, "time_min": 0.1245 },
+                    { "type": "Labor", "item_id": "L01 FILLING", "activities": "L01 FILLING", "class": "DL", "pax": 2, "machine": 1, "time_min": 0.1499 }
+                ],
+                "product_type": "Finished Good (FG)"
+            },
+            "1KPH5A5J01": {
+                "inventory_id": "1KPH5A5J01",
+                "revision_descr": "FG_KOPHENOL HIGHWAY YELLOW",
+                "revision": "00",
+                "notes": "PACKAGING MATERIAL: REUSE THE TIN PAIL OF KOPHENOL CREAM",
+                "production_line": "L01 - L1 COATINGS",
+                "production_line_code": "L01",
+                "activities": [
+                    { "type": "Labor", "item_id": "L01 LABELING/CODING", "activities": "L01 LABELING/CODING", "class": "DL", "pax": 1, "machine": 1, "time_min": 0.1167 }
+                ],
+                "product_type": "Finished Good (FG)"
+            },
+            "1WDG5A6601": {
+                "inventory_id": "1WDG5A6601",
+                "revision_descr": "COMM_PIONEER WOODGLUE D3 4KG",
+                "qty": 4,
+                "production_line_code": "L11",
+                "activities": [
+                    { "activities": "UNBOXING", "pax": 1, "machine": 0, "time_min": 0.1333 },
+                    { "activities": "BATCH CODING", "pax": 1, "machine": 0, "time_min": 0.0333 },
+                    { "activities": "PLACING OF CODED PAIL STICKER LABEL", "pax": 1, "machine": 0, "time_min": 0.1666 },
+                    { "activities": "REBOXING", "pax": 1, "machine": 0, "time_min": 0.1000 }
+                ],
+                "product_type": "Finished Good (FG)"
+            }
+        };
+
+        let currentMode = 'FG';
+        let appState = 'ADD'; // ADD, LOOKUP, UPDATE, MANAGE, ALLDATA
+        
+        // Pagination state
+        let currentPage = 1;
+        const itemsPerPage = 20;
+
+        // --- CORE UI/TAB MANAGEMENT ---
+        function switchTab(tabId) {
+            appState = tabId;
+            
+            // Reset styles for all tabs
+            ['tab-add', 'tab-lookup', 'tab-update', 'tab-manage', 'tab-alldata'].forEach(id => {
+                const el = document.getElementById(id);
+                el.className = "pb-2 px-1 tab-inactive transition-colors";
+            });
+
+            // Set active tab style
+            const activeTabMap = {
+                'ADD': 'tab-add', 'LOOKUP': 'tab-lookup', 'UPDATE': 'tab-update', 'MANAGE': 'tab-manage', 'ALLDATA': 'tab-alldata'
+            };
+            document.getElementById(activeTabMap[tabId]).className = "pb-2 px-1 tab-active transition-colors";
+
+            // View toggling
+            const viewRouting = document.getElementById('view-routing');
+            const viewManage = document.getElementById('view-manage');
+            const viewAllData = document.getElementById('view-alldata');
+            const searchSection = document.getElementById('search-section');
+            const saveBtn = document.getElementById('save-section');
+
+            if (tabId === 'MANAGE') {
+                viewRouting.classList.add('hidden');
+                viewAllData.classList.add('hidden');
+                viewManage.classList.remove('hidden');
+                initManageLines();
+            } else if (tabId === 'ALLDATA') {
+                viewRouting.classList.add('hidden');
+                viewManage.classList.add('hidden');
+                viewAllData.classList.remove('hidden');
+                currentPage = 1;
+                renderAllData();
+            } else {
+                viewRouting.classList.remove('hidden');
+                viewManage.classList.add('hidden');
+                viewAllData.classList.add('hidden');
+                
+                if (tabId === 'ADD') {
+                    searchSection.classList.add('hidden');
+                    saveBtn.classList.remove('hidden');
+                    clearForm();
+                    setFormEditable(true);
+                } else if (tabId === 'LOOKUP') {
+                    searchSection.classList.remove('hidden');
+                    saveBtn.classList.add('hidden');
+                    clearForm();
+                    setFormEditable(false);
+                    document.getElementById('search-status').innerText = "Search to view a record in Read-Only mode.";
+                } else if (tabId === 'UPDATE') {
+                    searchSection.classList.remove('hidden');
+                    saveBtn.classList.remove('hidden');
+                    clearForm();
+                    setFormEditable(false); // Initially disabled until searched
+                    document.getElementById('search-status').innerText = "Search to find a record to edit.";
+                }
+            }
+        }
+
+        function setFormEditable(isEditable) {
+            // Enable/Disable main inputs
+            document.getElementById('itemCode').disabled = !isEditable;
+            document.getElementById('skuDesc').disabled = !isEditable;
+            document.getElementById('qtyInput').disabled = !isEditable;
+            document.getElementById('prodLine').disabled = !isEditable;
+            
+            // Mode buttons
+            document.getElementById('btn-fg').disabled = !isEditable;
+            document.getElementById('btn-bm').disabled = !isEditable;
+
+            // Table inputs
+            document.querySelectorAll('#tableBody input').forEach(input => {
+                input.disabled = !isEditable;
+            });
+
+            // Action Columns / Buttons
+            document.getElementById('btn-add-row').style.display = isEditable ? 'block' : 'none';
+            document.querySelectorAll('.btn-remove-row').forEach(btn => {
+                btn.style.display = isEditable ? 'inline-block' : 'none';
+            });
+        }
+
+        // --- MOCK DATABASE SEARCH ---
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim().toUpperCase();
+            const statusLabel = document.getElementById('search-status');
+            
+            if (!query) {
+                statusLabel.innerText = "Please enter an item code.";
+                statusLabel.className = "text-sm font-semibold text-red-500 pb-2";
+                return;
+            }
+
+            const data = mockRoutingDB[query];
+            
+            if (data) {
+                statusLabel.innerText = `Record found for ${query}.`;
+                statusLabel.className = "text-sm font-semibold text-green-600 pb-2";
+                
+                loadDataIntoForm(data);
+
+                if (appState === 'UPDATE') {
+                    setFormEditable(true);
+                    // Special case: Make item code readonly even in update to prevent ID changes
+                    document.getElementById('itemCode').disabled = true; 
+                } else {
+                    setFormEditable(false);
+                }
+            } else {
+                statusLabel.innerText = `No record found for ${query}.`;
+                statusLabel.className = "text-sm font-semibold text-red-500 pb-2";
+                clearForm();
+                setFormEditable(false); // Keep disabled if not found
+            }
+        }
+
+        function loadDataIntoForm(data) {
+            // Determine FG or BM from product_type string
+            const isBM = data.product_type && (data.product_type.includes("Base") || data.product_type === "BM");
+            setMode(isBM ? 'BM' : 'FG');
+
+            document.getElementById('itemCode').value = data.inventory_id || "";
+            document.getElementById('skuDesc').value = data.revision_descr || "";
+            document.getElementById('qtyInput').value = data.qty || 1;
+            document.getElementById('prodLine').value = data.production_line_code || "";
+            updateLineDescription();
+
+            // Clear existing rows
+            document.getElementById('tableBody').innerHTML = '';
+            
+            // Add rows from db mapped from new JSON structure
+            if(data.activities && data.activities.length > 0) {
+                data.activities.forEach(act => {
+                    const name = act.activities || act.name || "";
+                    const pax = act.pax || 0;
+                    const machine = act.machine || 0;
+                    const time = act.time_min || act.time || 0;
+                    addRow(name, pax, machine, time);
+                });
+            } else {
+                addRow("", "", "", ""); // empty row if no activities
+            }
+            calculateAll();
+        }
+
+        function clearForm() {
+            setMode('FG');
+            document.getElementById('itemCode').value = "";
+            document.getElementById('skuDesc').value = "";
+            document.getElementById('qtyInput').value = 1;
+            document.getElementById('prodLine').value = "";
+            document.getElementById('lineDesc').value = "";
+            document.getElementById('tableBody').innerHTML = '';
+            
+            if (appState === 'ADD') {
+                // Initialize empty rows for Add mode
+                addRow("", "", "", "");
+                addRow("", "", "", "");
+            }
+            calculateAll();
+        }
+
+        // --- TEMPLATE LOGIC ---
+        function updateLineDescription() {
+            const select = document.getElementById('prodLine');
+            const desc = document.getElementById('lineDesc');
+            desc.value = lineDescriptions[select.value] || "";
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnFg = document.getElementById('btn-fg');
+            const btnBm = document.getElementById('btn-bm');
+            const qtyLabel = document.getElementById('qtyLabel');
+
+            if (mode === 'FG') {
+                btnFg.className = "px-4 py-2 rounded-md bg-white shadow-sm font-semibold transition-all";
+                btnBm.className = "px-4 py-2 rounded-md font-semibold text-gray-500 hover:text-gray-700 transition-all";
+                qtyLabel.innerText = "FG Qty/Unit";
+            } else {
+                btnBm.className = "px-4 py-2 rounded-md bg-white shadow-sm font-semibold transition-all";
+                btnFg.className = "px-4 py-2 rounded-md font-semibold text-gray-500 hover:text-gray-700 transition-all";
+                qtyLabel.innerText = "BM Qty per BATCH (Kg)";
+            }
+            calculateAll();
+        }
+
+        function addRow(activityName = "", pax = "", machine = "", time = "") {
+            const tbody = document.getElementById('tableBody');
+            const tr = document.createElement('tr');
+            
+            const isDisabled = (appState === 'LOOKUP' || (appState === 'UPDATE' && document.getElementById('itemCode').disabled)) ? 'disabled' : '';
+            const displayBtn = isDisabled ? 'none' : 'inline-block';
+
+            tr.innerHTML = `
+                <td class="bg-excel-yellow p-0"><input type="text" class="excel-input text-left px-2 py-1 activity-input" value="${activityName}" oninput="syncActivityName(this)" ${isDisabled}></td>
+                <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 pax-input" value="${pax}" min="0" oninput="calculateAll()" ${isDisabled}></td>
+                <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 machine-input" value="${machine}" min="0" oninput="calculateAll()" ${isDisabled}></td>
+                <td class="bg-excel-yellow p-0"><input type="number" step="0.0001" class="excel-input py-1 time-input" value="${time}" min="0" oninput="calculateAll()" ${isDisabled}></td>
+                
+                <td class="bg-gray-50 text-gray-600 run-time-cell">0.00000</td>
+                <td class="bg-gray-50 text-gray-600">UNIT</td>
+                <td class="bg-gray-50 text-gray-600 labor-min-cell">0.00</td>
+                <td class="bg-gray-50 text-gray-600 mc-min-cell border-r-2 border-gray-300">0.00</td>
+                
+                <td class="bg-blue-50 text-left pl-2 text-gray-600 sync-activity-cell">${activityName}</td>
+                <td class="bg-blue-50 text-gray-600 dl-units-cell">0</td>
+                <td class="bg-blue-50 text-gray-600 dl-cell">0.00000</td>
+                <td class="bg-blue-50 text-gray-600 voh-cell">0.00000</td>
+                <td class="bg-blue-50 text-gray-600 foh-cell">0.00000</td>
+                
+                <td class="text-center action-column">
+                    <button onclick="this.closest('tr').remove(); calculateAll();" class="text-red-500 hover:text-red-700 font-bold btn-remove-row text-lg" style="display:${displayBtn}" title="Remove Row">×</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+            calculateAll();
+        }
+
+        function syncActivityName(input) {
+            const row = input.closest('tr');
+            const syncCell = row.querySelector('.sync-activity-cell');
+            syncCell.innerText = input.value;
+        }
+
+        function calculateAll() {
+            const qtyStr = document.getElementById('qtyInput').value;
+            const qty = parseFloat(qtyStr) || 0;
+            
+            let totalPax = 0, totalMachine = 0, totalTime = 0, totalRunTime = 0;
+            let totalLabor = 0, totalMc = 0;
+            let totalDL = 0, totalVOH = 0, totalFOH = 0;
+
+            const rows = document.querySelectorAll('#tableBody tr');
+            
+            rows.forEach(row => {
+                const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
+                const machine = parseFloat(row.querySelector('.machine-input').value) || 0;
+                const time = parseFloat(row.querySelector('.time-input').value) || 0;
+                
+                const runTime = qty !== 0 ? (time / qty) : 0;
+                const laborMin = pax * time;
+                const mcMin = machine * time;
+                
+                let dlUnits = 0;
+                if (time > 0) dlUnits = qty / time;
+                
+                const dl = runTime;
+                const voh = runTime;
+                const foh = runTime;
+
+                row.querySelector('.run-time-cell').innerText = runTime.toFixed(5);
+                row.querySelector('.labor-min-cell').innerText = laborMin.toFixed(5);
+                row.querySelector('.mc-min-cell').innerText = mcMin.toFixed(5);
+                row.querySelector('.dl-units-cell').innerText = dlUnits > 0 ? dlUnits.toFixed(0) : "0";
+                row.querySelector('.dl-cell').innerText = dl.toFixed(5);
+                row.querySelector('.voh-cell').innerText = voh.toFixed(5);
+                row.querySelector('.foh-cell').innerText = foh.toFixed(5);
+
+                totalPax += pax;
+                totalMachine += machine;
+                totalTime += time;
+                totalRunTime += runTime;
+                totalLabor += laborMin;
+                totalMc += mcMin;
+                totalDL += dl;
+                totalVOH += voh;
+                totalFOH += foh;
+            });
+
+            document.getElementById('sumPax').innerText = totalPax;
+            document.getElementById('sumMachine').innerText = totalMachine;
+            document.getElementById('sumTime').innerText = totalTime.toFixed(5);
+            document.getElementById('sumRunTime').innerText = totalRunTime.toFixed(5);
+            document.getElementById('sumLaborMin').innerText = totalLabor.toFixed(5);
+            document.getElementById('sumMcMin').innerText = totalMc.toFixed(5);
+            document.getElementById('sumDL').innerText = totalDL.toFixed(5);
+            document.getElementById('sumVOH').innerText = totalVOH.toFixed(5);
+            document.getElementById('sumFOH').innerText = totalFOH.toFixed(5);
+        }
+
+        // --- MANAGE LINES LOGIC ---
+        function initManageLines() {
+            const select = document.getElementById('manageLineSelect');
+            // Populate if empty
+            if(select.options.length <= 1) {
+                for (const [key, value] of Object.entries(lineDescriptions)) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.innerText = key;
+                    select.appendChild(opt);
+                }
+            }
+        }
+
+        function renderManageActivities() {
+            const selectedLine = document.getElementById('manageLineSelect').value;
+            document.getElementById('manageLineDesc').innerText = lineDescriptions[selectedLine] || "";
+            document.getElementById('activityEditorSection').classList.remove('hidden');
+            
+            const listContainer = document.getElementById('manageActivityList');
+            const emptyMsg = document.getElementById('emptyActivitiesMsg');
+            listContainer.innerHTML = '';
+            
+            const activities = lineActivitiesDB[selectedLine] || [];
+            
+            if (activities.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                activities.forEach((act, index) => {
+                    const li = document.createElement('li');
+                    li.className = "flex justify-between items-center bg-white p-2 border border-gray-200 rounded shadow-sm";
+                    li.innerHTML = `
+                        <input type="text" class="font-medium text-gray-700 bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-300 px-2 w-full mr-4 rounded" value="${act}" onchange="updateActivityName('${selectedLine}', ${index}, this.value)">
+                        <button onclick="removeActivityFromLine('${selectedLine}', ${index})" class="text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors text-sm font-semibold">Delete</button>
+                    `;
+                    listContainer.appendChild(li);
+                });
+            }
+        }
+
+        function addActivityToLine() {
+            const selectedLine = document.getElementById('manageLineSelect').value;
+            const input = document.getElementById('newActivityInput');
+            const newAct = input.value.trim().toUpperCase();
+            
+            if (!selectedLine) return;
+            if (!newAct) return;
+
+            if (!lineActivitiesDB[selectedLine]) {
+                lineActivitiesDB[selectedLine] = [];
+            }
+            
+            lineActivitiesDB[selectedLine].push(newAct);
+            input.value = '';
+            renderManageActivities();
+        }
+
+        function removeActivityFromLine(line, index) {
+            lineActivitiesDB[line].splice(index, 1);
+            renderManageActivities();
+        }
+
+        function updateActivityName(line, index, newValue) {
+            if(newValue.trim() === '') {
+                removeActivityFromLine(line, index);
+            } else {
+                lineActivitiesDB[line][index] = newValue.trim().toUpperCase();
+            }
+            renderManageActivities();
+        }
+
+        // --- ALL DATA PAGINATION LOGIC ---
+        function renderAllData() {
+            const dbArray = Object.values(mockRoutingDB);
+            const totalItems = dbArray.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+            
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            
+            const paginatedData = dbArray.slice(startIndex, endIndex);
+            const tbody = document.getElementById('allDataTableBody');
+            tbody.innerHTML = '';
+
+            if (paginatedData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500 italic">No records found in database.</td></tr>';
+            } else {
+                paginatedData.forEach(item => {
+                    const isBM = item.product_type && (item.product_type.includes("Base") || item.product_type === "BM");
+                    const typeStr = isBM ? "BM" : "FG";
+                    const itemCode = item.inventory_id || item.itemCode || 'N/A';
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-gray-100 hover:bg-blue-50 transition-colors";
+                    tr.innerHTML = `
+                        <td class="p-3 font-bold text-blue-800">${itemCode}</td>
+                        <td class="p-3 text-gray-700">${item.revision_descr || item.skuDesc || ''}</td>
+                        <td class="p-3 text-gray-600">${item.production_line_code || item.prodLine || ''}</td>
+                        <td class="p-3 text-gray-600 font-medium">
+                            <span class="px-2 py-1 rounded text-xs ${isBM ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}">${typeStr}</span>
+                        </td>
+                        <td class="p-3 text-center">
+                            <button onclick="viewFromAllData('${itemCode}')" class="text-blue-600 hover:text-blue-800 hover:underline text-sm font-bold">View Details</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('pagination-info').innerText = `Showing ${totalItems === 0 ? 0 : startIndex + 1} to ${endIndex} of ${totalItems} entries`;
+            document.getElementById('btn-prev-page').disabled = currentPage === 1;
+            document.getElementById('btn-next-page').disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            renderAllData();
+        }
+
+        function viewFromAllData(itemCode) {
+            switchTab('LOOKUP');
+            document.getElementById('searchInput').value = itemCode;
+            performSearch();
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            // Generate some extra mock data purely for testing pagination
+            for(let i=1; i<=25; i++) {
+                const code = "DUMMY-" + String(i).padStart(3, '0');
+                mockRoutingDB[code] = {
+                    inventory_id: code,
+                    revision_descr: "Dummy Product " + i,
+                    production_line_code: "L0" + ((i % 9) + 1),
+                    product_type: i % 3 === 0 ? "Base Material (BM)" : "Finished Good (FG)",
+                    activities: []
+                };
+            }
+
+            switchTab('ADD'); // Start in Add Mode
+        };
+
+    </script>
+</body>
+</html>
