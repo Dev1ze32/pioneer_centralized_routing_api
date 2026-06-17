@@ -3,8 +3,10 @@ Items resource.
 """
 
 from flask import Blueprint, jsonify, request
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
-from db import get_connection, get_dict_cursor
+from db import get_connection, release_connection
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 
@@ -31,20 +33,20 @@ def get_item(item_code):
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            """
-            SELECT inventory_id, revision_descr, revision, notes, product_type,
-                   quantity,
-                   bm_production_line, bm_production_line_code,
-                   fg_production_line, fg_production_line_code
-            FROM products
-            WHERE UPPER(inventory_id) = UPPER(%s)
-            """,
-            (item_code,),
+        result = conn.execute(
+            text(
+                """
+                SELECT inventory_id, revision_descr, revision, notes, product_type,
+                       quantity,
+                       bm_production_line, bm_production_line_code,
+                       fg_production_line, fg_production_line_code
+                FROM products
+                WHERE UPPER(inventory_id) = UPPER(:item_code)
+                """
+            ),
+            {"item_code": item_code},
         )
-        product = cur.fetchone()
+        product = result.mappings().first()
 
         if product is None:
             return (
@@ -57,24 +59,26 @@ def get_item(item_code):
                 404,
             )
 
-        cur.execute(
-            """
-            SELECT id, type, item_id, activity_name AS activities,
-                class, class_1, pax, machine, time_min
-            FROM activities
-            WHERE inventory_id = %s
-            ORDER BY sort_order
-            """,
-            (product["inventory_id"],),
+        result = conn.execute(
+            text(
+                """
+                SELECT id, type, item_id, activity_name AS activities,
+                    class, class_1, pax, machine, time_min
+                FROM activities
+                WHERE inventory_id = :inventory_id
+                ORDER BY sort_order
+                """
+            ),
+            {"inventory_id": product["inventory_id"]},
         )
-        activities = cur.fetchall()
+        activities = result.mappings().all()
 
-        result = dict(product)
-        result["activities"] = [dict(a) for a in activities]
+        item_result = dict(product)
+        item_result["activities"] = [dict(a) for a in activities]
 
-        return jsonify(result)
+        return jsonify(item_result)
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @items_bp.post("/items")
@@ -135,61 +139,75 @@ def create_item():
     if not inventory_id or not revision_descr or not product_type:
         return jsonify({"error": "inventory_id, revision_descr, and product_type are required"}), 400
 
+    # --- [C7 FIX] Validate activities before touching the DB ---
+    raw_activities = body.get("activities", [])
+    for idx, act in enumerate(raw_activities):
+        if not (act.get("activity_name") or "").strip():
+            return jsonify({
+                "error": f"Activity at index {idx} is missing a non-empty activity_name"
+            }), 400
+
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
         # Check for duplicate
-        cur.execute(
-            "SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(%s)",
-            (inventory_id,),
+        result = conn.execute(
+            text("SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(:inventory_id)"),
+            {"inventory_id": inventory_id},
         )
-        if cur.fetchone():
+        if result.mappings().first() is not None:
             return jsonify({"error": "Item code already exists", "inventory_id": inventory_id}), 409
 
-        cur.execute(
-            """
-            INSERT INTO products
-                (inventory_id, revision_descr, revision, quantity, product_type,
-                 fg_production_line, fg_production_line_code,
-                 bm_production_line, bm_production_line_code, notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (
-                inventory_id,
-                revision_descr,
-                "00",
-                body.get("quantity", 1),
-                product_type,
-                body.get("fg_production_line"),
-                body.get("fg_production_line_code"),
-                body.get("bm_production_line"),
-                body.get("bm_production_line_code"),
-                body.get("notes"),
+        conn.execute(
+            text(
+                """
+                INSERT INTO products
+                    (inventory_id, revision_descr, revision, quantity, product_type,
+                     fg_production_line, fg_production_line_code,
+                     bm_production_line, bm_production_line_code, notes)
+                VALUES (:inventory_id, :revision_descr, :revision, :quantity, :product_type,
+                        :fg_production_line, :fg_production_line_code,
+                        :bm_production_line, :bm_production_line_code, :notes)
+                """
             ),
+            {
+                "inventory_id": inventory_id,
+                "revision_descr": revision_descr,
+                "revision": "00",
+                "quantity": body.get("quantity", 1),
+                "product_type": product_type,
+                "fg_production_line": body.get("fg_production_line"),
+                "fg_production_line_code": body.get("fg_production_line_code"),
+                "bm_production_line": body.get("bm_production_line"),
+                "bm_production_line_code": body.get("bm_production_line_code"),
+                "notes": body.get("notes"),
+            },
         )
 
-        # Insert activities if provided
-        for i, act in enumerate(body.get("activities", []), start=1):
-            cur.execute(
-                """
-                INSERT INTO activities
-                    (inventory_id, type, item_id, activity_name,
-                     class, class_1, pax, machine, time_min, sort_order)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    inventory_id,
-                    act.get("type", "Labor"),
-                    act.get("item_id", act.get("activity_name", "")),
-                    act.get("activity_name", ""),
-                    act.get("class", "DL"),
-                    act.get("class_1", "DL"),
-                    act.get("pax", 0),
-                    act.get("machine", 0),
-                    act.get("time_min", 0),
-                    i,
+        # Insert activities
+        for i, act in enumerate(raw_activities, start=1):
+            activity_name = act["activity_name"].strip()
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO activities
+                        (inventory_id, type, item_id, activity_name,
+                         class, class_1, pax, machine, time_min, sort_order)
+                    VALUES (:inventory_id, :type, :item_id, :activity_name,
+                            :class, :class_1, :pax, :machine, :time_min, :sort_order)
+                    """
                 ),
+                {
+                    "inventory_id": inventory_id,
+                    "type": act.get("type", "Labor"),
+                    "item_id": act.get("item_id", activity_name),
+                    "activity_name": activity_name,
+                    "class": act.get("class", "DL"),
+                    "class_1": act.get("class_1", "DL"),
+                    "pax": act.get("pax", 0),
+                    "machine": act.get("machine", 0),
+                    "time_min": act.get("time_min", 0),
+                    "sort_order": act.get("sort_order", i),   # [H5 FIX] respect caller sort_order
+                },
             )
 
         conn.commit()
@@ -199,11 +217,16 @@ def create_item():
             "revision": "00",
         }), 201
 
+    # --- [C2 FIX] Catch IntegrityError separately for a clean 409 ---
+    except IntegrityError:
+        conn.rollback()
+        return jsonify({"error": "Item code already exists", "inventory_id": inventory_id}), 409
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
+
 
 @items_bp.get("/items")
 def search_items():
@@ -228,41 +251,44 @@ def search_items():
         description: List of matching items (summary, no activities)
     """
     q = request.args.get("q", "").strip()
-    limit = request.args.get("limit", 50, type=int)
+    # [M2 FIX] Cap limit to prevent runaway full-table scans
+    limit = min(request.args.get("limit", 50, type=int), 1000)
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
         if q:
-            cur.execute(
-                """
-                SELECT inventory_id, revision_descr, revision, product_type,
-                       quantity,
-                       bm_production_line, bm_production_line_code,
-                       fg_production_line, fg_production_line_code
-                FROM products
-                WHERE inventory_id ILIKE %s OR revision_descr ILIKE %s
-                ORDER BY inventory_id
-                LIMIT %s
-                """,
-                (f"%{q}%", f"%{q}%", limit),
+            result = conn.execute(
+                text(
+                    """
+                    SELECT inventory_id, revision_descr, revision, product_type,
+                           quantity,
+                           bm_production_line, bm_production_line_code,
+                           fg_production_line, fg_production_line_code
+                    FROM products
+                    WHERE inventory_id ILIKE :q OR revision_descr ILIKE :q
+                    ORDER BY inventory_id
+                    LIMIT :limit
+                    """
+                ),
+                {"q": f"%{q}%", "limit": limit},
             )
         else:
-            cur.execute(
-                """
-                SELECT inventory_id, revision_descr, revision, product_type,
-                       quantity,
-                       bm_production_line, bm_production_line_code,
-                       fg_production_line, fg_production_line_code
-                FROM products
-                ORDER BY inventory_id
-                LIMIT %s
-                """,
-                (limit,),
+            result = conn.execute(
+                text(
+                    """
+                    SELECT inventory_id, revision_descr, revision, product_type,
+                           quantity,
+                           bm_production_line, bm_production_line_code,
+                           fg_production_line, fg_production_line_code
+                    FROM products
+                    ORDER BY inventory_id
+                    LIMIT :limit
+                    """
+                ),
+                {"limit": limit},
             )
 
-        rows = cur.fetchall()
+        rows = result.mappings().all()
         return jsonify([dict(r) for r in rows])
     finally:
-        conn.close()
+        release_connection(conn)

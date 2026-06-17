@@ -2,10 +2,12 @@
 Production lines resource.
 """
 
-import psycopg2
+import psycopg2.errors
 from flask import Blueprint, jsonify, request
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
-from db import get_connection, get_dict_cursor
+from db import get_connection, release_connection
 
 production_lines_bp = Blueprint(
     "production_lines", __name__, url_prefix="/api"
@@ -25,25 +27,28 @@ def get_production_lines():
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            """
-            SELECT production_line_code, production_line_name
-            FROM production_lines
-            ORDER BY production_line_code
-            """
+        result = conn.execute(
+            text(
+                """
+                SELECT production_line_code, production_line_name
+                FROM production_lines
+                ORDER BY production_line_code
+                """
+            )
         )
-        lines = cur.fetchall()
+        lines = result.mappings().all()
 
-        cur.execute(
-            """
-            SELECT id, production_line_code, activity_name, sort_order
-            FROM line_activities
-            ORDER BY production_line_code, sort_order
-            """
+        # [C3 FIX] Include `id` so the frontend can delete/update individual activities
+        result = conn.execute(
+            text(
+                """
+                SELECT id, production_line_code, activity_name, sort_order
+                FROM line_activities
+                ORDER BY production_line_code, sort_order
+                """
+            )
         )
-        activities = cur.fetchall()
+        activities = result.mappings().all()
 
         line_map = {}
         for line in lines:
@@ -57,6 +62,7 @@ def get_production_lines():
         for act in activities:
             code = act["production_line_code"]
             if code in line_map:
+                # [C3 FIX] Pass `id` through to the response
                 line_map[code]["activities"].append(
                     {
                         "id": act["id"],
@@ -67,7 +73,7 @@ def get_production_lines():
 
         return jsonify(list(line_map.values()))
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @production_lines_bp.get("/production-lines/<line_code>")
@@ -92,17 +98,17 @@ def get_production_line(line_code):
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            """
-            SELECT production_line_code, production_line_name
-            FROM production_lines
-            WHERE UPPER(production_line_code) = UPPER(%s)
-            """,
-            (line_code,),
+        result = conn.execute(
+            text(
+                """
+                SELECT production_line_code, production_line_name
+                FROM production_lines
+                WHERE UPPER(production_line_code) = UPPER(:line_code)
+                """
+            ),
+            {"line_code": line_code},
         )
-        line = cur.fetchone()
+        line = result.mappings().first()
 
         if line is None:
             return (
@@ -115,23 +121,26 @@ def get_production_line(line_code):
                 404,
             )
 
-        cur.execute(
-            """
-            SELECT activity_name, sort_order
-            FROM line_activities
-            WHERE UPPER(production_line_code) = UPPER(%s)
-            ORDER BY sort_order
-            """,
-            (line_code,),
+        # [M6 FIX] Include `id` here too, consistent with the list endpoint
+        result = conn.execute(
+            text(
+                """
+                SELECT id, activity_name, sort_order
+                FROM line_activities
+                WHERE UPPER(production_line_code) = UPPER(:line_code)
+                ORDER BY sort_order
+                """
+            ),
+            {"line_code": line_code},
         )
-        activities = cur.fetchall()
+        activities = result.mappings().all()
 
-        result = dict(line)
-        result["activities"] = [dict(a) for a in activities]
+        line_result = dict(line)
+        line_result["activities"] = [dict(a) for a in activities]
 
-        return jsonify(result)
+        return jsonify(line_result)
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @production_lines_bp.put("/production-lines/<line_code>")
@@ -162,7 +171,7 @@ def update_production_line(line_code):
       404:
         description: Line not found
       400:
-        description: Invalid JSON
+        description: Invalid JSON or missing activity fields
     """
     body = request.get_json(force=True, silent=True)
     if not body:
@@ -171,15 +180,24 @@ def update_production_line(line_code):
     new_name = body.get("production_line_name")
     activities = body.get("activities", [])
 
+    # [C4 FIX] Validate all activities up-front before touching the DB
+    for idx, act in enumerate(activities):
+        if not (act.get("activity_name") or "").strip():
+            return jsonify({
+                "error": f"Activity at index {idx} is missing a non-empty activity_name"
+            }), 400
+        if not isinstance(act.get("sort_order"), int):
+            return jsonify({
+                "error": f"Activity at index {idx} must have an integer sort_order"
+            }), 400
+
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code)"),
+            {"line_code": line_code},
         )
-        if cur.fetchone() is None:
+        if result.mappings().first() is None:
             return (
                 jsonify(
                     {"error": "Production line not found", "line_code": line_code}
@@ -188,28 +206,30 @@ def update_production_line(line_code):
             )
 
         if new_name:
-            cur.execute(
-                "UPDATE production_lines SET production_line_name = %s WHERE production_line_code = %s",
-                (new_name, line_code),
+            conn.execute(
+                text("UPDATE production_lines SET production_line_name = :new_name WHERE production_line_code = :line_code"),
+                {"new_name": new_name, "line_code": line_code},
             )
 
-        cur.execute(
-            "DELETE FROM line_activities WHERE production_line_code = %s",
-            (line_code,),
+        conn.execute(
+            text("DELETE FROM line_activities WHERE production_line_code = :line_code"),
+            {"line_code": line_code},
         )
         for act in activities:
-            cur.execute(
-                """
-                INSERT INTO line_activities
-                    (production_line_code, activity_name, sort_order, stage)
-                VALUES (%s, %s, %s, %s)
-                """,
-                (
-                    line_code,
-                    act.get("activity_name"),
-                    act.get("sort_order"),
-                    act.get("stage"),
+            conn.execute(
+                text(
+                    """
+                    INSERT INTO line_activities
+                        (production_line_code, activity_name, sort_order, stage)
+                    VALUES (:line_code, :activity_name, :sort_order, :stage)
+                    """
                 ),
+                {
+                    "line_code": line_code,
+                    "activity_name": act["activity_name"].strip(),
+                    "sort_order": act["sort_order"],
+                    "stage": act.get("stage"),
+                },
             )
 
         conn.commit()
@@ -224,7 +244,7 @@ def update_production_line(line_code):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 # ── Create / rename / delete a production line ────────────────────────────────
@@ -274,21 +294,19 @@ def create_production_line():
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code)"),
+            {"line_code": line_code},
         )
-        if cur.fetchone() is not None:
+        if result.mappings().first() is not None:
             return jsonify({
                 "error": "Production line code already exists",
                 "line_code": line_code,
             }), 409
 
-        cur.execute(
-            "INSERT INTO production_lines (production_line_code, production_line_name) VALUES (%s, %s)",
-            (line_code, line_name),
+        conn.execute(
+            text("INSERT INTO production_lines (production_line_code, production_line_name) VALUES (:line_code, :line_name)"),
+            {"line_code": line_code, "line_name": line_name},
         )
 
         conn.commit()
@@ -297,11 +315,14 @@ def create_production_line():
             "production_line_code": line_code,
             "production_line_name": line_name,
         }), 201
+    except IntegrityError:
+        conn.rollback()
+        return jsonify({"error": "Production line code already exists", "line_code": line_code}), 409
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @production_lines_bp.patch("/production-lines/<line_code>")
@@ -345,21 +366,19 @@ def rename_production_line(line_code):
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code)"),
+            {"line_code": line_code},
         )
-        row = cur.fetchone()
+        row = result.mappings().first()
         if row is None:
             return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
         canonical_code = row["production_line_code"]
 
-        cur.execute(
-            "UPDATE production_lines SET production_line_name = %s WHERE production_line_code = %s",
-            (new_name, canonical_code),
+        conn.execute(
+            text("UPDATE production_lines SET production_line_name = :new_name WHERE production_line_code = :canonical_code"),
+            {"new_name": new_name, "canonical_code": canonical_code},
         )
 
         conn.commit()
@@ -372,7 +391,7 @@ def rename_production_line(line_code):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @production_lines_bp.delete("/production-lines/<line_code>")
@@ -400,38 +419,35 @@ def delete_production_line(line_code):
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code)"),
+            {"line_code": line_code},
         )
-        row = cur.fetchone()
+        row = result.mappings().first()
         if row is None:
             return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
         canonical_code = row["production_line_code"]
 
-        # products.bm/fg_production_line_code have no ON DELETE CASCADE, so
-        # check up front and give a clear error instead of a raw FK violation.
-        cur.execute(
-            """
-            SELECT inventory_id FROM products
-            WHERE bm_production_line_code = %s OR fg_production_line_code = %s
-            LIMIT 1
-            """,
-            (canonical_code, canonical_code),
+        result = conn.execute(
+            text(
+                """
+                SELECT inventory_id FROM products
+                WHERE bm_production_line_code = :canonical_code OR fg_production_line_code = :canonical_code
+                LIMIT 1
+                """
+            ),
+            {"canonical_code": canonical_code},
         )
-        if cur.fetchone() is not None:
+        if result.mappings().first() is not None:
             return jsonify({
                 "error": "Production line is still in use by one or more products and cannot be deleted",
                 "line_code": canonical_code,
             }), 409
 
-        # line_activities has ON DELETE CASCADE, so its rows are removed automatically.
-        cur.execute(
-            "DELETE FROM production_lines WHERE production_line_code = %s",
-            (canonical_code,),
+        conn.execute(
+            text("DELETE FROM production_lines WHERE production_line_code = :canonical_code"),
+            {"canonical_code": canonical_code},
         )
 
         conn.commit()
@@ -439,11 +455,20 @@ def delete_production_line(line_code):
             "message": "Production line deleted",
             "production_line_code": canonical_code,
         })
+    # [H3 FIX] Catch any FK violation from tables we didn't check manually
+    except IntegrityError as e:
+        conn.rollback()
+        if isinstance(e.orig, psycopg2.errors.ForeignKeyViolation):
+            return jsonify({
+                "error": "Production line is still referenced by another record and cannot be deleted",
+                "line_code": line_code,
+            }), 409
+        return jsonify({"error": str(e)}), 500
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 # ── Add / update / delete a single activity on a line ──────────────────────────
@@ -489,18 +514,23 @@ def add_line_activity(line_code):
         description: Internal server error
     """
     body = request.get_json(force=True, silent=True)
-    if not body or not body.get("activity_name"):
-        return jsonify({"error": "activity_name is required"}), 400
+    if not body or not (body.get("activity_name") or "").strip():
+        return jsonify({"error": "activity_name is required and must be non-empty"}), 400
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        # [H4 FIX] FOR UPDATE locks this production line's row for the rest of the
+        # transaction. If two requests race to add an activity to the same line,
+        # the second blocks here until the first commits — so it computes
+        # MAX(sort_order) against the now-updated table instead of a stale
+        # snapshot, which is what actually prevents duplicate sort_orders.
+        # A bare MAX+1 subquery inside the INSERT, on its own, is NOT atomic
+        # across concurrent transactions under READ COMMITTED.
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code) FOR UPDATE"),
+            {"line_code": line_code},
         )
-        row = cur.fetchone()
+        row = result.mappings().first()
         if row is None:
             return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
@@ -508,30 +538,53 @@ def add_line_activity(line_code):
 
         sort_order = body.get("sort_order")
         if sort_order is None:
-            cur.execute(
-                "SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM line_activities WHERE production_line_code = %s",
-                (canonical_code,),
+            result = conn.execute(
+                text(
+                    """
+                    INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
+                    VALUES (
+                        :canonical_code, :activity_name,
+                        (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM line_activities WHERE production_line_code = :canonical_code),
+                        :stage
+                    )
+                    RETURNING id, sort_order
+                    """
+                ),
+                {
+                    "canonical_code": canonical_code,
+                    "activity_name": body["activity_name"].strip(),
+                    "stage": body.get("stage"),
+                },
             )
-            sort_order = cur.fetchone()["max_order"] + 1
+        else:
+            result = conn.execute(
+                text(
+                    """
+                    INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
+                    VALUES (:canonical_code, :activity_name, :sort_order, :stage)
+                    RETURNING id, sort_order
+                    """
+                ),
+                {
+                    "canonical_code": canonical_code,
+                    "activity_name": body["activity_name"].strip(),
+                    "sort_order": sort_order,
+                    "stage": body.get("stage"),
+                },
+            )
 
-        cur.execute(
-            """
-            INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
-            VALUES (%s, %s, %s, %s)
-            RETURNING id
-            """,
-            (canonical_code, body["activity_name"], sort_order, body.get("stage")),
-        )
-        new_id = cur.fetchone()["id"]
+        result_row = result.mappings().first()
+        new_id = result_row["id"]
+        final_sort_order = result_row["sort_order"]
 
         conn.commit()
         return jsonify({
             "message": "Activity added",
             "production_line_code": canonical_code,
             "activity_id": new_id,
-            "sort_order": sort_order,
+            "sort_order": final_sort_order,
         }), 201
-    except psycopg2.IntegrityError:
+    except IntegrityError:
         conn.rollback()
         return jsonify({
             "error": "This activity already exists on this production line",
@@ -541,7 +594,7 @@ def add_line_activity(line_code):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @production_lines_bp.patch("/production-lines/<line_code>/activities/<int:activity_id>")
@@ -585,6 +638,7 @@ def update_line_activity(line_code, activity_id):
       500:
         description: Internal server error
     """
+    # SECURITY: Only hardcoded field names reach set_clause — never add user-supplied keys here.
     UPDATABLE_LINE_ACTIVITY_FIELDS = {"activity_name", "sort_order", "stage"}
 
     body = request.get_json(force=True, silent=True)
@@ -600,33 +654,32 @@ def update_line_activity(line_code, activity_id):
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code)"),
+            {"line_code": line_code},
         )
-        row = cur.fetchone()
+        row = result.mappings().first()
         if row is None:
             return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
         canonical_code = row["production_line_code"]
 
-        cur.execute(
-            "SELECT id FROM line_activities WHERE id = %s AND production_line_code = %s",
-            (activity_id, canonical_code),
+        result = conn.execute(
+            text("SELECT id FROM line_activities WHERE id = :activity_id AND production_line_code = :canonical_code"),
+            {"activity_id": activity_id, "canonical_code": canonical_code},
         )
-        if cur.fetchone() is None:
+        if result.mappings().first() is None:
             return jsonify({
                 "error": "Activity not found for this production line",
                 "activity_id": activity_id,
                 "line_code": canonical_code,
             }), 404
 
-        set_clause = ", ".join(f"{col} = %s" for col in updates)
-        cur.execute(
-            f"UPDATE line_activities SET {set_clause} WHERE id = %s AND production_line_code = %s",
-            (*updates.values(), activity_id, canonical_code),
+        set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+        params = {**updates, "activity_id": activity_id, "canonical_code": canonical_code}
+        conn.execute(
+            text(f"UPDATE line_activities SET {set_clause} WHERE id = :activity_id AND production_line_code = :canonical_code"),
+            params,
         )
 
         conn.commit()
@@ -636,7 +689,7 @@ def update_line_activity(line_code, activity_id):
             "activity_id": activity_id,
             "fields_updated": list(updates.keys()),
         })
-    except psycopg2.IntegrityError:
+    except IntegrityError:
         conn.rollback()
         return jsonify({
             "error": "This activity name already exists on this production line",
@@ -646,7 +699,7 @@ def update_line_activity(line_code, activity_id):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 @production_lines_bp.delete("/production-lines/<line_code>/activities/<int:activity_id>")
@@ -676,32 +729,30 @@ def delete_line_activity(line_code, activity_id):
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        cur.execute(
-            "SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(%s)",
-            (line_code,),
+        result = conn.execute(
+            text("SELECT production_line_code FROM production_lines WHERE UPPER(production_line_code) = UPPER(:line_code)"),
+            {"line_code": line_code},
         )
-        row = cur.fetchone()
+        row = result.mappings().first()
         if row is None:
             return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
         canonical_code = row["production_line_code"]
 
-        cur.execute(
-            "SELECT id FROM line_activities WHERE id = %s AND production_line_code = %s",
-            (activity_id, canonical_code),
+        result = conn.execute(
+            text("SELECT id FROM line_activities WHERE id = :activity_id AND production_line_code = :canonical_code"),
+            {"activity_id": activity_id, "canonical_code": canonical_code},
         )
-        if cur.fetchone() is None:
+        if result.mappings().first() is None:
             return jsonify({
                 "error": "Activity not found for this production line",
                 "activity_id": activity_id,
                 "line_code": canonical_code,
             }), 404
 
-        cur.execute(
-            "DELETE FROM line_activities WHERE id = %s AND production_line_code = %s",
-            (activity_id, canonical_code),
+        conn.execute(
+            text("DELETE FROM line_activities WHERE id = :activity_id AND production_line_code = :canonical_code"),
+            {"activity_id": activity_id, "canonical_code": canonical_code},
         )
 
         conn.commit()
@@ -714,4 +765,4 @@ def delete_line_activity(line_code, activity_id):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)

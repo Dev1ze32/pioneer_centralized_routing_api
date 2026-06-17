@@ -24,14 +24,17 @@ DELETE /api/items/<item_code>
     activities (cascades at the DB level).
 """
 
-from flask import Blueprint, jsonify, request
-
-from db import get_connection, get_dict_cursor
 from typing import Optional
+
+from flask import Blueprint, jsonify, request
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
+
+from db import get_connection, release_connection
 
 update_bp = Blueprint("update", __name__, url_prefix="/api")
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# ── Constants ─────────────────────────────────────────────────────────────────
 
 UPDATABLE_PRODUCT_FIELDS = {
     "revision_descr",
@@ -42,9 +45,22 @@ UPDATABLE_PRODUCT_FIELDS = {
     "fg_production_line",
     "fg_production_line_code",
     "product_type",
+    # SECURITY: 'revision' must NEVER be added here — it is managed exclusively
+    # by _bump_revision() and is injected separately into the SET clause.
+    # Adding it here would allow callers to overwrite the auto-increment value.
 }
 
 REQUIRED_ACTIVITY_FIELDS = ("activity_name", "pax", "machine", "time_min")
+
+# [H7 FIX] Moved to module level — was re-created on every request inside update_activity()
+# SECURITY: Only hardcoded field names reach the f-string SET clause.
+# Never add user-supplied keys to this set.
+UPDATABLE_ACTIVITY_FIELDS = {
+    "activity_name", "type", "item_id",
+    "class", "class_1", "pax", "machine", "time_min", "sort_order",
+}
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
 
 
 def _increment_revision(current: Optional[str]) -> str:
@@ -60,28 +76,43 @@ def _increment_revision(current: Optional[str]) -> str:
     return f"0{num}" if num < 10 else str(num)
 
 
-def _fetch_product(cur, item_code: str):
-    """Return the product row or None. Uses the canonical (exact) ID."""
-    cur.execute(
-        """
-        SELECT inventory_id, revision, revision_descr, notes, product_type,
-               quantity,
-               bm_production_line, bm_production_line_code,
-               fg_production_line, fg_production_line_code
-        FROM   products
-        WHERE  UPPER(inventory_id) = UPPER(%s)
-        """,
-        (item_code,),
+def _fetch_product(conn: Connection, item_code: str, for_update: bool = False):
+    """Return the product row (RowMapping) or None. Uses the canonical (exact) ID.
+
+    for_update=True takes a row lock (SELECT ... FOR UPDATE) so that a concurrent
+    request touching the same product serializes behind this one instead of
+    racing on a value computed from the row (e.g. the next activity sort_order).
+    Only pass for_update=True where that's actually needed — it holds a lock
+    for the rest of the transaction.
+    """
+    lock_clause = "FOR UPDATE" if for_update else ""
+    result = conn.execute(
+        text(
+            f"""
+            SELECT inventory_id, revision, revision_descr, notes, product_type,
+                   quantity,
+                   bm_production_line, bm_production_line_code,
+                   fg_production_line, fg_production_line_code
+            FROM   products
+            WHERE  UPPER(inventory_id) = UPPER(:item_code)
+            {lock_clause}
+            """
+        ),
+        {"item_code": item_code},
     )
-    return cur.fetchone()
+    return result.mappings().first()
 
 
-def _bump_revision(cur, canonical_id: str, old_revision: str) -> str:
-    """Write the incremented revision to the DB and return the new value."""
+def _bump_revision(conn: Connection, canonical_id: str, old_revision: str) -> str:
+    """Write the incremented revision to the DB and return the new value.
+
+    NOTE: Always call this AFTER all validation is complete so that a failed
+    operation never silently advances the revision counter.
+    """
     new_revision = _increment_revision(old_revision)
-    cur.execute(
-        "UPDATE products SET revision = %s WHERE inventory_id = %s",
-        (new_revision, canonical_id),
+    conn.execute(
+        text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
+        {"new_revision": new_revision, "canonical_id": canonical_id},
     )
     return new_revision
 
@@ -138,7 +169,9 @@ def update_product_metadata(item_code):
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    # Only keep fields that are actually allowed to be updated
+    # Only keep fields that are actually allowed to be updated.
+    # 'revision' is intentionally excluded from UPDATABLE_PRODUCT_FIELDS so
+    # callers cannot overwrite the auto-incremented value.
     updates = {k: v for k, v in body.items() if k in UPDATABLE_PRODUCT_FIELDS}
     if not updates:
         return jsonify({
@@ -148,30 +181,34 @@ def update_product_metadata(item_code):
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        product = _fetch_product(cur, item_code)
+        product = _fetch_product(conn, item_code)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id  = product["inventory_id"]
-        old_revision  = product["revision"]
-        new_revision  = _increment_revision(old_revision)
+        canonical_id = product["inventory_id"]
+        old_revision = product["revision"]
+        new_revision = _increment_revision(old_revision)
 
-        # Include the revision bump together with the metadata update
-        updates["revision"] = new_revision
-        set_clause = ", ".join(f"{col} = %s" for col in updates)
-        cur.execute(
-            f"UPDATE products SET {set_clause} WHERE inventory_id = %s",
-            (*updates.values(), canonical_id),
+        # [C6 FIX] Revision is set in its OWN explicit UPDATE, completely separate
+        # from the user-field SET clause, so there is no risk of it being shadowed
+        # or duplicated if UPDATABLE_PRODUCT_FIELDS is ever changed carelessly.
+        set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+        params = {**updates, "canonical_id": canonical_id}
+        conn.execute(
+            text(f"UPDATE products SET {set_clause} WHERE inventory_id = :canonical_id"),
+            params,
+        )
+        conn.execute(
+            text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
+            {"new_revision": new_revision, "canonical_id": canonical_id},
         )
 
         conn.commit()
         return jsonify({
-            "message":       "Product metadata updated",
-            "inventory_id":  canonical_id,
-            "old_revision":  old_revision,
-            "new_revision":  new_revision,
+            "message":        "Product metadata updated",
+            "inventory_id":   canonical_id,
+            "old_revision":   old_revision,
+            "new_revision":   new_revision,
             "fields_updated": list(updates.keys()),
         })
 
@@ -179,7 +216,7 @@ def update_product_metadata(item_code):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 # ── 2. Add a single activity ──────────────────────────────────────────────────
@@ -245,68 +282,74 @@ def add_activity(item_code):
     if missing:
         return jsonify({"error": f"Missing required fields: {missing}"}), 400
 
+    # [H6 FIX] Validate that activity_name is actually non-empty, not just present
+    activity_name = (body.get("activity_name") or "").strip()
+    if not activity_name:
+        return jsonify({"error": "activity_name cannot be empty"}), 400
+
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        product = _fetch_product(cur, item_code)
+        # [H4 FIX] for_update=True locks this product's row so a concurrent
+        # add_activity call on the same product blocks until this one commits,
+        # rather than both racing to compute the same MAX(sort_order) + 1.
+        product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
         canonical_id = product["inventory_id"]
 
-        # Place the new activity after all existing ones
-        cur.execute(
-            "SELECT COALESCE(MAX(sort_order), 0) AS max_order FROM activities WHERE inventory_id = %s",
-            (canonical_id,),
-        )
-        next_order = cur.fetchone()["max_order"] + 1
-
-        cur.execute(
-            """
-            INSERT INTO activities
-                (inventory_id, type, item_id,
-                 activity_name, class, class_1, pax, machine, time_min, sort_order)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-            """,
-            (
-                canonical_id,
-                body.get("type", "Labor"),
-                body.get("item_id", body["activity_name"]),
-                body["activity_name"],
-                body.get("class", "DL"),
-                body.get("class_1", "DL"),
-                body["pax"],
-                body["machine"],
-                body["time_min"],
-                next_order,
+        # Place the new activity after all existing ones (the row lock above is
+        # what actually makes this race-free — see _fetch_product docstring)
+        result = conn.execute(
+            text(
+                """
+                INSERT INTO activities
+                    (inventory_id, type, item_id,
+                     activity_name, class, class_1, pax, machine, time_min, sort_order)
+                VALUES (:inventory_id, :type, :item_id, :activity_name, :class, :class_1,
+                        :pax, :machine, :time_min,
+                        (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM activities WHERE inventory_id = :inventory_id))
+                RETURNING id, sort_order
+                """
             ),
+            {
+                "inventory_id": canonical_id,
+                "type": body.get("type", "Labor"),
+                "item_id": body.get("item_id", activity_name),   # [H6 FIX] uses validated non-empty name
+                "activity_name": activity_name,
+                "class": body.get("class", "DL"),
+                "class_1": body.get("class_1", "DL"),
+                "pax": body["pax"],
+                "machine": body["machine"],
+                "time_min": body["time_min"],
+            },
         )
-        new_id = cur.fetchone()["id"]
+        result_row = result.mappings().first()
+        new_id = result_row["id"]
+        next_order = result_row["sort_order"]
 
         old_revision = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
-            new_revision = _bump_revision(cur, canonical_id, old_revision)
+            new_revision = _bump_revision(conn, canonical_id, old_revision)
         else:
             new_revision = old_revision
 
         conn.commit()
         return jsonify({
-            "message":       "Activity added",
-            "inventory_id":  canonical_id,
-            "activity_id":   new_id,
-            "sort_order":    next_order,
-            "old_revision":  old_revision,
-            "new_revision":  new_revision,
+            "message":      "Activity added",
+            "inventory_id": canonical_id,
+            "activity_id":  new_id,
+            "sort_order":   next_order,
+            "old_revision": old_revision,
+            "new_revision": new_revision,
         }), 201
 
     except Exception as e:
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 # ── 3. Update a single activity ───────────────────────────────────────────────
@@ -364,11 +407,6 @@ def update_activity(item_code, activity_id):
       500:
         description: Internal server error
     """
-    UPDATABLE_ACTIVITY_FIELDS = {
-        "activity_name", "type", "item_id",
-        "class", "class_1", "pax", "machine", "time_min", "sort_order",
-    }
-
     body = request.get_json(force=True, silent=True)
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
@@ -382,36 +420,34 @@ def update_activity(item_code, activity_id):
 
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        product = _fetch_product(cur, item_code)
+        product = _fetch_product(conn, item_code)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
         canonical_id = product["inventory_id"]
 
-        # Confirm the activity belongs to this product
-        cur.execute(
-            "SELECT id FROM activities WHERE id = %s AND inventory_id = %s",
-            (activity_id, canonical_id),
+        result = conn.execute(
+            text("SELECT id FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            {"activity_id": activity_id, "canonical_id": canonical_id},
         )
-        if cur.fetchone() is None:
+        if result.mappings().first() is None:
             return jsonify({
                 "error":       "Activity not found for this product",
                 "activity_id": activity_id,
                 "item_code":   canonical_id,
             }), 404
 
-        set_clause = ", ".join(f"{col} = %s" for col in updates)
-        cur.execute(
-            f"UPDATE activities SET {set_clause} WHERE id = %s AND inventory_id = %s",
-            (*updates.values(), activity_id, canonical_id),
+        set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+        params = {**updates, "activity_id": activity_id, "canonical_id": canonical_id}
+        conn.execute(
+            text(f"UPDATE activities SET {set_clause} WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            params,
         )
 
         old_revision = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
-            new_revision = _bump_revision(cur, canonical_id, old_revision)
+            new_revision = _bump_revision(conn, canonical_id, old_revision)
         else:
             new_revision = old_revision
 
@@ -429,7 +465,7 @@ def update_activity(item_code, activity_id):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 # ── 4. Delete a single activity ───────────────────────────────────────────────
@@ -462,34 +498,32 @@ def delete_activity(item_code, activity_id):
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        product = _fetch_product(cur, item_code)
+        product = _fetch_product(conn, item_code)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
         canonical_id = product["inventory_id"]
 
-        cur.execute(
-            "SELECT id FROM activities WHERE id = %s AND inventory_id = %s",
-            (activity_id, canonical_id),
+        result = conn.execute(
+            text("SELECT id FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            {"activity_id": activity_id, "canonical_id": canonical_id},
         )
-        if cur.fetchone() is None:
+        if result.mappings().first() is None:
             return jsonify({
                 "error":       "Activity not found for this product",
                 "activity_id": activity_id,
                 "item_code":   canonical_id,
             }), 404
 
-        cur.execute(
-            "DELETE FROM activities WHERE id = %s AND inventory_id = %s",
-            (activity_id, canonical_id),
+        conn.execute(
+            text("DELETE FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            {"activity_id": activity_id, "canonical_id": canonical_id},
         )
 
         old_revision = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
-            new_revision = _bump_revision(cur, canonical_id, old_revision)
+            new_revision = _bump_revision(conn, canonical_id, old_revision)
         else:
             new_revision = old_revision
 
@@ -506,7 +540,7 @@ def delete_activity(item_code, activity_id):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
 
 
 # ── 5. Delete an entire product ───────────────────────────────────────────────
@@ -535,19 +569,15 @@ def delete_product(item_code):
     """
     conn = get_connection()
     try:
-        cur = get_dict_cursor(conn)
-
-        product = _fetch_product(cur, item_code)
+        product = _fetch_product(conn, item_code)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
         canonical_id = product["inventory_id"]
 
-        # activities.inventory_id has ON DELETE CASCADE, so deleting the
-        # product row removes its activities automatically.
-        cur.execute(
-            "DELETE FROM products WHERE inventory_id = %s",
-            (canonical_id,),
+        conn.execute(
+            text("DELETE FROM products WHERE inventory_id = :canonical_id"),
+            {"canonical_id": canonical_id},
         )
 
         conn.commit()
@@ -560,4 +590,4 @@ def delete_product(item_code):
         conn.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        conn.close()
+        release_connection(conn)
