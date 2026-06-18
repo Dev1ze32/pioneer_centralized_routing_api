@@ -57,6 +57,44 @@
             color: #1f2937;
             border-bottom: 2px solid #d1d5db;
         }
+        .time-input-cell { position: relative; cursor: pointer; }
+        .time-input-cell input { cursor: pointer; }
+        .time-input-cell .fx-indicator {
+            position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+            font-size: 9px; color: #9ca3af; font-style: italic; pointer-events: none;
+            font-family: Georgia, serif; line-height: 1;
+        }
+        .time-input-cell:hover .fx-indicator { color: #2563eb; }
+        .modal-backdrop { backdrop-filter: blur(3px); }
+
+        /* Time cell formula indicator */
+        .time-input-cell {
+            position: relative;
+            cursor: pointer;
+        }
+        .time-input-cell input {
+            cursor: pointer;
+        }
+        .time-input-cell .fx-indicator {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 9px;
+            color: #9ca3af;
+            font-style: italic;
+            pointer-events: none;
+            font-family: Georgia, serif;
+            line-height: 1;
+        }
+        .time-input-cell:hover .fx-indicator {
+            color: #2563eb;
+        }
+        
+        /* Modal backdrop blur */
+        .modal-backdrop {
+            backdrop-filter: blur(3px);
+        }
     </style>
 </head>
 <body class="bg-gray-100 p-6 font-sans text-sm text-gray-800">
@@ -105,6 +143,7 @@
                     <ul class="list-disc pl-5 text-blue-900 space-y-0.5 text-xs">
                         <li><span class="font-bold bg-yellow-200 px-1">YELLOW CELLS ONLY</span> - Fill in cells highlighted in YELLOW.</li>
                         <li><strong>DROPDOWN FIRST:</strong> Select the Production Line first.</li>
+                        <li><strong>TIME FORMULA:</strong> Click any Time (min) cell to enter a formula (e.g., <code>=8/60</code>).</li>
                     </ul>
                 </div>
 
@@ -296,6 +335,74 @@
 
     </div>
 
+    <!-- ============================================== -->
+    <!-- FORMULA INPUT MODAL                            -->
+    <!-- ============================================== -->
+    
+    <div id="formulaModal" class="fixed inset-0 bg-black bg-opacity-40 modal-backdrop hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-[440px] max-w-full mx-4 border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span class="text-blue-600 text-xl">ƒ</span> Time Formula
+                </h3>
+                <button onclick="closeFormulaModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            
+            <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                Enter a formula like <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-pink-600">=8/60</code> or <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-pink-600">=8/60+3/60</code>. 
+                Supported operators: <code class="bg-gray-100 px-1 rounded text-xs font-mono">+</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">-</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">*</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">/</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">()</code>
+            </p>
+            
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Formula</label>
+                <div class="flex items-center border-2 border-gray-200 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all bg-gray-50">
+                    <span class="pl-3 text-gray-400 font-bold text-lg select-none">=</span>
+                    <input type="text" id="formulaInput" class="w-full px-2 py-2.5 outline-none bg-transparent font-mono text-gray-800 text-base" placeholder="8/60 or 8/60+3/60" oninput="previewFormula()" autocomplete="off">
+                </div>
+            </div>
+            
+            <div class="mb-5 bg-blue-50 border border-blue-100 rounded-lg p-3 flex justify-between items-center">
+                <span class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Computed Result</span>
+                <span id="formulaResult" class="text-xl font-bold text-blue-800 font-mono">0.00000</span>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button onclick="closeFormulaModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors">Cancel</button>
+                <button onclick="applyFormula()" class="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm">Apply to Cell</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="formulaModal" class="fixed inset-0 bg-black bg-opacity-40 modal-backdrop hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-[440px] max-w-full mx-4 border border-gray-200">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span class="text-blue-600 text-xl">ƒ</span> Time Formula
+                </h3>
+                <button onclick="closeFormulaModal()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                Enter a formula like <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-pink-600">=8/60</code> or <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono text-pink-600">=8/60+3/60</code>. 
+                Supported: <code class="bg-gray-100 px-1 rounded text-xs font-mono">+</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">-</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">*</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">/</code> <code class="bg-gray-100 px-1 rounded text-xs font-mono">()</code>
+            </p>
+            <div class="mb-3">
+                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Formula</label>
+                <div class="flex items-center border-2 border-gray-200 rounded-lg focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all bg-gray-50">
+                    <span class="pl-3 text-gray-400 font-bold text-lg select-none">=</span>
+                    <input type="text" id="formulaInput" class="w-full px-2 py-2.5 outline-none bg-transparent font-mono text-gray-800 text-base" placeholder="8/60 or 8/60+3/60" oninput="previewFormula()" autocomplete="off">
+                </div>
+            </div>
+            <div class="mb-5 bg-blue-50 border border-blue-100 rounded-lg p-3 flex justify-between items-center">
+                <span class="text-xs text-blue-600 font-semibold uppercase tracking-wide">Computed Result</span>
+                <span id="formulaResult" class="text-xl font-bold text-blue-800 font-mono">0.00000</span>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeFormulaModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors">Cancel</button>
+                <button onclick="applyFormula()" class="px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm">Apply to Cell</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================
         // API CONFIG
@@ -309,6 +416,11 @@
         // ============================================================
         // STARTUP — load production lines from API
         // ============================================================
+        function roundExcel(num, decimals) {
+            if (isNaN(num) || !isFinite(num)) return 0;
+            const factor = Math.pow(10, decimals);
+            return Math.round((num + Number.EPSILON) * factor) / factor;
+        }
         async function loadProductionLines() {
             try {
                 const res = await fetch(`${API_BASE}/production-lines`);
@@ -619,7 +731,10 @@
                 <td class="bg-excel-yellow p-0">${buildActivityDropdown(activityName, isDisabled)}</td>
                 <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 pax-input" value="${pax}" min="0" oninput="calculateAll()" ${disabledAttr}></td>
                 <td class="bg-excel-yellow p-0"><input type="number" class="excel-input py-1 machine-input" value="${machine}" min="0" oninput="calculateAll()" ${disabledAttr}></td>
-                <td class="bg-excel-yellow p-0"><input type="number" step="0.0001" class="excel-input py-1 time-input" value="${time}" min="0" oninput="calculateAll()" ${disabledAttr}></td>
+                <td class="bg-excel-yellow p-0 time-input-cell" onclick="if(!this.querySelector('input').disabled) openFormulaModal(this.querySelector('input'))">
+                    <input type="text" class="excel-input py-1 time-input pr-5" value="${time !== '' ? roundExcel(parseFloat(time), 3).toFixed(3) : ''}" data-value="${time}" readonly ${disabledAttr}>
+                    <span class="fx-indicator">ƒ</span>
+                </td>
 
                 <td class="bg-gray-50 text-gray-600 run-time-cell">0.00000</td>
                 <td class="bg-gray-50 text-gray-600">UNIT</td>
@@ -661,6 +776,9 @@
             calculateAll();
         }
 
+        // ============================================================
+        // EXCEL-STYLE ROUNDING & FORMULA CHAIN
+        // ============================================================
         function calculateAll() {
             const qtyStr = document.getElementById('qtyInput').value;
             const qty = parseFloat(qtyStr) || 0;
@@ -674,27 +792,40 @@
             rows.forEach(row => {
                 const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
                 const machine = parseFloat(row.querySelector('.machine-input').value) || 0;
-                const time = parseFloat(row.querySelector('.time-input').value) || 0;
                 
-                const runTime = qty !== 0 ? (time / qty) : 0;
+                // Read raw time value from data-value (full precision) or fall back to value
+                const timeInput = row.querySelector('.time-input');
+                const time = parseFloat(timeInput.getAttribute('data-value') || timeInput.value) || 0;
+                
+                // Excel formula chain:
+                // Run Time = ROUND(Time / Qty, 5)
+                const runTime = qty !== 0 ? roundExcel(time / qty, 5) : 0;
+                
+                // Total Labor = Pax * Time (no rounding, full precision like Excel)
                 const laborMin = pax * time;
+                
+                // Total MC = Machine * Time (no rounding)
                 const mcMin = machine * time;
                 
+                // DL Units = ROUND(Qty / Time, 0) — Excel rounds to integer
                 let dlUnits = 0;
-                if (time > 0) dlUnits = qty / time;
+                if (time > 0) dlUnits = roundExcel(qty / time, 0);
                 
+                // DL, VOH, FOH reference the rounded Run Time cell (formula chain)
                 const dl = runTime;
                 const voh = runTime;
                 const foh = runTime;
 
+                // Update display — use toFixed to match Excel's column formatting
                 row.querySelector('.run-time-cell').innerText = runTime.toFixed(5);
-                row.querySelector('.labor-min-cell').innerText = laborMin.toFixed(5);
-                row.querySelector('.mc-min-cell').innerText = mcMin.toFixed(5);
-                row.querySelector('.dl-units-cell').innerText = dlUnits > 0 ? dlUnits.toFixed(0) : "0";
+                row.querySelector('.labor-min-cell').innerText = laborMin.toFixed(2);   // Excel shows 2 dec
+                row.querySelector('.mc-min-cell').innerText = mcMin.toFixed(2);       // Excel shows 2 dec
+                row.querySelector('.dl-units-cell').innerText = dlUnits.toFixed(0);   // Integer
                 row.querySelector('.dl-cell').innerText = dl.toFixed(5);
                 row.querySelector('.voh-cell').innerText = voh.toFixed(5);
                 row.querySelector('.foh-cell').innerText = foh.toFixed(5);
 
+                // Accumulate totals — sum the rounded cell values (matches Excel SUM)
                 totalPax += pax;
                 totalMachine += machine;
                 totalTime += time;
@@ -706,16 +837,255 @@
                 totalFOH += foh;
             });
 
+            // Update totals — format to match Excel display
             document.getElementById('sumPax').innerText = totalPax;
             document.getElementById('sumMachine').innerText = totalMachine;
-            document.getElementById('sumTime').innerText = totalTime.toFixed(5);
+            document.getElementById('sumTime').innerText = roundExcel(totalTime, 3).toFixed(3);  // Match time display
             document.getElementById('sumRunTime').innerText = totalRunTime.toFixed(5);
-            document.getElementById('sumLaborMin').innerText = totalLabor.toFixed(5);
-            document.getElementById('sumMcMin').innerText = totalMc.toFixed(5);
+            document.getElementById('sumLaborMin').innerText = totalLabor.toFixed(2);
+            document.getElementById('sumMcMin').innerText = totalMc.toFixed(2);
             document.getElementById('sumDL').innerText = totalDL.toFixed(5);
             document.getElementById('sumVOH').innerText = totalVOH.toFixed(5);
             document.getElementById('sumFOH').innerText = totalFOH.toFixed(5);
         }
+
+        // ============================================================
+        // FORMULA MODAL LOGIC
+        // ===========================================================
+
+        function openFormulaModal(inputEl) {
+            activeTimeInput = inputEl;
+            const modal = document.getElementById('formulaModal');
+            const formulaInput = document.getElementById('formulaInput');
+            const resultDisplay = document.getElementById('formulaResult');
+            
+            // Check if there's a stored formula
+            const storedFormula = inputEl.getAttribute('data-formula') || '';
+            const currentValue = inputEl.value;
+            
+            if (storedFormula) {
+                formulaInput.value = storedFormula.replace(/^=/, '');
+            } else if (currentValue && !isNaN(parseFloat(currentValue))) {
+                // Pre-fill with current value for easy editing
+                formulaInput.value = currentValue;
+            } else {
+                formulaInput.value = '';
+            }
+            
+            resultDisplay.innerText = currentValue ? parseFloat(currentValue).toFixed(5) : '0.00000';
+            resultDisplay.className = 'text-xl font-bold text-blue-800 font-mono';
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            formulaInput.focus();
+            formulaInput.select();
+        }
+
+        function closeFormulaModal() {
+            const modal = document.getElementById('formulaModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            activeTimeInput = null;
+        }
+
+        function previewFormula() {
+            const raw = document.getElementById('formulaInput').value;
+            const resultDisplay = document.getElementById('formulaResult');
+            
+            if (!raw.trim()) {
+                resultDisplay.innerText = '0.00000';
+                resultDisplay.className = 'text-xl font-bold text-blue-800 font-mono';
+                return;
+            }
+            
+            try {
+                const result = evaluateFormula(raw);
+                if (isNaN(result) || !isFinite(result)) {
+                    resultDisplay.innerText = 'Error';
+                    resultDisplay.className = 'text-xl font-bold text-red-600 font-mono';
+                } else {
+                    resultDisplay.innerText = result.toFixed(5);
+                    resultDisplay.className = 'text-xl font-bold text-blue-800 font-mono';
+                }
+            } catch (e) {
+                resultDisplay.innerText = 'Invalid';
+                resultDisplay.className = 'text-xl font-bold text-red-600 font-mono';
+            }
+        }
+
+        function evaluateFormula(expr) {
+            expr = expr.trim();
+            // Remove leading = if present
+            if (expr.startsWith('=')) expr = expr.slice(1).trim();
+            
+            // If it's just a plain number, return it directly
+            if (/^\d+(\.\d+)?$/.test(expr)) {
+                return parseFloat(expr);
+            }
+            
+            // Security: only allow safe math characters
+            if (!/^[0-9\s\.\+\-\*/\(\)]+$/.test(expr)) {
+                throw new Error("Invalid characters in formula");
+            }
+            
+            // Prevent empty expressions
+            if (!expr) throw new Error("Empty formula");
+            
+            try {
+                // Use Function constructor for safe evaluation (no access to outer scope)
+                return new Function('return (' + expr + ')')();
+            } catch (e) {
+                throw new Error("Invalid formula syntax");
+            }
+        }
+
+        function applyFormula() {
+            if (!activeTimeInput) return;
+            
+            const raw = document.getElementById('formulaInput').value.trim();
+            
+            if (!raw) {
+                activeTimeInput.value = '';
+                activeTimeInput.removeAttribute('data-formula');
+                closeFormulaModal();
+                calculateAll();
+                return;
+            }
+            
+            try {
+                const result = evaluateFormula(raw);
+                if (isNaN(result) || !isFinite(result)) {
+                    alert("Formula results in an invalid number.");
+                    return;
+                }
+                
+                // Store formula and computed value
+                activeTimeInput.value = result;
+                activeTimeInput.setAttribute('data-formula', '=' + raw.replace(/^=/, ''));
+                closeFormulaModal();
+                calculateAll();
+            } catch (e) {
+                alert("Invalid formula: " + e.message);
+            }
+        }
+
+        // Modal event listeners
+        document.getElementById('formulaModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFormulaModal();
+        });
+        
+        document.getElementById('formulaInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFormula();
+            }
+            if (e.key === 'Escape') {
+                closeFormulaModal();
+            }
+        });
+
+                // ============================================================
+        // FORMULA MODAL LOGIC
+        // ============================================================
+        let activeTimeInput = null;
+
+        function openFormulaModal(inputEl) {
+            activeTimeInput = inputEl;
+            const modal = document.getElementById('formulaModal');
+            const formulaInput = document.getElementById('formulaInput');
+            const resultDisplay = document.getElementById('formulaResult');
+            const storedFormula = inputEl.getAttribute('data-formula') || '';
+            const currentValue = inputEl.dataset.value || inputEl.value;
+            
+            if (storedFormula) {
+                formulaInput.value = storedFormula.replace(/^=/, '');
+            } else if (currentValue && !isNaN(parseFloat(currentValue))) {
+                formulaInput.value = currentValue;
+            } else {
+                formulaInput.value = '';
+            }
+            
+            resultDisplay.innerText = currentValue ? parseFloat(currentValue).toFixed(5) : '0.00000';
+            resultDisplay.className = 'text-xl font-bold text-blue-800 font-mono';
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            formulaInput.focus();
+            formulaInput.select();
+        }
+
+        function closeFormulaModal() {
+            const modal = document.getElementById('formulaModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            activeTimeInput = null;
+        }
+
+        function previewFormula() {
+            const raw = document.getElementById('formulaInput').value;
+            const resultDisplay = document.getElementById('formulaResult');
+            if (!raw.trim()) {
+                resultDisplay.innerText = '0.00000';
+                resultDisplay.className = 'text-xl font-bold text-blue-800 font-mono';
+                return;
+            }
+            try {
+                const result = evaluateFormula(raw);
+                if (isNaN(result) || !isFinite(result)) {
+                    resultDisplay.innerText = 'Error';
+                    resultDisplay.className = 'text-xl font-bold text-red-600 font-mono';
+                } else {
+                    resultDisplay.innerText = result.toFixed(5);
+                    resultDisplay.className = 'text-xl font-bold text-blue-800 font-mono';
+                }
+            } catch (e) {
+                resultDisplay.innerText = 'Invalid';
+                resultDisplay.className = 'text-xl font-bold text-red-600 font-mono';
+            }
+        }
+
+        function evaluateFormula(expr) {
+            expr = expr.trim();
+            if (expr.startsWith('=')) expr = expr.slice(1).trim();
+            if (/^\d+(\.\d+)?$/.test(expr)) return parseFloat(expr);
+            if (!/^[0-9\s\.\+\-\*/\(\)]+$/.test(expr)) throw new Error("Invalid characters");
+            if (!expr) throw new Error("Empty formula");
+            return new Function('return (' + expr + ')')();
+        }
+
+        function applyFormula() {
+            if (!activeTimeInput) return;
+            const raw = document.getElementById('formulaInput').value.trim();
+            if (!raw) {
+                activeTimeInput.value = '';
+                activeTimeInput.removeAttribute('data-value');
+                closeFormulaModal();
+                calculateAll();
+                return;
+            }
+            try {
+                const result = evaluateFormula(raw);
+                if (isNaN(result) || !isFinite(result)) {
+                    alert("Formula results in an invalid number.");
+                    return;
+                }
+                activeTimeInput.setAttribute('data-value', result);
+                activeTimeInput.value = roundExcel(result, 3).toFixed(3);
+                activeTimeInput.setAttribute('data-formula', '=' + raw.replace(/^=/, ''));
+                closeFormulaModal();
+                calculateAll();
+            } catch (e) {
+                alert("Invalid formula: " + e.message);
+            }
+        }
+
+        document.getElementById('formulaModal').addEventListener('click', function(e) {
+            if (e.target === this) closeFormulaModal();
+        });
+        document.getElementById('formulaInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); applyFormula(); }
+            if (e.key === 'Escape') { closeFormulaModal(); }
+        });
 
         // --- MANAGE LINES LOGIC ---
         function initManageLines() {
@@ -950,7 +1320,8 @@
                 const name = row.querySelector('.activity-input').value.trim();
                 const pax = parseFloat(row.querySelector('.pax-input').value) || 0;
                 const machine = parseFloat(row.querySelector('.machine-input').value) || 0;
-                const time = parseFloat(row.querySelector('.time-input').value) || 0;
+                const timeInput = row.querySelector('.time-input');
+                const time = parseFloat(timeInput.getAttribute('data-value') || timeInput.value) || 0;
                 if (name || time) {
                     activities.push({
                         activity_name: name,
