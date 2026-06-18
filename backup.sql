@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict lb1pSFwqxliQnXMrZP5BwOorKBEtFwt9HfoihgAMpNFt6hf5A6YDqT7pymSaWVJ
+\restrict JbJ7z2Za8inuvGSE3fsiyrN9sfJe3tPGJUtgscRv2AeFfY7dcZdurfIUcPsNYPy
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -19,6 +19,56 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: sync_production_line_text(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sync_production_line_text() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    bm_text varchar(100);
+    fg_text varchar(100);
+BEGIN
+    IF NEW.bm_production_line_code IS NOT NULL THEN
+        SELECT canonical_line_text INTO bm_text
+        FROM production_lines WHERE production_line_code = NEW.bm_production_line_code;
+        IF bm_text IS NOT NULL THEN
+            NEW.bm_production_line := bm_text;
+        END IF;
+    END IF;
+
+    IF NEW.fg_production_line_code IS NOT NULL THEN
+        SELECT canonical_line_text INTO fg_text
+        FROM production_lines WHERE production_line_code = NEW.fg_production_line_code;
+        IF fg_text IS NOT NULL THEN
+            NEW.fg_production_line := fg_text;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.sync_production_line_text() OWNER TO postgres;
+
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.update_updated_at_column() OWNER TO postgres;
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -32,7 +82,7 @@ CREATE TABLE public.activities (
     inventory_id character varying(50) NOT NULL,
     type character varying(20),
     item_id text,
-    activity_name text,
+    activity_name text NOT NULL,
     class character varying(10),
     class_1 character varying(10),
     pax integer,
@@ -109,7 +159,8 @@ ALTER SEQUENCE public.line_activities_id_seq OWNED BY public.line_activities.id;
 
 CREATE TABLE public.production_lines (
     production_line_code character varying(20) NOT NULL,
-    production_line_name text NOT NULL
+    production_line_name text NOT NULL,
+    canonical_line_text character varying(100)
 );
 
 
@@ -129,11 +180,52 @@ CREATE TABLE public.products (
     fg_production_line text,
     fg_production_line_code character varying(20),
     product_type character varying(50),
-    quantity double precision
+    quantity double precision,
+    CONSTRAINT products_quantity_whole_number CHECK (((quantity IS NULL) OR (quantity = floor(quantity))))
 );
 
 
 ALTER TABLE public.products OWNER TO postgres;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    username character varying(50) NOT NULL,
+    password_hash text NOT NULL,
+    role character varying(20) DEFAULT 'user'::character varying NOT NULL,
+    is_active boolean DEFAULT true NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT valid_role CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'superuser'::character varying, 'admin'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
+--
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
 
 --
 -- Name: activities id; Type: DEFAULT; Schema: public; Owner: postgres
@@ -147,6 +239,13 @@ ALTER TABLE ONLY public.activities ALTER COLUMN id SET DEFAULT nextval('public.a
 --
 
 ALTER TABLE ONLY public.line_activities ALTER COLUMN id SET DEFAULT nextval('public.line_activities_id_seq'::regclass);
+
+
+--
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
@@ -787,11 +886,13 @@ COPY public.activities (id, inventory_id, type, item_id, activity_name, class, c
 1270	1KPH5A5J01	Labor	L01 LABELING/CODING	L01 LABELING/CODING	DL	DL	1	1	0.1167	1
 1271	1KRT5A9A12	Labor	L01 LABELING/CODING	L01 LABELING/CODING	DL	DL	1	1	0.5	1
 1272	1KRT5A9A12	Labor	L01 FILLING	L01 FILLING	DL	DL	2	1	1	2
-1309	1234567890	Labor	L04B MIXING	MIXING	DL	DL	1	0	0.0123	1
-1310	1234567890	Labor	L04B CAPPING	CAPPING	DL	DL	1	0	0.2	2
-1317	1APU5A5I04	Labor	L01 L01 LABELING/CODING	L01 LABELING/CODING	DL	DL	1	1	0.125	1
-1318	1APU5A5I04	Labor	L01 L01 LETDOWN	L01 LETDOWN	DL	DL	1	1	0.6667	2
-1319	1APU5A5I04	Labor	L01 L01 PACKING/PALLETIZ	L01 PACKING/PALLETIZ	DL	DL	1	1	0.5	3
+1317	1APU5A5I04	Labor	L01 LABELING/CODING	L01 LABELING/CODING	DL	DL	1	1	0.125	1
+1318	1APU5A5I04	Labor	L01 LETDOWN	L01 LETDOWN	DL	DL	1	1	0.6667	2
+1319	1APU5A5I04	Labor	L01 PACKING/PALLETIZ	L01 PACKING/PALLETIZ	DL	DL	1	1	0.5	3
+1320	1LKM20	Labor	MILLING	MILLING	DL	DL	1	3	56	1
+1321	1LKM20	Labor	LETDOWN	LETDOWN	DL	DL	2	4	20	2
+1322	LSAJDKW	Labor	NOZZLE & CAPPING	NOZZLE & CAPPING	DL	DL	1	0	20	1
+1323	LSAJDKW	Labor	PLUNGERING	PLUNGERING	DL	DL	1	3	0.13333	2
 \.
 
 
@@ -937,25 +1038,25 @@ COPY public.line_activities (id, production_line_code, activity_name, sort_order
 -- Data for Name: production_lines; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.production_lines (production_line_code, production_line_name) FROM stdin;
-L01	Line 01 COATINGS
-L02	Line 02 CYANO BOTTLE FILLING
-L03	Line 03 CYANO TUBE FILLING
-L04A	Line 04A ELASTO MIXING
-L04B	Line 04B SEMI AUTO FILLING
-L04C	Line 04C AUTO FILLING
-L05	Line 05 EPOXY CLAY
-L06	Line 06 EPOXY LINE
-L07	Line 07 EPOXY TUBE FILLING
-L08	Line 08
-L09	Line 09 EPS - BLOCKS
-L09A	Line 09A EPS - CUTTING
-L10	Line 10 CONTACT BOND
-L11	Line 11 SILICONE FILLING LINE
-L12	Line 12 SPECIAL PRODUCTS - EPOXY BASED
-L13	Line 13 SPECIAL PRODUCTS - WATER BASED
-L14	Line 14 SKIM COAT
-SIPS	STRUCTURAL INSULATED PANEL
+COPY public.production_lines (production_line_code, production_line_name, canonical_line_text) FROM stdin;
+L03	Line 03 CYANO TUBE FILLING	\N
+L05	Line 05 EPOXY CLAY	\N
+L07	Line 07 EPOXY TUBE FILLING	\N
+L08	Line 08	\N
+L09A	Line 09A EPS - CUTTING	\N
+SIPS	STRUCTURAL INSULATED PANEL	\N
+L01	Line 01 COATINGS	L01 - L1 COATINGS
+L02	Line 02 CYANO BOTTLE FILLING	L02 - L2 CYANO BOTTLE FILLING
+L04A	Line 04A ELASTO MIXING	L04A - L4A ELASTO MIXING
+L04B	Line 04B SEMI AUTO FILLING	L04B - L4B SEMI AUTO FILLING
+L04C	Line 04C AUTO FILLING	L04C - L4C ATO FILLING
+L06	Line 06 EPOXY LINE	L06 - L6 EPOXY LINE
+L09	Line 09 EPS - BLOCKS	L09 - L9 EPS - BLOCKS
+L10	Line 10 CONTACT BOND	L10 - L10 CONTACT BOND
+L11	Line 11 SILICONE FILLING LINE	L11 - L11 SILICONE FILLING LINE
+L12	Line 12 SPECIAL PRODUCTS - EPOXY BASED	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED
+L13	Line 13 SPECIAL PRODUCTS - WATER BASED	L13 - L13 SPECIAL PRODUCTS - WATER BASED
+L14	Line 14 SKIM COAT	L14 - L14 SKIM COAT
 \.
 
 
@@ -1160,10 +1261,10 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 1PSC9229	PEARL GLAZE SATIN CATERPILLAR YELLOW 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSC9233	PEARL GLAZE SATIN CATERPILLAR YELLOW 1L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSC966D	PAINTER'S BUDDY SKIMCOAT GRAY	02	CRN RD24-CR027	L14 - L14 SKIM COAT	L14	L14 - L14 SKIM COAT	L14	Finished Good (FG)	\N
-1PSG9229	TO OPTIMIZE BATCHING	03	\N	L01 LABELING/CODING	L01	L01 LABELING/CODING	L01	Finished Good (FG)	\N
 1PSG9233	PEARL GLAZE GLOSS SAFETY GREEN 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSO9229	PEARL GLAZE GLOSS SAFETY ORANGE 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSO9233	PEARL GLAZE GLOSS SAFETY ORANGE 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
+1PSG9229	TO OPTIMIZE BATCHING	03	\N	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSR9229	PEARL GLAZE GLOSS SAFETY RED 4L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSR9233	PEARL GLAZE GLOSS SAFETY RED 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1PSY9229	PEARL GLAZE GLOSS SAFETY YELLOW 4L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
@@ -1341,7 +1442,6 @@ BM000047	BULK MIX-PILE SPLICING EPOXY A	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL
 BM000048	BULK MIX-PILE SPLICING EPOXY B	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N
 BM000052	BULKMIX- MELVEST LAMINATING B	02	CRN RD23-CR043	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N
 BM000054	BULK MIX - NON SAG EPOXY B	02	CRN RD23-CR041	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N
-BM000055	OPTIMIZED BM MIXING PROCESS FOR PAPE PART A – Line 6	05	\N	L06 MIXING	L06	L06 MIXING	L06	Base Material (BM)	\N
 BM000071	BULKMIX- ETL WHITE PART B	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N
 BM000082	BULKMIX- PG ANTI FOULING PAINT BLUE A	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N
 FGI00043	ELASTOSEAL 500G	03	CRN RD23-CR055	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N
@@ -1454,8 +1554,22 @@ GIP000147	BULKMIX - PG SATIN CLEAR BASE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS
 GIP000149	BULK MIX-ENAMEL PERMANENT RED R170	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N
 1KPH5A5J01	FG_KOPHENOL HIGHWAY YELLOW	00	PACKAGING MATERIAL: REUSE THE TIN PAIL OF KOPHENOL CREAM	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
 1KRT5A9A12	KORETHAN TC UT6581 RAL 5011 URETHANE TOPCOAT SOLVENT BASED BLUE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N
-1APU5A5I04	PIOTHANE PU TOPCOAT RAL 5011 16L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - Line 01 COATINGS	L01	Finished Good (FG)	2
-1234567890	dummy123	02	\N	L04B - Line 04B SEMI AUTO FILLING	L04B	\N	\N	Base Material (BM)	400
+1LKM20	PG ANTI FOULING PAINT RED 4L	00		\N	\N	Line 01 COATINGS	L01	Finished Good (FG)	1
+BM000055	OPTIMIZED BM MIXING PROCESS FOR PAPE PART A – Line 6	05	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N
+1APU5A5I04	PIOTHANE PU TOPCOAT RAL 5011 16L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	2
+LSAJDKW	ALL PURPOSE EPOXY 1/4 PINT	00		\N	\N	Line 02 CYANO BOTTLE FILLING	L02	Finished Good (FG)	1
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, username, password_hash, role, is_active, created_at, updated_at) FROM stdin;
+1	admin	$argon2id$v=19$m=65536,t=3,p=4$MTIzNDU2Nzg5MGFiY2RlZg$ fakeplaceholder_donotuse	admin	t	2026-06-18 15:20:16.628133+08	2026-06-18 15:20:16.628133+08
+2	dell	$argon2id$v=19$m=65536,t=3,p=4$gnPaeY1Kz0g/BywRj9eYPw$gFdnesLRnt3jWqBaOqaRgszHADxBTzWdBs4ybHMBCtU	admin	t	2026-06-18 15:34:24.750689+08	2026-06-18 15:34:24.750689+08
+3	eson	$argon2id$v=19$m=65536,t=3,p=4$hosg01+28U+obYfqM+A9Uw$lyi2bwAzt0YttBcza7TubzCnMZIPKu02ay/LPzEVgHg	user	t	2026-06-18 16:09:41.130776+08	2026-06-18 16:09:41.130776+08
+4	macky	$argon2id$v=19$m=65536,t=3,p=4$1k7II7us7fbuXGu/3ALzqg$2vBLFYTP2dv3bUJC7sSlFK1qtvYfm4vMxNxxcGxvse0	superuser	t	2026-06-18 16:16:45.624111+08	2026-06-18 16:16:45.624111+08
 \.
 
 
@@ -1463,14 +1577,21 @@ GIP000149	BULK MIX-ENAMEL PERMANENT RED R170	01	PHASE 2 APM PACKAGE	L01 - L1 COA
 -- Name: activities_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.activities_id_seq', 1319, true);
+SELECT pg_catalog.setval('public.activities_id_seq', 1323, true);
 
 
 --
 -- Name: line_activities_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.line_activities_id_seq', 392, true);
+SELECT pg_catalog.setval('public.line_activities_id_seq', 396, true);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 4, true);
 
 
 --
@@ -1514,6 +1635,22 @@ ALTER TABLE ONLY public.products
 
 
 --
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
 -- Name: idx_activities_inventory_id; Type: INDEX; Schema: public; Owner: postgres
 --
 
@@ -1525,6 +1662,34 @@ CREATE INDEX idx_activities_inventory_id ON public.activities USING btree (inven
 --
 
 CREATE INDEX idx_line_activities_line_code ON public.line_activities USING btree (production_line_code);
+
+
+--
+-- Name: idx_users_active; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_active ON public.users USING btree (id) WHERE (is_active = true);
+
+
+--
+-- Name: idx_users_role; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_role ON public.users USING btree (role);
+
+
+--
+-- Name: idx_users_username; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_username ON public.users USING btree (username);
+
+
+--
+-- Name: users trigger_users_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER trigger_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --
@@ -1548,15 +1713,7 @@ ALTER TABLE ONLY public.products
 --
 
 ALTER TABLE ONLY public.products
-    ADD CONSTRAINT fk_products_fg_line FOREIGN KEY (fg_production_line_code) REFERENCES public.production_lines(production_line_code);
-
-
---
--- Name: products fk_products_production_line; Type: FK CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.products
-    ADD CONSTRAINT fk_products_production_line FOREIGN KEY (bm_production_line_code) REFERENCES public.production_lines(production_line_code) ON UPDATE CASCADE;
+    ADD CONSTRAINT fk_products_fg_line FOREIGN KEY (fg_production_line_code) REFERENCES public.production_lines(production_line_code) ON UPDATE CASCADE;
 
 
 --
@@ -1571,5 +1728,5 @@ ALTER TABLE ONLY public.line_activities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict lb1pSFwqxliQnXMrZP5BwOorKBEtFwt9HfoihgAMpNFt6hf5A6YDqT7pymSaWVJ
+\unrestrict JbJ7z2Za8inuvGSE3fsiyrN9sfJe3tPGJUtgscRv2AeFfY7dcZdurfIUcPsNYPy
 

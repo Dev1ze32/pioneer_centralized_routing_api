@@ -26,12 +26,13 @@ DELETE /api/items/<item_code>
 
 from typing import Optional
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from db import get_connection, release_connection
 from routes.utils.decorators import require_superuser_or_admin
+from routes.utils.log_utils import log_action
 
 update_bp = Blueprint("update", __name__, url_prefix="/api")
 
@@ -46,16 +47,10 @@ UPDATABLE_PRODUCT_FIELDS = {
     "fg_production_line",
     "fg_production_line_code",
     "product_type",
-    # SECURITY: 'revision' must NEVER be added here — it is managed exclusively
-    # by _bump_revision() and is injected separately into the SET clause.
-    # Adding it here would allow callers to overwrite the auto-increment value.
 }
 
 REQUIRED_ACTIVITY_FIELDS = ("activity_name", "pax", "machine", "time_min")
 
-# [H7 FIX] Moved to module level — was re-created on every request inside update_activity()
-# SECURITY: Only hardcoded field names reach the f-string SET clause.
-# Never add user-supplied keys to this set.
 UPDATABLE_ACTIVITY_FIELDS = {
     "activity_name", "type", "item_id",
     "class", "class_1", "pax", "machine", "time_min", "sort_order",
@@ -65,11 +60,6 @@ UPDATABLE_ACTIVITY_FIELDS = {
 
 
 def _increment_revision(current: Optional[str]) -> str:
-    """
-    Increment a zero-padded revision string.
-    "00" -> "01", "03" -> "04", "09" -> "10", "99" -> "100"
-    None or unrecognised values start at "01".
-    """
     try:
         num = int(current or "0") + 1
     except (ValueError, TypeError):
@@ -78,14 +68,6 @@ def _increment_revision(current: Optional[str]) -> str:
 
 
 def _fetch_product(conn: Connection, item_code: str, for_update: bool = False):
-    """Return the product row (RowMapping) or None. Uses the canonical (exact) ID.
-
-    for_update=True takes a row lock (SELECT ... FOR UPDATE) so that a concurrent
-    request touching the same product serializes behind this one instead of
-    racing on a value computed from the row (e.g. the next activity sort_order).
-    Only pass for_update=True where that's actually needed — it holds a lock
-    for the rest of the transaction.
-    """
     lock_clause = "FOR UPDATE" if for_update else ""
     result = conn.execute(
         text(
@@ -105,11 +87,6 @@ def _fetch_product(conn: Connection, item_code: str, for_update: bool = False):
 
 
 def _bump_revision(conn: Connection, canonical_id: str, old_revision: str) -> str:
-    """Write the incremented revision to the DB and return the new value.
-
-    NOTE: Always call this AFTER all validation is complete so that a failed
-    operation never silently advances the revision counter.
-    """
     new_revision = _increment_revision(old_revision)
     conn.execute(
         text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
@@ -171,16 +148,11 @@ def update_product_metadata(item_code):
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    # Only keep fields that are actually allowed to be updated.
-    # 'revision' is intentionally excluded from UPDATABLE_PRODUCT_FIELDS so
-    # callers cannot overwrite the auto-incremented value.
     updates = {k: v for k, v in body.items() if k in UPDATABLE_PRODUCT_FIELDS}
     VALID_PRODUCT_TYPES = {"Finished Good (FG)", "Base Material (BM)", "Other / Intermediate"}
     if "product_type" in updates and updates["product_type"] not in VALID_PRODUCT_TYPES:
         return jsonify({"error": f"Invalid product_type. Must be one of: {sorted(VALID_PRODUCT_TYPES)}"}), 400
-    # [H8 FIX] quantity is semantically a whole number (matches the
-    # products_quantity_whole_number CHECK constraint). Validate here too,
-    # since this endpoint is the other place quantity can be written.
+
     if "quantity" in updates and updates["quantity"] is not None:
         try:
             q = float(updates["quantity"])
@@ -189,6 +161,7 @@ def update_product_metadata(item_code):
         if q != int(q):
             return jsonify({"error": "quantity must be a whole number"}), 400
         updates["quantity"] = q
+
     if not updates:
         return jsonify({
             "error": "No valid fields provided",
@@ -205,9 +178,6 @@ def update_product_metadata(item_code):
         old_revision = product["revision"]
         new_revision = _increment_revision(old_revision)
 
-        # [C6 FIX] Revision is set in its OWN explicit UPDATE, completely separate
-        # from the user-field SET clause, so there is no risk of it being shadowed
-        # or duplicated if UPDATABLE_PRODUCT_FIELDS is ever changed carelessly.
         set_clause = ", ".join(f"{col} = :{col}" for col in updates)
         params = {**updates, "canonical_id": canonical_id}
         conn.execute(
@@ -220,6 +190,24 @@ def update_product_metadata(item_code):
         )
 
         conn.commit()
+
+        actor = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        changed_fields = ", ".join(sorted(updates.keys()))
+        log_action(
+            action="Updated product",
+            description=(
+                f"'{actor_name}' updated product '{canonical_id}'. "
+                f"Fields changed: {changed_fields}. "
+                f"Revision {old_revision} → {new_revision}."
+            ),
+            target_type="product",
+            target_id=canonical_id,
+            extra={"fields_updated": list(updates.keys()),
+                   "old_revision": old_revision,
+                   "new_revision": new_revision},
+        )
+
         return jsonify({
             "message":        "Product metadata updated",
             "inventory_id":   canonical_id,
@@ -299,24 +287,18 @@ def add_activity(item_code):
     if missing:
         return jsonify({"error": f"Missing required fields: {missing}"}), 400
 
-    # [H6 FIX] Validate that activity_name is actually non-empty, not just present
     activity_name = (body.get("activity_name") or "").strip()
     if not activity_name:
         return jsonify({"error": "activity_name cannot be empty"}), 400
 
     conn = get_connection()
     try:
-        # [H4 FIX] for_update=True locks this product's row so a concurrent
-        # add_activity call on the same product blocks until this one commits,
-        # rather than both racing to compute the same MAX(sort_order) + 1.
         product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
         canonical_id = product["inventory_id"]
 
-        # Place the new activity after all existing ones (the row lock above is
-        # what actually makes this race-free — see _fetch_product docstring)
         result = conn.execute(
             text(
                 """
@@ -332,7 +314,7 @@ def add_activity(item_code):
             {
                 "inventory_id": canonical_id,
                 "type": body.get("type", "Labor"),
-                "item_id": body.get("item_id", activity_name),   # [H6 FIX] uses validated non-empty name
+                "item_id": body.get("item_id", activity_name),
                 "activity_name": activity_name,
                 "class": body.get("class", "DL"),
                 "class_1": body.get("class_1", "DL"),
@@ -342,15 +324,10 @@ def add_activity(item_code):
             },
         )
         result_row = result.mappings().first()
-        new_id = result_row["id"]
+        new_id     = result_row["id"]
         next_order = result_row["sort_order"]
 
         old_revision = product["revision"]
-        # [H9 FIX] This bump must stay inside the SAME transaction as the
-        # operation above (no commit() between them). If _bump_revision()
-        # raises, the surrounding except block rolls back the whole
-        # transaction, so the activity insert/update/delete above is undone
-        # too -- the bump is not optional or safe to move out on its own.
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
             new_revision = _bump_revision(conn, canonical_id, old_revision)
@@ -358,6 +335,24 @@ def add_activity(item_code):
             new_revision = old_revision
 
         conn.commit()
+
+        actor = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        log_action(
+            action="Added activity",
+            description=(
+                f"'{actor_name}' added activity '{activity_name}' (ID {new_id}) "
+                f"to product '{canonical_id}'. "
+                f"Revision {old_revision} → {new_revision}."
+            ),
+            target_type="activity",
+            target_id=str(new_id),
+            extra={"inventory_id": canonical_id,
+                   "activity_name": activity_name,
+                   "old_revision": old_revision,
+                   "new_revision": new_revision},
+        )
+
         return jsonify({
             "message":      "Activity added",
             "inventory_id": canonical_id,
@@ -443,12 +438,6 @@ def update_activity(item_code, activity_id):
 
     conn = get_connection()
     try:
-        # [H7 FIX] for_update=True locks the product row for the rest of the
-        # transaction, same as add_activity(). Without it, two concurrent
-        # requests touching this product (e.g. one update racing another, or
-        # an update racing an add) can both read a stale `revision` value and
-        # each think they're applying the "next" revision, or otherwise step
-        # on each other's partial writes.
         product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
@@ -474,11 +463,6 @@ def update_activity(item_code, activity_id):
         )
 
         old_revision = product["revision"]
-        # [H9 FIX] This bump must stay inside the SAME transaction as the
-        # operation above (no commit() between them). If _bump_revision()
-        # raises, the surrounding except block rolls back the whole
-        # transaction, so the activity insert/update/delete above is undone
-        # too -- the bump is not optional or safe to move out on its own.
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
             new_revision = _bump_revision(conn, canonical_id, old_revision)
@@ -486,6 +470,26 @@ def update_activity(item_code, activity_id):
             new_revision = old_revision
 
         conn.commit()
+
+        actor = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        changed_fields = ", ".join(sorted(updates.keys()))
+        log_action(
+            action="Updated activity",
+            description=(
+                f"'{actor_name}' updated activity ID {activity_id} "
+                f"on product '{canonical_id}'. "
+                f"Fields changed: {changed_fields}. "
+                f"Revision {old_revision} → {new_revision}."
+            ),
+            target_type="activity",
+            target_id=str(activity_id),
+            extra={"inventory_id": canonical_id,
+                   "fields_updated": list(updates.keys()),
+                   "old_revision": old_revision,
+                   "new_revision": new_revision},
+        )
+
         return jsonify({
             "message":        "Activity updated",
             "inventory_id":   canonical_id,
@@ -539,16 +543,20 @@ def delete_activity(item_code, activity_id):
 
         canonical_id = product["inventory_id"]
 
-        result = conn.execute(
-            text("SELECT id FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+        # Fetch activity name before deleting (for the log message)
+        act_row = conn.execute(
+            text("SELECT id, activity_name FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
             {"activity_id": activity_id, "canonical_id": canonical_id},
-        )
-        if result.mappings().first() is None:
+        ).mappings().first()
+
+        if act_row is None:
             return jsonify({
                 "error":       "Activity not found for this product",
                 "activity_id": activity_id,
                 "item_code":   canonical_id,
             }), 404
+
+        activity_name = act_row["activity_name"]
 
         conn.execute(
             text("DELETE FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
@@ -556,11 +564,6 @@ def delete_activity(item_code, activity_id):
         )
 
         old_revision = product["revision"]
-        # [H9 FIX] This bump must stay inside the SAME transaction as the
-        # operation above (no commit() between them). If _bump_revision()
-        # raises, the surrounding except block rolls back the whole
-        # transaction, so the activity insert/update/delete above is undone
-        # too -- the bump is not optional or safe to move out on its own.
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
             new_revision = _bump_revision(conn, canonical_id, old_revision)
@@ -568,6 +571,24 @@ def delete_activity(item_code, activity_id):
             new_revision = old_revision
 
         conn.commit()
+
+        actor = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        log_action(
+            action="Deleted activity",
+            description=(
+                f"'{actor_name}' deleted activity '{activity_name}' (ID {activity_id}) "
+                f"from product '{canonical_id}'. "
+                f"Revision {old_revision} → {new_revision}."
+            ),
+            target_type="activity",
+            target_id=str(activity_id),
+            extra={"inventory_id": canonical_id,
+                   "activity_name": activity_name,
+                   "old_revision": old_revision,
+                   "new_revision": new_revision},
+        )
+
         return jsonify({
             "message":      "Activity deleted",
             "inventory_id": canonical_id,
@@ -614,7 +635,16 @@ def delete_product(item_code):
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id = product["inventory_id"]
+        canonical_id   = product["inventory_id"]
+        revision_descr = product["revision_descr"]
+        revision       = product["revision"]
+
+        # Count activities before cascade delete (for the log message)
+        act_count_row = conn.execute(
+            text("SELECT COUNT(*) AS cnt FROM activities WHERE inventory_id = :canonical_id"),
+            {"canonical_id": canonical_id},
+        ).mappings().first()
+        activity_count = act_count_row["cnt"] if act_count_row else 0
 
         conn.execute(
             text("DELETE FROM products WHERE inventory_id = :canonical_id"),
@@ -622,6 +652,23 @@ def delete_product(item_code):
         )
 
         conn.commit()
+
+        actor = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        log_action(
+            action="Deleted product",
+            description=(
+                f"'{actor_name}' permanently deleted product '{canonical_id}' "
+                f"(\"{revision_descr}\", Revision {revision}) "
+                f"along with its {activity_count} activit{'y' if activity_count == 1 else 'ies'}."
+            ),
+            target_type="product",
+            target_id=canonical_id,
+            extra={"revision": revision,
+                   "revision_descr": revision_descr,
+                   "activities_deleted": activity_count},
+        )
+
         return jsonify({
             "message":      "Product deleted",
             "inventory_id": canonical_id,

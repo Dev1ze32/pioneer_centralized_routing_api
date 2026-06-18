@@ -4,8 +4,7 @@ Authentication blueprint — registration and login.
 Endpoints
 ---------
     POST /api/auth/register
-        Anyone can register as a default 'user' role.
-        Only an existing 'admin' can create 'superuser' or 'admin' accounts.
+        Admin-only. Creates a user with any role.
 
     POST /api/auth/login
         Authenticate with username + password, receive a JWT access token.
@@ -21,7 +20,7 @@ Dependencies
 import logging
 
 from flask import Blueprint, jsonify, request, g
- 
+
 from routes.utils.auth_utils import (
     hash_password,
     verify_password,
@@ -29,6 +28,7 @@ from routes.utils.auth_utils import (
     create_access_token,
 )
 from routes.utils.decorators import require_auth, require_role
+from routes.utils.log_utils import log_action
 from routes.models import User, get_db_session, managed_db_session
 
 logger = logging.getLogger(__name__)
@@ -36,18 +36,26 @@ logger = logging.getLogger(__name__)
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
+def _require_admin(f):
+    """Shorthand: require valid JWT + admin role."""
+    return require_auth(require_role("admin")(f))
+
+
 # -----------------------------------------------------------------------------
-# POST /api/auth/register
+# POST /api/auth/register  (admin only)
 # -----------------------------------------------------------------------------
 
 @auth_bp.post("/register")
+@_require_admin
 def register():
     """
-    Register a new user account.
+    Create a new user account. Admin only.
 
     ---
     tags:
       - Authentication
+    security:
+      - Bearer: []
     parameters:
       - name: body
         in: body
@@ -69,22 +77,22 @@ def register():
               type: string
               enum: [user, superuser, admin]
               default: user
-              description: Only admins can set roles other than 'user'
     responses:
       201:
         description: User created successfully
       400:
         description: Missing or invalid fields
+      401:
+        description: Missing or invalid token
+      403:
+        description: Admin access required
       409:
         description: Username already exists
-      403:
-        description: Only admins can create privileged accounts
     """
     body = request.get_json(force=True, silent=True)
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    # --- Validate required fields ---
     username = (body.get("username") or "").strip()
     password = body.get("password") or ""
 
@@ -97,35 +105,13 @@ def register():
     if len(password) < 8:
         return jsonify({"error": "password must be at least 8 characters"}), 400
 
-    # --- Determine requested role ---
     requested_role = (body.get("role") or "user").strip().lower()
     if requested_role not in User.ROLES:
         return jsonify({"error": f"Invalid role. Must be one of: {sorted(User.ROLES)}"}), 400
 
-    # --- RBAC: Only admins can create superuser or admin accounts ---
-    if requested_role in ("superuser", "admin"):
-        # Check if an admin is making this request
-        auth_header = request.headers.get("Authorization", "")
-        from routes.utils.auth_utils import get_token_from_header, decode_access_token
-
-        token = get_token_from_header(auth_header)
-        is_admin = False
-
-        if token:
-            payload = decode_access_token(token)
-            if payload and payload.get("role") == "admin":
-                is_admin = True
-
-        if not is_admin:
-            return jsonify({
-                "error": "Permission denied. Only admin users can create accounts with 'superuser' or 'admin' roles."
-            }), 403
-
-    # --- Create the user ---
     password_hash = hash_password(password)
 
     with managed_db_session() as session:
-        # Check for existing username
         existing = session.query(User).filter_by(username=username).first()
         if existing:
             return jsonify({"error": "Username already exists", "username": username}), 409
@@ -137,18 +123,29 @@ def register():
             is_active=True,
         )
         session.add(new_user)
-        session.flush()  # Populate new_user.id before commit
+        session.flush()
 
-        # Build response BEFORE the session closes
-        user_id = new_user.id
+        user_id   = new_user.id
         user_role = new_user.role
 
-    # --- Return success (no sensitive data) ---
+    # Audit log — admin created an account
+    admin = g.current_user
+    log_action(
+        action="Created user account",
+        description=(
+            f"Admin '{admin.username}' created a new '{requested_role}' "
+            f"account for '{username}' (user ID {user_id})."
+        ),
+        target_type="user",
+        target_id=str(user_id),
+        extra={"new_username": username, "assigned_role": requested_role},
+    )
+
     return jsonify({
-        "message": "User registered successfully",
-        "user_id": user_id,
+        "message":  "User created successfully",
+        "user_id":  user_id,
         "username": username,
-        "role": user_role,
+        "role":     user_role,
     }), 201
 
 
@@ -198,7 +195,6 @@ def login():
     if not username or not password:
         return jsonify({"error": "username and password are required"}), 400
 
-    # Look up user
     session = get_db_session()
     try:
         user = session.query(User).filter_by(username=username).first()
@@ -206,35 +202,32 @@ def login():
         session.close()
 
     if user is None:
-        # Generic error to avoid username enumeration
         return jsonify({"error": "Invalid username or password"}), 401
 
     if not user.is_active:
         return jsonify({"error": "Account is disabled"}), 403
 
-    # Verify password
     if not verify_password(password, user.password_hash):
         return jsonify({"error": "Invalid username or password"}), 401
 
     # Transparent rehash if Argon2 parameters have changed
     if check_needs_rehash(user.password_hash):
         new_hash = hash_password(password)
-        with managed_db_session() as session:
-            refreshed = session.query(User).filter_by(id=user.id).first()
+        with managed_db_session() as s:
+            refreshed = s.query(User).filter_by(id=user.id).first()
             if refreshed:
                 refreshed.password_hash = new_hash
 
-    # Issue JWT
     token = create_access_token(user_id=user.id, role=user.role)
 
     return jsonify({
-        "message": "Login successful",
+        "message":      "Login successful",
         "access_token": token,
-        "token_type": "Bearer",
+        "token_type":   "Bearer",
         "user": {
-            "id": user.id,
+            "id":       user.id,
             "username": user.username,
-            "role": user.role,
+            "role":     user.role,
         },
     }), 200
 
