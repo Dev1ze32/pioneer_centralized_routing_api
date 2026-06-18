@@ -13,3 +13,18 @@ ALTER TABLE public.products
 
 ALTER TABLE public.activities
     DROP COLUMN qty_required;
+
+
+-- Drop the duplicate
+ALTER TABLE public.products DROP CONSTRAINT fk_products_production_line;
+
+-- Fix: add ON UPDATE CASCADE to the FG FK as well
+ALTER TABLE public.products DROP CONSTRAINT fk_products_fg_line;
+ALTER TABLE public.products ADD CONSTRAINT fk_products_fg_line
+    FOREIGN KEY (fg_production_line_code)
+    REFERENCES public.production_lines(production_line_code)
+    ON UPDATE CASCADE;
+
+ALTER TABLE public.activities ALTER COLUMN activity_name SET NOT NULL;
+
+DELETE FROM products WHERE inventory_id = '1234567890';

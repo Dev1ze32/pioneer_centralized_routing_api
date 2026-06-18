@@ -173,6 +173,20 @@ def update_product_metadata(item_code):
     # 'revision' is intentionally excluded from UPDATABLE_PRODUCT_FIELDS so
     # callers cannot overwrite the auto-incremented value.
     updates = {k: v for k, v in body.items() if k in UPDATABLE_PRODUCT_FIELDS}
+    VALID_PRODUCT_TYPES = {"Finished Good (FG)", "Base Material (BM)", "Other / Intermediate"}
+    if "product_type" in updates and updates["product_type"] not in VALID_PRODUCT_TYPES:
+        return jsonify({"error": f"Invalid product_type. Must be one of: {sorted(VALID_PRODUCT_TYPES)}"}), 400
+    # [H8 FIX] quantity is semantically a whole number (matches the
+    # products_quantity_whole_number CHECK constraint). Validate here too,
+    # since this endpoint is the other place quantity can be written.
+    if "quantity" in updates and updates["quantity"] is not None:
+        try:
+            q = float(updates["quantity"])
+        except (TypeError, ValueError):
+            return jsonify({"error": "quantity must be a number"}), 400
+        if q != int(q):
+            return jsonify({"error": "quantity must be a whole number"}), 400
+        updates["quantity"] = q
     if not updates:
         return jsonify({
             "error": "No valid fields provided",
@@ -329,6 +343,11 @@ def add_activity(item_code):
         next_order = result_row["sort_order"]
 
         old_revision = product["revision"]
+        # [H9 FIX] This bump must stay inside the SAME transaction as the
+        # operation above (no commit() between them). If _bump_revision()
+        # raises, the surrounding except block rolls back the whole
+        # transaction, so the activity insert/update/delete above is undone
+        # too -- the bump is not optional or safe to move out on its own.
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
             new_revision = _bump_revision(conn, canonical_id, old_revision)
@@ -420,7 +439,13 @@ def update_activity(item_code, activity_id):
 
     conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code)
+        # [H7 FIX] for_update=True locks the product row for the rest of the
+        # transaction, same as add_activity(). Without it, two concurrent
+        # requests touching this product (e.g. one update racing another, or
+        # an update racing an add) can both read a stale `revision` value and
+        # each think they're applying the "next" revision, or otherwise step
+        # on each other's partial writes.
+        product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
@@ -445,6 +470,11 @@ def update_activity(item_code, activity_id):
         )
 
         old_revision = product["revision"]
+        # [H9 FIX] This bump must stay inside the SAME transaction as the
+        # operation above (no commit() between them). If _bump_revision()
+        # raises, the surrounding except block rolls back the whole
+        # transaction, so the activity insert/update/delete above is undone
+        # too -- the bump is not optional or safe to move out on its own.
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
             new_revision = _bump_revision(conn, canonical_id, old_revision)
@@ -521,6 +551,11 @@ def delete_activity(item_code, activity_id):
         )
 
         old_revision = product["revision"]
+        # [H9 FIX] This bump must stay inside the SAME transaction as the
+        # operation above (no commit() between them). If _bump_revision()
+        # raises, the surrounding except block rolls back the whole
+        # transaction, so the activity insert/update/delete above is undone
+        # too -- the bump is not optional or safe to move out on its own.
         skip_revision = request.args.get("skip_revision", "0") == "1"
         if not skip_revision:
             new_revision = _bump_revision(conn, canonical_id, old_revision)

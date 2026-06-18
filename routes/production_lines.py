@@ -21,10 +21,30 @@ def get_production_lines():
     ---
     tags:
       - Production Lines
+    parameters:
+      - name: limit
+        in: query
+        type: integer
+        required: false
+        default: 50
+        description: Max number of production lines to return (capped at 200)
+      - name: offset
+        in: query
+        type: integer
+        required: false
+        default: 0
+        description: Number of production lines to skip, for paging
     responses:
       200:
         description: List of production lines with associated activities
     """
+    # [M10 FIX] Paginate the lines themselves (there are only ~18 today, but
+    # this keeps the response/memory footprint bounded as lines and their
+    # activities grow) rather than fetching every line + every activity on
+    # every request.
+    limit = min(request.args.get("limit", 50, type=int), 200)
+    offset = max(request.args.get("offset", 0, type=int), 0)
+
     conn = get_connection()
     try:
         result = conn.execute(
@@ -33,20 +53,28 @@ def get_production_lines():
                 SELECT production_line_code, production_line_name
                 FROM production_lines
                 ORDER BY production_line_code
+                LIMIT :limit OFFSET :offset
                 """
-            )
+            ),
+            {"limit": limit, "offset": offset},
         )
         lines = result.mappings().all()
 
+        line_codes = [line["production_line_code"] for line in lines]
+
         # [C3 FIX] Include `id` so the frontend can delete/update individual activities
+        # [M10 FIX] Only pull activities for the lines on this page, instead
+        # of the full line_activities table every time.
         result = conn.execute(
             text(
                 """
                 SELECT id, production_line_code, activity_name, sort_order
                 FROM line_activities
+                WHERE production_line_code = ANY(:line_codes)
                 ORDER BY production_line_code, sort_order
                 """
-            )
+            ),
+            {"line_codes": line_codes},
         )
         activities = result.mappings().all()
 
@@ -429,15 +457,24 @@ def delete_production_line(line_code):
 
         canonical_code = row["production_line_code"]
 
+        # [H11 FIX] The free-text bm_production_line/fg_production_line
+        # columns aren't FK-constrained, so a product can reference this line
+        # by name (e.g. "L01 - L1 COATINGS") while its *_code column is NULL
+        # or stale. Checking only the code columns lets that product's text
+        # go stale with no referential integrity once the line is gone, so
+        # this also matches on the free-text columns starting with the code.
         result = conn.execute(
             text(
                 """
                 SELECT inventory_id FROM products
-                WHERE bm_production_line_code = :canonical_code OR fg_production_line_code = :canonical_code
+                WHERE bm_production_line_code = :canonical_code
+                   OR fg_production_line_code = :canonical_code
+                   OR bm_production_line ILIKE :code_prefix
+                   OR fg_production_line ILIKE :code_prefix
                 LIMIT 1
                 """
             ),
-            {"canonical_code": canonical_code},
+            {"canonical_code": canonical_code, "code_prefix": f"{canonical_code} - %"},
         )
         if result.mappings().first() is not None:
             return jsonify({

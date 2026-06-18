@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from db import get_connection, release_connection
+from db import get_connection, release_connection, managed_connection
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 
@@ -31,8 +31,11 @@ def get_item(item_code):
       404:
         description: Item code not found
     """
-    conn = get_connection()
-    try:
+    # [H6 FIX] Use the managed_connection() context manager instead of a bare
+    # get_connection()/finally pair, so the connection is always returned to
+    # the pool (and any error correctly rolled back) regardless of where an
+    # exception is raised.
+    with managed_connection() as conn:
         result = conn.execute(
             text(
                 """
@@ -77,8 +80,6 @@ def get_item(item_code):
         item_result["activities"] = [dict(a) for a in activities]
 
         return jsonify(item_result)
-    finally:
-        release_connection(conn)
 
 
 @items_bp.post("/items")
@@ -139,6 +140,18 @@ def create_item():
     if not inventory_id or not revision_descr or not product_type:
         return jsonify({"error": "inventory_id, revision_descr, and product_type are required"}), 400
 
+    # [H8 FIX] quantity is stored as double precision but is semantically a
+    # whole number (matches the products_quantity_whole_number CHECK constraint
+    # added in the data-fix migration). Validate up front so a bad value comes
+    # back as a clean 400 instead of a raw Postgres CheckViolation / 500.
+    quantity = body.get("quantity", 1)
+    try:
+        quantity = float(quantity)
+    except (TypeError, ValueError):
+        return jsonify({"error": "quantity must be a number"}), 400
+    if quantity != int(quantity):
+        return jsonify({"error": "quantity must be a whole number"}), 400
+
     # --- [C7 FIX] Validate activities before touching the DB ---
     raw_activities = body.get("activities", [])
     for idx, act in enumerate(raw_activities):
@@ -147,8 +160,21 @@ def create_item():
                 "error": f"Activity at index {idx} is missing a non-empty activity_name"
             }), 400
 
+    # [H8 FIX] Validate fg/bm_production_line_code against production_lines
+    # before inserting, so an unknown code comes back as a clean 400 instead
+    # of a raw FK-violation IntegrityError surfaced as a 500.
     conn = get_connection()
     try:
+        for code_field in ("fg_production_line_code", "bm_production_line_code"):
+            code = body.get(code_field)
+            if code:
+                row = conn.execute(
+                    text("SELECT 1 FROM production_lines WHERE production_line_code = :c"),
+                    {"c": code},
+                ).first()
+                if not row:
+                    return jsonify({"error": f"{code_field} '{code}' does not exist"}), 400
+
         # Check for duplicate
         result = conn.execute(
             text("SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(:inventory_id)"),
@@ -173,7 +199,7 @@ def create_item():
                 "inventory_id": inventory_id,
                 "revision_descr": revision_descr,
                 "revision": "00",
-                "quantity": body.get("quantity", 1),
+                "quantity": quantity,
                 "product_type": product_type,
                 "fg_production_line": body.get("fg_production_line"),
                 "fg_production_line_code": body.get("fg_production_line_code"),
@@ -254,8 +280,9 @@ def search_items():
     # [M2 FIX] Cap limit to prevent runaway full-table scans
     limit = min(request.args.get("limit", 50, type=int), 1000)
 
-    conn = get_connection()
-    try:
+    # [H6 FIX] managed_connection() guarantees the connection is released
+    # back to the pool even if something raises mid-query.
+    with managed_connection() as conn:
         if q:
             result = conn.execute(
                 text(
@@ -290,5 +317,3 @@ def search_items():
 
         rows = result.mappings().all()
         return jsonify([dict(r) for r in rows])
-    finally:
-        release_connection(conn)
