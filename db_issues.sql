@@ -138,10 +138,8 @@ COMMIT;
 -- -----------------------------------------------------------------------
 -- Verification queries (run manually, not part of the migration):
 --
---   SELECT inventory_id, bm_production_line, bm_production_line_code,
---          fg_production_line, fg_production_line_code
---   FROM products WHERE inventory_id IN ('1PSG9229', 'BM000055', '1APU5A5I04');
---
---   SELECT id, inventory_id, item_id, activity_name
---   FROM activities WHERE inventory_id = '1APU5A5I04';
+SELECT inventory_id, bm_production_line, bm_production_line_code, fg_production_line, fg_production_line_code
+   FROM products WHERE inventory_id IN ('1PSG9229', 'BM000055', '1APU5A5I04');
+  SELECT id, inventory_id, item_id, activity_name
+   FROM activities WHERE inventory_id = '1APU5A5I04';
 -- -----------------------------------------------------------------------

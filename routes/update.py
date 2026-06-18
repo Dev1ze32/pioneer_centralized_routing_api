@@ -31,6 +31,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from db import get_connection, release_connection
+from routes.decorators import require_superuser_or_admin
 
 update_bp = Blueprint("update", __name__, url_prefix="/api")
 
@@ -120,6 +121,7 @@ def _bump_revision(conn: Connection, canonical_id: str, old_revision: str) -> st
 # ── 1. Update product metadata ────────────────────────────────────────────────
 
 @update_bp.patch("/items/<item_code>")
+@require_superuser_or_admin
 def update_product_metadata(item_code):
     """
     Update product metadata. Revision is auto-incremented on every save.
@@ -236,6 +238,7 @@ def update_product_metadata(item_code):
 # ── 2. Add a single activity ──────────────────────────────────────────────────
 
 @update_bp.post("/items/<item_code>/activities")
+@require_superuser_or_admin
 def add_activity(item_code):
     """
     Add one new activity to a product. Revision is auto-incremented.
@@ -374,6 +377,7 @@ def add_activity(item_code):
 # ── 3. Update a single activity ───────────────────────────────────────────────
 
 @update_bp.patch("/items/<item_code>/activities/<int:activity_id>")
+@require_superuser_or_admin
 def update_activity(item_code, activity_id):
     """
     Update one specific activity by its ID. Only send the fields you want to change.
@@ -501,6 +505,7 @@ def update_activity(item_code, activity_id):
 # ── 4. Delete a single activity ───────────────────────────────────────────────
 
 @update_bp.delete("/items/<item_code>/activities/<int:activity_id>")
+@require_superuser_or_admin
 def delete_activity(item_code, activity_id):
     """
     Remove one activity from a product. Revision is auto-incremented.
@@ -581,6 +586,7 @@ def delete_activity(item_code, activity_id):
 # ── 5. Delete an entire product ───────────────────────────────────────────────
 
 @update_bp.delete("/items/<item_code>")
+@require_superuser_or_admin
 def delete_product(item_code):
     """
     Permanently delete a product and all of its activities.

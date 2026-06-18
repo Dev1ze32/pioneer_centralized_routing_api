@@ -7,11 +7,13 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from db import get_connection, release_connection, managed_connection
+from routes.decorators import require_auth, require_superuser_or_admin
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 
 
 @items_bp.get("/items/<item_code>")
+@require_auth
 def get_item(item_code):
     """
     Look up an item code's routing details
@@ -83,6 +85,7 @@ def get_item(item_code):
 
 
 @items_bp.post("/items")
+@require_superuser_or_admin
 def create_item():
     """
     Create a new product with optional activities
@@ -255,6 +258,7 @@ def create_item():
 
 
 @items_bp.get("/items")
+@require_auth
 def search_items():
     """
     Browse / search item codes
