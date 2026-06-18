@@ -37,7 +37,7 @@ from functools import wraps
 
 from flask import jsonify, g, request
 
-from routes.auth_utils import get_token_from_header, decode_access_token
+from routes.utils.auth_utils import get_token_from_header, decode_access_token
 from routes.models import User, get_db_session
 
 logger = logging.getLogger(__name__)

@@ -21,14 +21,14 @@ Dependencies
 import logging
 
 from flask import Blueprint, jsonify, request, g
-
-from routes.auth_utils import (
+ 
+from routes.utils.auth_utils import (
     hash_password,
     verify_password,
     check_needs_rehash,
     create_access_token,
 )
-from routes.decorators import require_auth, require_role
+from routes.utils.decorators import require_auth, require_role
 from routes.models import User, get_db_session, managed_db_session
 
 logger = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def register():
     if requested_role in ("superuser", "admin"):
         # Check if an admin is making this request
         auth_header = request.headers.get("Authorization", "")
-        from routes.auth_utils import get_token_from_header, decode_access_token
+        from routes.utils.auth_utils import get_token_from_header, decode_access_token
 
         token = get_token_from_header(auth_header)
         is_admin = False

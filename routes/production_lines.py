@@ -8,6 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from db import get_connection, release_connection
+from routes.utils.decorators import require_superuser_or_admin
 
 production_lines_bp = Blueprint(
     "production_lines", __name__, url_prefix="/api"
@@ -15,6 +16,7 @@ production_lines_bp = Blueprint(
 
 
 @production_lines_bp.get("/production-lines")
+@require_superuser_or_admin
 def get_production_lines():
     """
     List all production lines and their activities
@@ -105,6 +107,7 @@ def get_production_lines():
 
 
 @production_lines_bp.get("/production-lines/<line_code>")
+@require_superuser_or_admin
 def get_production_line(line_code):
     """
     Get a single production line and its activities
@@ -172,6 +175,7 @@ def get_production_line(line_code):
 
 
 @production_lines_bp.put("/production-lines/<line_code>")
+@require_superuser_or_admin
 def update_production_line(line_code):
     """
     Replace a production line and its activities atomically
@@ -278,6 +282,7 @@ def update_production_line(line_code):
 # ── Create / rename / delete a production line ────────────────────────────────
 
 @production_lines_bp.post("/production-lines")
+@require_superuser_or_admin
 def create_production_line():
     """
     Create a new production line
@@ -354,6 +359,7 @@ def create_production_line():
 
 
 @production_lines_bp.patch("/production-lines/<line_code>")
+@require_superuser_or_admin
 def rename_production_line(line_code):
     """
     Rename a production line
@@ -423,6 +429,7 @@ def rename_production_line(line_code):
 
 
 @production_lines_bp.delete("/production-lines/<line_code>")
+@require_superuser_or_admin
 def delete_production_line(line_code):
     """
     Delete a production line and its activities
@@ -511,6 +518,7 @@ def delete_production_line(line_code):
 # ── Add / update / delete a single activity on a line ──────────────────────────
 
 @production_lines_bp.post("/production-lines/<line_code>/activities")
+@require_superuser_or_admin
 def add_line_activity(line_code):
     """
     Add a single activity to a production line
@@ -635,6 +643,7 @@ def add_line_activity(line_code):
 
 
 @production_lines_bp.patch("/production-lines/<line_code>/activities/<int:activity_id>")
+@require_superuser_or_admin
 def update_line_activity(line_code, activity_id):
     """
     Update a single activity on a production line
@@ -740,6 +749,7 @@ def update_line_activity(line_code, activity_id):
 
 
 @production_lines_bp.delete("/production-lines/<line_code>/activities/<int:activity_id>")
+@require_superuser_or_admin
 def delete_line_activity(line_code, activity_id):
     """
     Delete a single activity from a production line

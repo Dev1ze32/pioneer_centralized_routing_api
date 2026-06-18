@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from db import get_connection, release_connection, managed_connection
-from routes.decorators import require_auth, require_superuser_or_admin
+from routes.utils.decorators import require_auth, require_superuser_or_admin
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 

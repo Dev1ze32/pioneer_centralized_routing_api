@@ -31,7 +31,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from db import get_connection, release_connection
-from routes.decorators import require_superuser_or_admin
+from routes.utils.decorators import require_superuser_or_admin
 
 update_bp = Blueprint("update", __name__, url_prefix="/api")
 
