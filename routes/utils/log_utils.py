@@ -1,22 +1,17 @@
 """
 Audit logging utility.
 
+FIX #4 — purge_old_logs() no longer interpolates `days` directly into the
+SQL string.  PostgreSQL's INTERVAL literal cannot use a plain bind parameter,
+but it CAN be written as  INTERVAL '1 day' * :days  which is fully
+parameterised and safe against any future refactoring that might loosen the
+int() cast.
+
 Only meaningful, irreversible actions are logged:
   - Product created / updated / deleted
   - Activity added / updated / deleted
   - User account created (admin action)
   - Audit log purged
-
-Usage
------
-    from routes.utils.log_utils import log_action
-
-    log_action(
-        action="Deleted product",
-        description=f"'alice' permanently deleted product '1AF2202L' (Revision 03).",
-        target_type="product",
-        target_id="1AF2202L",
-    )
 
 log_action() reads g.current_user and the client IP automatically.
 It is fire-and-forget: a failure will NOT break the API response.
@@ -40,9 +35,6 @@ def log_action(
     target_type: Optional[str] = None,
     target_id: Optional[str] = None,
     extra: Optional[dict] = None,
-    # Manual overrides — only needed when g.current_user isn't populated yet
-    # (e.g. the register endpoint where the admin IS in g.current_user via @_require_admin,
-    #  so overrides are rarely needed now)
     user_id: Optional[int] = None,
     username: Optional[str] = None,
     user_role: Optional[str] = None,
@@ -53,21 +45,19 @@ def log_action(
     Parameters
     ----------
     action      : Short label shown in the admin log view.
-                  E.g. "Deleted product", "Updated activity".
     description : Full human-readable sentence of what happened.
     target_type : "product" | "activity" | "user" | "logs"
     target_id   : The affected object's identifier.
-    extra       : Optional dict stored as JSONB (e.g. old/new revision).
+    extra       : Optional dict stored as JSONB.
     user_id / username / user_role : Override g.current_user when needed.
     """
     try:
         current_user = getattr(g, "current_user", None)
 
-        resolved_user_id   = user_id   if user_id   is not None else (current_user.id       if current_user else None)
-        resolved_username  = username  if username  is not None else (current_user.username  if current_user else "unknown")
-        resolved_user_role = user_role if user_role is not None else (current_user.role      if current_user else "unknown")
+        resolved_user_id   = user_id   if user_id   is not None else (current_user.id      if current_user else None)
+        resolved_username  = username  if username  is not None else (current_user.username if current_user else "unknown")
+        resolved_user_role = user_role if user_role is not None else (current_user.role     if current_user else "unknown")
 
-        # Respect reverse-proxy forwarding headers
         ip = (
             request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
             or request.remote_addr
@@ -112,12 +102,19 @@ def log_action(
 def purge_old_logs(days: int = 90) -> int:
     """
     Delete log entries older than *days* days. Returns the row count deleted.
-    Called by DELETE /api/logs/cleanup (admin only).
+
+    FIX #4: uses a fully parameterised expression for the interval instead of
+    f-string interpolation.  INTERVAL '1 day' * :days is valid PostgreSQL and
+    keeps the value in a bind parameter.
     """
     try:
         with managed_connection() as conn:
             result = conn.execute(
-                text(f"DELETE FROM activity_logs WHERE logged_at < NOW() - INTERVAL '{days} days'")
+                text(
+                    "DELETE FROM activity_logs "
+                    "WHERE logged_at < NOW() - (INTERVAL '1 day' * :days)"
+                ),
+                {"days": int(days)},
             )
             return result.rowcount
     except Exception as exc:

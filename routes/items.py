@@ -1,12 +1,21 @@
 """
 Items resource.
+
+FIX #2 — create_item() now uses managed_connection() throughout. The old
+get_connection() + manual try/except/finally had early returns inside the
+try block that could leave connections in the pool with open (uncommitted,
+not-rolled-back) transactions.
+
+FIX #1 — all read-only endpoints also use managed_connection() so any
+mid-query error is always followed by an explicit rollback before the
+connection is returned to the pool.
 """
 
 from flask import Blueprint, jsonify, request
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from db import get_connection, release_connection, managed_connection
+from db import managed_connection
 from routes.utils.decorators import require_auth, require_superuser_or_admin
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
@@ -33,10 +42,6 @@ def get_item(item_code):
       404:
         description: Item code not found
     """
-    # [H6 FIX] Use the managed_connection() context manager instead of a bare
-    # get_connection()/finally pair, so the connection is always returned to
-    # the pool (and any error correctly rolled back) regardless of where an
-    # exception is raised.
     with managed_connection() as conn:
         result = conn.execute(
             text(
@@ -54,21 +59,13 @@ def get_item(item_code):
         product = result.mappings().first()
 
         if product is None:
-            return (
-                jsonify(
-                    {
-                        "error": "Item code not found",
-                        "item_code": item_code,
-                    }
-                ),
-                404,
-            )
+            return jsonify({"error": "Item code not found", "item_code": item_code}), 404
 
         result = conn.execute(
             text(
                 """
                 SELECT id, type, item_id, activity_name AS activities,
-                    class, class_1, pax, machine, time_min
+                       class, class_1, pax, machine, time_min
                 FROM activities
                 WHERE inventory_id = :inventory_id
                 ORDER BY sort_order
@@ -136,17 +133,13 @@ def create_item():
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    inventory_id = (body.get("inventory_id") or "").strip()
+    inventory_id   = (body.get("inventory_id")   or "").strip()
     revision_descr = (body.get("revision_descr") or "").strip()
-    product_type = (body.get("product_type") or "").strip()
+    product_type   = (body.get("product_type")   or "").strip()
 
     if not inventory_id or not revision_descr or not product_type:
         return jsonify({"error": "inventory_id, revision_descr, and product_type are required"}), 400
 
-    # [H8 FIX] quantity is stored as double precision but is semantically a
-    # whole number (matches the products_quantity_whole_number CHECK constraint
-    # added in the data-fix migration). Validate up front so a bad value comes
-    # back as a clean 400 instead of a raw Postgres CheckViolation / 500.
     quantity = body.get("quantity", 1)
     try:
         quantity = float(quantity)
@@ -155,7 +148,7 @@ def create_item():
     if quantity != int(quantity):
         return jsonify({"error": "quantity must be a whole number"}), 400
 
-    # --- [C7 FIX] Validate activities before touching the DB ---
+    # Validate activities before touching the DB
     raw_activities = body.get("activities", [])
     for idx, act in enumerate(raw_activities):
         if not (act.get("activity_name") or "").strip():
@@ -163,98 +156,94 @@ def create_item():
                 "error": f"Activity at index {idx} is missing a non-empty activity_name"
             }), 400
 
-    # [H8 FIX] Validate fg/bm_production_line_code against production_lines
-    # before inserting, so an unknown code comes back as a clean 400 instead
-    # of a raw FK-violation IntegrityError surfaced as a 500.
-    conn = get_connection()
+    # FIX #2: managed_connection() guarantees rollback + pool return on any
+    # early return or exception — no more leaked open transactions.
     try:
-        for code_field in ("fg_production_line_code", "bm_production_line_code"):
-            code = body.get(code_field)
-            if code:
-                row = conn.execute(
-                    text("SELECT 1 FROM production_lines WHERE production_line_code = :c"),
-                    {"c": code},
-                ).first()
-                if not row:
-                    return jsonify({"error": f"{code_field} '{code}' does not exist"}), 400
+        with managed_connection() as conn:
+            # Validate production line codes against the production_lines table
+            for code_field in ("fg_production_line_code", "bm_production_line_code"):
+                code = body.get(code_field)
+                if code:
+                    row = conn.execute(
+                        text("SELECT 1 FROM production_lines WHERE production_line_code = :c"),
+                        {"c": code},
+                    ).first()
+                    if not row:
+                        return jsonify({"error": f"{code_field} '{code}' does not exist"}), 400
 
-        # Check for duplicate
-        result = conn.execute(
-            text("SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(:inventory_id)"),
-            {"inventory_id": inventory_id},
-        )
-        if result.mappings().first() is not None:
-            return jsonify({"error": "Item code already exists", "inventory_id": inventory_id}), 409
+            # Check for duplicate inventory_id
+            result = conn.execute(
+                text("SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(:inventory_id)"),
+                {"inventory_id": inventory_id},
+            )
+            if result.mappings().first() is not None:
+                return jsonify({"error": "Item code already exists", "inventory_id": inventory_id}), 409
 
-        conn.execute(
-            text(
-                """
-                INSERT INTO products
-                    (inventory_id, revision_descr, revision, quantity, product_type,
-                     fg_production_line, fg_production_line_code,
-                     bm_production_line, bm_production_line_code, notes)
-                VALUES (:inventory_id, :revision_descr, :revision, :quantity, :product_type,
-                        :fg_production_line, :fg_production_line_code,
-                        :bm_production_line, :bm_production_line_code, :notes)
-                """
-            ),
-            {
-                "inventory_id": inventory_id,
-                "revision_descr": revision_descr,
-                "revision": "00",
-                "quantity": quantity,
-                "product_type": product_type,
-                "fg_production_line": body.get("fg_production_line"),
-                "fg_production_line_code": body.get("fg_production_line_code"),
-                "bm_production_line": body.get("bm_production_line"),
-                "bm_production_line_code": body.get("bm_production_line_code"),
-                "notes": body.get("notes"),
-            },
-        )
-
-        # Insert activities
-        for i, act in enumerate(raw_activities, start=1):
-            activity_name = act["activity_name"].strip()
             conn.execute(
                 text(
                     """
-                    INSERT INTO activities
-                        (inventory_id, type, item_id, activity_name,
-                         class, class_1, pax, machine, time_min, sort_order)
-                    VALUES (:inventory_id, :type, :item_id, :activity_name,
-                            :class, :class_1, :pax, :machine, :time_min, :sort_order)
+                    INSERT INTO products
+                        (inventory_id, revision_descr, revision, quantity, product_type,
+                         fg_production_line, fg_production_line_code,
+                         bm_production_line, bm_production_line_code, notes)
+                    VALUES (:inventory_id, :revision_descr, :revision, :quantity, :product_type,
+                            :fg_production_line, :fg_production_line_code,
+                            :bm_production_line, :bm_production_line_code, :notes)
                     """
                 ),
                 {
-                    "inventory_id": inventory_id,
-                    "type": act.get("type", "Labor"),
-                    "item_id": act.get("item_id", activity_name),
-                    "activity_name": activity_name,
-                    "class": act.get("class", "DL"),
-                    "class_1": act.get("class_1", "DL"),
-                    "pax": act.get("pax", 0),
-                    "machine": act.get("machine", 0),
-                    "time_min": act.get("time_min", 0),
-                    "sort_order": act.get("sort_order", i),   # [H5 FIX] respect caller sort_order
+                    "inventory_id":            inventory_id,
+                    "revision_descr":          revision_descr,
+                    "revision":                "00",
+                    "quantity":                quantity,
+                    "product_type":            product_type,
+                    "fg_production_line":      body.get("fg_production_line"),
+                    "fg_production_line_code": body.get("fg_production_line_code"),
+                    "bm_production_line":      body.get("bm_production_line"),
+                    "bm_production_line_code": body.get("bm_production_line_code"),
+                    "notes":                   body.get("notes"),
                 },
             )
 
-        conn.commit()
+            for i, act in enumerate(raw_activities, start=1):
+                activity_name = act["activity_name"].strip()
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO activities
+                            (inventory_id, type, item_id, activity_name,
+                             class, class_1, pax, machine, time_min, sort_order)
+                        VALUES (:inventory_id, :type, :item_id, :activity_name,
+                                :class, :class_1, :pax, :machine, :time_min, :sort_order)
+                        """
+                    ),
+                    {
+                        "inventory_id": inventory_id,
+                        "type":         act.get("type", "Labor"),
+                        "item_id":      act.get("item_id", activity_name),
+                        "activity_name": activity_name,
+                        "class":        act.get("class", "DL"),
+                        "class_1":      act.get("class_1", "DL"),
+                        "pax":          act.get("pax", 0),
+                        "machine":      act.get("machine", 0),
+                        "time_min":     act.get("time_min", 0),
+                        "sort_order":   act.get("sort_order", i),
+                    },
+                )
+
+            # managed_connection() commits on clean exit
+
         return jsonify({
-            "message": "Product created",
+            "message":      "Product created",
             "inventory_id": inventory_id,
-            "revision": "00",
+            "revision":     "00",
         }), 201
 
-    # --- [C2 FIX] Catch IntegrityError separately for a clean 409 ---
     except IntegrityError:
-        conn.rollback()
+        # managed_connection() already rolled back
         return jsonify({"error": "Item code already exists", "inventory_id": inventory_id}), 409
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @items_bp.get("/items")
@@ -276,48 +265,55 @@ def search_items():
         type: integer
         required: false
         default: 50
+      - name: offset
+        in: query
+        type: integer
+        required: false
+        default: 0
+        description: Number of items to skip, for pagination
     responses:
       200:
         description: List of matching items (summary, no activities)
     """
-    q = request.args.get("q", "").strip()
-    # [M2 FIX] Cap limit to prevent runaway full-table scans
-    limit = min(request.args.get("limit", 50, type=int), 1000)
+    q      = request.args.get("q", "").strip()
+    limit  = min(request.args.get("limit", 50, type=int), 1000)
+    offset = max(request.args.get("offset", 0, type=int), 0)
 
-    # [H6 FIX] managed_connection() guarantees the connection is released
-    # back to the pool even if something raises mid-query.
     with managed_connection() as conn:
+        params: dict = {"limit": limit, "offset": offset}
         if q:
-            result = conn.execute(
-                text(
-                    """
-                    SELECT inventory_id, revision_descr, revision, product_type,
-                           quantity,
-                           bm_production_line, bm_production_line_code,
-                           fg_production_line, fg_production_line_code
-                    FROM products
-                    WHERE inventory_id ILIKE :q OR revision_descr ILIKE :q
-                    ORDER BY inventory_id
-                    LIMIT :limit
-                    """
-                ),
-                {"q": f"%{q}%", "limit": limit},
-            )
+            params["q"] = f"%{q}%"
+            where = "WHERE inventory_id ILIKE :q OR revision_descr ILIKE :q"
         else:
-            result = conn.execute(
-                text(
-                    """
-                    SELECT inventory_id, revision_descr, revision, product_type,
-                           quantity,
-                           bm_production_line, bm_production_line_code,
-                           fg_production_line, fg_production_line_code
-                    FROM products
-                    ORDER BY inventory_id
-                    LIMIT :limit
-                    """
-                ),
-                {"limit": limit},
-            )
+            where = ""
 
+        # Total count so callers know when results are truncated
+        count_result = conn.execute(
+            text(f"SELECT COUNT(*) AS total FROM products {where}"),
+            params,
+        )
+        total = count_result.mappings().first()["total"]
+
+        result = conn.execute(
+            text(
+                f"""
+                SELECT inventory_id, revision_descr, revision, product_type,
+                       quantity,
+                       bm_production_line, bm_production_line_code,
+                       fg_production_line, fg_production_line_code
+                FROM products
+                {where}
+                ORDER BY inventory_id
+                LIMIT :limit OFFSET :offset
+                """
+            ),
+            params,
+        )
         rows = result.mappings().all()
-        return jsonify([dict(r) for r in rows])
+
+    return jsonify({
+        "total":   total,
+        "limit":   limit,
+        "offset":  offset,
+        "results": [dict(r) for r in rows],
+    })

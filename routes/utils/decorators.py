@@ -1,35 +1,9 @@
 """
 Flask decorators for authentication and RBAC authorization.
 
-Decorators
-----------
-    @require_auth
-        Ensures the request carries a valid JWT. Injects
-        `g.current_user` (User instance) and `g.current_token` (payload dict).
-
-    @require_role("superuser", "admin")
-        Requires @require_auth first. Then checks that the authenticated
-        user's role is one of the allowed roles. Returns 403 otherwise.
-
-Usage Examples
---------------
-    @items_bp.get("/items")
-    @require_auth
-    def search_items():
-        # g.current_user and g.current_token are available here
-        ...
-
-    @items_bp.post("/items")
-    @require_role("superuser", "admin")
-    def create_item():
-        # Only superuser or admin can reach this
-        ...
-
-    @some_bp.get("/admin/logs")
-    @require_role("admin")
-    def view_logs():
-        # Only admin can reach this
-        ...
+FIX #6 — require_auth now uses managed_db_session() so the scoped session
+is properly released via .remove() on every request, preventing the
+thread-local session from being reused in a closed/dirty state.
 """
 
 import logging
@@ -38,9 +12,10 @@ from functools import wraps
 from flask import jsonify, g, request
 
 from routes.utils.auth_utils import get_token_from_header, decode_access_token
-from routes.models import User, get_db_session
+from routes.models import User, managed_db_session
 
 logger = logging.getLogger(__name__)
+
 
 # -----------------------------------------------------------------------------
 # @require_auth — validates JWT and loads the user
@@ -51,37 +26,35 @@ def require_auth(f):
     Verify that the request includes a valid JWT access token.
 
     On success, attaches to Flask's `g` object:
-        g.current_user  -> User ORM instance (or None if user deleted)
+        g.current_user  -> User ORM instance
         g.current_token -> Decoded JWT payload dict
 
-    On failure, returns 401 with a JSON error body. The decorated route
-    function is NOT called.
+    On failure, returns 401/403 with a JSON error body.
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        # 1. Extract token from Authorization header
         auth_header = request.headers.get("Authorization", "")
         token = get_token_from_header(auth_header)
 
         if not token:
             return jsonify({"error": "Authentication required. Provide a Bearer token in the Authorization header."}), 401
 
-        # 2. Decode and validate the JWT
         payload = decode_access_token(token)
         if not payload:
             return jsonify({"error": "Invalid or expired token."}), 401
 
-        # 3. Load the user from the database
         try:
             user_id = int(payload["sub"])
         except (ValueError, TypeError, KeyError):
             return jsonify({"error": "Invalid token payload."}), 401
 
-        session = get_db_session()
-        try:
+        # FIX #6: managed_db_session() calls factory.remove() on exit,
+        # ensuring the scoped session is fully released after each request.
+        user = None
+        with managed_db_session() as session:
             user = session.query(User).filter_by(id=user_id).first()
-        finally:
-            session.close()
+            if user is not None:
+                session.expunge(user)   # detach so it survives session close
 
         if user is None:
             return jsonify({"error": "User not found."}), 401
@@ -89,11 +62,9 @@ def require_auth(f):
         if not user.is_active:
             return jsonify({"error": "Account is disabled."}), 403
 
-        # 4. Attach to Flask's application context
         g.current_user = user
         g.current_token = payload
 
-        # 5. Call the actual route
         return f(*args, **kwargs)
 
     return decorated
@@ -107,28 +78,13 @@ def require_role(*allowed_roles):
     """
     Restrict access to users whose role is one of *allowed_roles*.
 
-    This decorator MUST be used AFTER @require_auth (it depends on
-    g.current_user being set).
-
-    Parameters
-    ----------
-    *allowed_roles : str
-        One or more role names from {"user", "superuser", "admin"}.
-
-    Example
-    -------
-        @items_bp.post("/items")
-        @require_auth
-        @require_role("superuser", "admin")
-        def create_item():
-            ...
+    Must be applied AFTER @require_auth (depends on g.current_user).
     """
     allowed = set(allowed_roles)
 
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            # Ensure @require_auth ran first
             current_user = getattr(g, "current_user", None)
             if current_user is None:
                 return jsonify({"error": "Authentication required."}), 401
@@ -146,7 +102,7 @@ def require_role(*allowed_roles):
 
 
 # -----------------------------------------------------------------------------
-# Convenience composites (optional — reduces repetition)
+# Convenience composites
 # -----------------------------------------------------------------------------
 
 def require_admin(f):

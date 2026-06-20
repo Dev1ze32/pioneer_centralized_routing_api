@@ -1,31 +1,29 @@
 """
 SQLAlchemy ORM models for the ACU Routing API.
 
-This module provides the declarative User model used by the auth system.
-It uses a separate ORM session/scoped_session from the Core engine in db.py
-so that both patterns (Core for existing routes, ORM for auth) can coexist.
+FIX #17 — Single engine: this module now imports and reuses _get_engine()
+from db.py instead of creating its own engine. Both Core (db.py) and ORM
+(models.py) share one pool, keeping the total connection ceiling at 20.
 
-Usage
------
-    from routes.models import User, get_db_session
-    session = get_db_session()
-    user = session.query(User).filter_by(username="alice").first()
+FIX #5 / #6 — Scoped session lifecycle: managed_db_session() now calls
+session.remove() (not session.close()) so the scoped-session registry
+releases the session properly and the next call in the same thread gets a
+fresh session. Direct callers of get_db_session() are expected to call
+_session_factory.remove() when done; the managed context manager handles
+this automatically.
 """
 
 import logging
 from contextlib import contextmanager
 
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 from sqlalchemy.sql import func
 
-from config import Config
+from db import _get_engine   # FIX #17: reuse the shared engine
 
 logger = logging.getLogger(__name__)
 
-# -----------------------------------------------------------------------------
-# Shared declarative base
-# -----------------------------------------------------------------------------
 Base = declarative_base()
 
 
@@ -75,31 +73,21 @@ class User(Base):
         "admin":     3,
     }
 
-    # -------------------------------------------------------------------------
-    # Helpers
-    # -------------------------------------------------------------------------
-
     def has_role(self, *required_roles: str) -> bool:
         """Return True if the user's role is one of *required_roles*."""
         return self.role in required_roles
 
     def has_minimum_role(self, minimum_role: str) -> bool:
-        """
-        Return True if the user's role level is >= *minimum_role*.
-
-        Example
-        -------
-            user.has_minimum_role("superuser")  # True for superuser and admin
-        """
+        """Return True if the user's role level is >= *minimum_role*."""
         return self.ROLE_LEVEL.get(self.role, 0) >= self.ROLE_LEVEL.get(minimum_role, 0)
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Serialize the user to a dictionary."""
         data = {
-            "id":        self.id,
-            "username":  self.username,
-            "role":      self.role,
-            "is_active": self.is_active,
+            "id":         self.id,
+            "username":   self.username,
+            "role":       self.role,
+            "is_active":  self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -112,43 +100,32 @@ class User(Base):
 
 
 # -----------------------------------------------------------------------------
-# ORM Session Factory (scoped, thread-safe)
+# ORM Session Factory — binds to the shared engine from db.py
+# FIX #17: no second engine; FIX #5/#6: use .remove() not .close()
 # -----------------------------------------------------------------------------
 
-_engine = None
-_session_factory = None
+_session_factory: scoped_session | None = None
 
-def _get_orm_engine():
-    """Create or return the shared ORM engine (mirrors db.py's Core engine)."""
-    global _engine
-    if _engine is None:
-        db_url = (
-            f"postgresql+psycopg2://{Config.DB_USER}:{Config.DB_PASSWORD}"
-            f"@{Config.DB_HOST}:{Config.DB_PORT}/{Config.DB_NAME}"
+
+def _get_session_factory() -> scoped_session:
+    global _session_factory
+    if _session_factory is None:
+        _session_factory = scoped_session(
+            sessionmaker(bind=_get_engine())
         )
-        _engine = create_engine(
-            db_url,
-            pool_size=2,
-            max_overflow=18,
-            pool_pre_ping=True,
-        )
-        logger.info("Auth ORM engine created.")
-    return _engine
+        logger.info("ORM scoped_session factory created (bound to shared engine).")
+    return _session_factory
 
 
 def get_db_session():
     """
-    Return a new scoped ORM session.
+    Return the scoped ORM session for the current thread.
 
-n    The caller must call session.close() when done, or use
-    managed_db_session() as a context manager.
+    IMPORTANT: always call _get_session_factory().remove() (or use
+    managed_db_session()) when finished so the scoped-session registry
+    releases the session and returns the underlying connection to the pool.
     """
-    global _session_factory
-    if _session_factory is None:
-        _session_factory = scoped_session(
-            sessionmaker(bind=_get_orm_engine())
-        )
-    return _session_factory()
+    return _get_session_factory()()
 
 
 @contextmanager
@@ -156,14 +133,19 @@ def managed_db_session():
     """
     Context manager for ORM sessions.
 
-    Commits on success, rolls back on error, always closes the session.
+    Commits on success, rolls back on error, and always removes the session
+    from the scoped-session registry so the connection is returned to the pool.
+
+    FIX #5/#6: calls session_factory.remove() instead of session.close(),
+    which is the correct way to release a scoped_session.
 
     Usage
     -----
         with managed_db_session() as session:
             user = session.query(User).filter_by(username="alice").first()
     """
-    session = get_db_session()
+    factory = _get_session_factory()
+    session = factory()
     try:
         yield session
         session.commit()
@@ -171,4 +153,4 @@ def managed_db_session():
         session.rollback()
         raise
     finally:
-        session.close()
+        factory.remove()   # FIX #5/#6: properly releases scope + connection

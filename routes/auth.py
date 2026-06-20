@@ -3,18 +3,13 @@ Authentication blueprint — registration and login.
 
 Endpoints
 ---------
-    POST /api/auth/register
-        Admin-only. Creates a user with any role.
+    POST /api/auth/register   Admin-only. Creates a user with any role.
+    POST /api/auth/login      Authenticate, receive a JWT access token.
+    GET  /api/auth/me         Return the currently authenticated user.
 
-    POST /api/auth/login
-        Authenticate with username + password, receive a JWT access token.
-
-    GET  /api/auth/me
-        Return the currently authenticated user's details.
-
-Dependencies
-------------
-    pip install argon2-cffi pyjwt
+FIX #6 — login() now uses managed_db_session() (which calls .remove() on
+the scoped-session registry) instead of a bare get_db_session() / .close()
+pair that did not properly release the scoped session.
 """
 
 import logging
@@ -29,7 +24,7 @@ from routes.utils.auth_utils import (
 )
 from routes.utils.decorators import require_auth, require_role
 from routes.utils.log_utils import log_action
-from routes.models import User, get_db_session, managed_db_session
+from routes.models import User, managed_db_session
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +123,6 @@ def register():
         user_id   = new_user.id
         user_role = new_user.role
 
-    # Audit log — admin created an account
     admin = g.current_user
     log_action(
         action="Created user account",
@@ -151,6 +145,8 @@ def register():
 
 # -----------------------------------------------------------------------------
 # POST /api/auth/login
+# FIX #6: use managed_db_session() so the scoped session is properly released
+# via .remove() rather than leaving the scope dirty with .close().
 # -----------------------------------------------------------------------------
 
 @auth_bp.post("/login")
@@ -195,11 +191,14 @@ def login():
     if not username or not password:
         return jsonify({"error": "username and password are required"}), 400
 
-    session = get_db_session()
-    try:
+    # FIX #6: managed_db_session() calls factory.remove() on exit,
+    # properly releasing the scoped session back to the pool.
+    user = None
+    with managed_db_session() as session:
         user = session.query(User).filter_by(username=username).first()
-    finally:
-        session.close()
+        # Expunge so we can safely use the user object after the session closes
+        if user is not None:
+            session.expunge(user)
 
     if user is None:
         return jsonify({"error": "Invalid username or password"}), 401

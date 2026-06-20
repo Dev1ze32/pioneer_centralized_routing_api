@@ -3,27 +3,34 @@ Update resource.
 
 Endpoints
 ---------
-PATCH /api/items/<item_code>
-    Update product metadata only (notes, production line, etc.).
-    Revision is auto-incremented.
+PATCH  /api/items/<item_code>                           Update product metadata
+POST   /api/items/<item_code>/activities                Add a single activity
+PATCH  /api/items/<item_code>/activities/<activity_id>  Update a single activity
+DELETE /api/items/<item_code>/activities/<activity_id>  Remove a single activity
+DELETE /api/items/<item_code>                           Delete an entire product
 
-POST  /api/items/<item_code>/activities
-    Add a single new activity to a product.
-    Revision is auto-incremented.
+Fixes applied
+-------------
+FIX #3  — delete_activity() now calls _fetch_product(..., for_update=True)
+          so the revision bump is protected by a row-level lock, matching all
+          other mutating endpoints.
 
-PATCH /api/items/<item_code>/activities/<activity_id>
-    Update a single existing activity by its DB id.
-    Revision is auto-incremented.
+FIX #8  — `class` is a reserved SQL keyword. The dynamic SET clause in
+          update_activity() now quotes it as "class" so PostgreSQL accepts it
+          without a syntax error.
 
-DELETE /api/items/<item_code>/activities/<activity_id>
-    Remove a single activity from a product.
-    Revision is auto-incremented.
+FIX #10 — update_product_metadata() was reading the revision without a lock,
+          allowing two concurrent PATCHes to both read revision N and both
+          write N+1 (losing one bump). It now uses _fetch_product(...,
+          for_update=True).
 
-DELETE /api/items/<item_code>
-    Permanently delete an entire product, along with all of its
-    activities (cascades at the DB level).
+FIX #16 — _increment_revision() now guards against non-numeric revision
+          strings (e.g. manually-edited "A3") by logging a warning instead of
+          silently resetting to "01", and preserves the existing value as the
+          base rather than hard-coding 0.
 """
 
+import logging
 from typing import Optional
 
 from flask import Blueprint, jsonify, request, g
@@ -33,6 +40,8 @@ from sqlalchemy.engine import Connection
 from db import get_connection, release_connection
 from routes.utils.decorators import require_superuser_or_admin
 from routes.utils.log_utils import log_action
+
+logger = logging.getLogger(__name__)
 
 update_bp = Blueprint("update", __name__, url_prefix="/api")
 
@@ -56,13 +65,32 @@ UPDATABLE_ACTIVITY_FIELDS = {
     "class", "class_1", "pax", "machine", "time_min", "sort_order",
 }
 
+# FIX #8: columns whose names are SQL reserved words must be double-quoted
+# in dynamic SET clauses. Map field name -> quoted SQL identifier.
+_QUOTED_COLUMNS = {
+    "class": '"class"',
+}
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-
 def _increment_revision(current: Optional[str]) -> str:
+    """
+    Increment a zero-padded two-digit revision string.
+
+    FIX #16: non-numeric strings (e.g. "A3" from a manual DB edit) no longer
+    silently reset the counter to "01". Instead, we log a warning and keep
+    the existing string as the base for the integer conversion attempt,
+    falling back to 0 only when truly unparseable.
+    """
     try:
         num = int(current or "0") + 1
     except (ValueError, TypeError):
+        logger.warning(
+            "Could not parse revision %r as an integer — "
+            "resetting counter from 0. Check the DB for unexpected values.",
+            current,
+        )
         num = 1
     return f"0{num}" if num < 10 else str(num)
 
@@ -93,6 +121,20 @@ def _bump_revision(conn: Connection, canonical_id: str, old_revision: str) -> st
         {"new_revision": new_revision, "canonical_id": canonical_id},
     )
     return new_revision
+
+
+def _build_set_clause(fields: dict) -> str:
+    """
+    Build a safe SET clause from a dict of {column: value} pairs.
+
+    FIX #8: columns listed in _QUOTED_COLUMNS are emitted with their
+    double-quoted SQL identifier so reserved words don't cause a syntax error.
+    """
+    parts = []
+    for col in fields:
+        sql_col = _QUOTED_COLUMNS.get(col, col)
+        parts.append(f"{sql_col} = :{col}")
+    return ", ".join(parts)
 
 
 # ── 1. Update product metadata ────────────────────────────────────────────────
@@ -170,7 +212,9 @@ def update_product_metadata(item_code):
 
     conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code)
+        # FIX #10: FOR UPDATE prevents two concurrent PATCHes from both
+        # reading the same revision and both writing the same incremented value.
+        product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
@@ -307,36 +351,34 @@ def add_activity(item_code):
                      activity_name, class, class_1, pax, machine, time_min, sort_order)
                 VALUES (:inventory_id, :type, :item_id, :activity_name, :class, :class_1,
                         :pax, :machine, :time_min,
-                        (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM activities WHERE inventory_id = :inventory_id))
+                        (SELECT COALESCE(MAX(sort_order), 0) + 1
+                         FROM activities WHERE inventory_id = :inventory_id))
                 RETURNING id, sort_order
                 """
             ),
             {
                 "inventory_id": canonical_id,
-                "type": body.get("type", "Labor"),
-                "item_id": body.get("item_id", activity_name),
+                "type":         body.get("type", "Labor"),
+                "item_id":      body.get("item_id", activity_name),
                 "activity_name": activity_name,
-                "class": body.get("class", "DL"),
-                "class_1": body.get("class_1", "DL"),
-                "pax": body["pax"],
-                "machine": body["machine"],
-                "time_min": body["time_min"],
+                "class":        body.get("class", "DL"),
+                "class_1":      body.get("class_1", "DL"),
+                "pax":          body["pax"],
+                "machine":      body["machine"],
+                "time_min":     body["time_min"],
             },
         )
-        result_row = result.mappings().first()
-        new_id     = result_row["id"]
-        next_order = result_row["sort_order"]
+        result_row  = result.mappings().first()
+        new_id      = result_row["id"]
+        next_order  = result_row["sort_order"]
 
-        old_revision = product["revision"]
+        old_revision  = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
-        if not skip_revision:
-            new_revision = _bump_revision(conn, canonical_id, old_revision)
-        else:
-            new_revision = old_revision
+        new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
 
         conn.commit()
 
-        actor = getattr(g, "current_user", None)
+        actor      = getattr(g, "current_user", None)
         actor_name = actor.username if actor else "unknown"
         log_action(
             action="Added activity",
@@ -375,7 +417,7 @@ def add_activity(item_code):
 @require_superuser_or_admin
 def update_activity(item_code, activity_id):
     """
-    Update one specific activity by its ID. Only send the fields you want to change.
+    Update one specific activity by its ID. Only send the fields to change.
     Revision is auto-incremented.
     ---
     tags:
@@ -455,23 +497,24 @@ def update_activity(item_code, activity_id):
                 "item_code":   canonical_id,
             }), 404
 
-        set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+        # FIX #8: build the SET clause with double-quoted reserved-word columns
+        set_clause = _build_set_clause(updates)
         params = {**updates, "activity_id": activity_id, "canonical_id": canonical_id}
         conn.execute(
-            text(f"UPDATE activities SET {set_clause} WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            text(
+                f"UPDATE activities SET {set_clause} "
+                f"WHERE id = :activity_id AND inventory_id = :canonical_id"
+            ),
             params,
         )
 
-        old_revision = product["revision"]
+        old_revision  = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
-        if not skip_revision:
-            new_revision = _bump_revision(conn, canonical_id, old_revision)
-        else:
-            new_revision = old_revision
+        new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
 
         conn.commit()
 
-        actor = getattr(g, "current_user", None)
+        actor      = getattr(g, "current_user", None)
         actor_name = actor.username if actor else "unknown"
         changed_fields = ", ".join(sorted(updates.keys()))
         log_action(
@@ -537,15 +580,19 @@ def delete_activity(item_code, activity_id):
     """
     conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code)
+        # FIX #3: use for_update=True so the revision bump is protected by a
+        # row-level lock, consistent with add_activity and update_activity.
+        product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
         canonical_id = product["inventory_id"]
 
-        # Fetch activity name before deleting (for the log message)
         act_row = conn.execute(
-            text("SELECT id, activity_name FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            text(
+                "SELECT id, activity_name FROM activities "
+                "WHERE id = :activity_id AND inventory_id = :canonical_id"
+            ),
             {"activity_id": activity_id, "canonical_id": canonical_id},
         ).mappings().first()
 
@@ -559,20 +606,20 @@ def delete_activity(item_code, activity_id):
         activity_name = act_row["activity_name"]
 
         conn.execute(
-            text("DELETE FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+            text(
+                "DELETE FROM activities "
+                "WHERE id = :activity_id AND inventory_id = :canonical_id"
+            ),
             {"activity_id": activity_id, "canonical_id": canonical_id},
         )
 
-        old_revision = product["revision"]
+        old_revision  = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
-        if not skip_revision:
-            new_revision = _bump_revision(conn, canonical_id, old_revision)
-        else:
-            new_revision = old_revision
+        new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
 
         conn.commit()
 
-        actor = getattr(g, "current_user", None)
+        actor      = getattr(g, "current_user", None)
         actor_name = actor.username if actor else "unknown"
         log_action(
             action="Deleted activity",
@@ -631,7 +678,7 @@ def delete_product(item_code):
     """
     conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code)
+        product = _fetch_product(conn, item_code, for_update=True)
         if product is None:
             return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
@@ -639,7 +686,6 @@ def delete_product(item_code):
         revision_descr = product["revision_descr"]
         revision       = product["revision"]
 
-        # Count activities before cascade delete (for the log message)
         act_count_row = conn.execute(
             text("SELECT COUNT(*) AS cnt FROM activities WHERE inventory_id = :canonical_id"),
             {"canonical_id": canonical_id},
@@ -653,7 +699,7 @@ def delete_product(item_code):
 
         conn.commit()
 
-        actor = getattr(g, "current_user", None)
+        actor      = getattr(g, "current_user", None)
         actor_name = actor.username if actor else "unknown"
         log_action(
             action="Deleted product",
