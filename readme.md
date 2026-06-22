@@ -1,6 +1,8 @@
-# ACU Routing API (v0.0.1)
+# ACU Routing API (v0.1.0)
 
 A Flask + PostgreSQL REST API for managing product routing data — item codes, their activity sequences, and the production lines those activities belong to. Documented via Swagger UI (Flasgger).
+
+All write endpoints require authentication. Read endpoints require a valid token. See [Authentication](#authentication) for details.
 
 ---
 
@@ -13,9 +15,12 @@ A Flask + PostgreSQL REST API for managing product routing data — item codes, 
 5. [Interactive Docs (Swagger UI)](#5-interactive-docs-swagger-ui)
 6. [API Reference](#6-api-reference)
    - [Health](#health)
+   - [Authentication](#authentication)
    - [Items](#items)
    - [Production Lines](#production-lines)
+   - [Logs](#logs)
 7. [Error Responses](#7-error-responses)
+8. [Rate Limiting](#8-rate-limiting)
 
 ---
 
@@ -24,26 +29,33 @@ A Flask + PostgreSQL REST API for managing product routing data — item codes, 
 ```
 routing_api/
 ├── app.py                      # Flask app factory + entry point
-├── config.py                   # Env-based configuration (DB credentials)
+├── config.py                   # All configuration (DB, JWT, pool, rate limits, gunicorn)
 ├── db.py                       # SQLAlchemy connection pool helper
-├── schema.sql                  # Creates products, activities, production_lines, line_activities tables
+├── gunicorn.conf.py            # Gunicorn production server configuration
+├── schema.sql                  # Creates all tables
 ├── load_data.py                # Loads acu_routing_parsed.json into the database
 ├── requirements.txt            # Python dependencies
-├── .env.example                # Copy to .env and fill in DB credentials
+├── .env.example                # Copy to .env and fill in values
 ├── acu_routing_parsed.json     # Source data exported by parser.py
 └── routes/
     ├── __init__.py             # Blueprint registration
+    ├── auth.py                 # POST /api/auth/register, /login, GET /api/auth/me
     ├── health.py               # GET /api/health
-    ├── items.py                # CRUD for /api/items
+    ├── items.py                # GET /api/items (search + single lookup, POST create)
+    ├── logs.py                 # GET /api/logs, DELETE /api/logs/cleanup (admin only)
     ├── production_lines.py     # CRUD for /api/production-lines
-    └── update.py               # PATCH/DELETE for items and their activities
+    ├── update.py               # PATCH/DELETE for items and their activities
+    └── utils/
+        ├── auth_utils.py       # Argon2 password hashing, JWT creation and decoding
+        ├── decorators.py       # @require_auth, @require_role, @require_superuser_or_admin
+        └── log_utils.py        # Audit log writer (log_action) and purge helper
 ```
 
 ---
 
 ## 2. Schema Design
 
-Four tables with a clear hierarchy:
+Six tables total. Four for routing data, two for auth and auditing.
 
 **products** — one row per item code
 | Column | Type |
@@ -88,6 +100,32 @@ Four tables with a clear hierarchy:
 | sort_order | integer |
 | stage | text |
 
+**users** — one row per application user
+| Column | Type |
+|---|---|
+| id (PK) | serial |
+| username | varchar(50) unique |
+| password_hash | varchar(255) |
+| role | varchar(20) — `user`, `superuser`, `admin` |
+| is_active | boolean |
+| created_at | timestamptz |
+| updated_at | timestamptz |
+
+**activity_logs** — audit trail for all write operations
+| Column | Type |
+|---|---|
+| id (PK) | serial |
+| logged_at | timestamptz |
+| user_id | integer |
+| username | varchar(50) |
+| user_role | varchar(20) |
+| action | text |
+| description | text |
+| target_type | text |
+| target_id | text |
+| ip_address | text |
+| extra | jsonb |
+
 `activities.inventory_id` has `ON DELETE CASCADE` — deleting a product also removes all its activities. `line_activities.production_line_code` has `ON DELETE CASCADE` as well.
 
 ---
@@ -100,32 +138,55 @@ Four tables with a clear hierarchy:
 pip install -r requirements.txt
 ```
 
-### b) Configure the database connection
+### b) Configure environment
 
 ```bash
 cp .env.example .env
-# Edit .env with your PostgreSQL credentials
+# Edit .env — at minimum set DB_PASSWORD and JWT_SECRET_KEY
 ```
 
-`.env.example` values:
+Generate a secure JWT secret:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
 ```
+
+Full `.env` reference:
+```
+# Database
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=routing_db
 DB_USER=postgres
-DB_PASSWORD=postgres
+DB_PASSWORD=CHANGE_ME
+
+# JWT — must be set, app warns loudly on startup if left as placeholder
+JWT_SECRET_KEY=CHANGE_ME
+JWT_ACCESS_TOKEN_EXPIRES_HOURS=24
+
+# Connection pool (defaults work for most deployments)
+DB_POOL_SIZE=20
+DB_MAX_OVERFLOW=10
+DB_POOL_TIMEOUT=10
+DB_POOL_RECYCLE=1800
+DB_CONNECT_TIMEOUT=5
+DB_STATEMENT_TIMEOUT_MS=30000
+
+# Rate limiting
+RATE_LIMIT_LOGIN=10/minute
+RATE_LIMIT_REGISTER=5/minute
+RATE_LIMIT_DEFAULT=300/minute
+
+# Gunicorn (production only)
+GUNICORN_WORKERS=4
+GUNICORN_THREADS=4
+GUNICORN_PORT=5000
+GUNICORN_TIMEOUT=60
 ```
 
-Make sure the database exists:
+### c) Create the database and load data
+
 ```bash
 createdb routing_db
-```
-
-### c) Load the data
-
-Creates the schema (drops and recreates all tables) and loads `acu_routing_parsed.json`. Safe to re-run — it upserts products and replaces activities for each product.
-
-```bash
 python load_data.py acu_routing_parsed.json
 ```
 
@@ -133,11 +194,19 @@ python load_data.py acu_routing_parsed.json
 
 ## 4. Running the Server
 
+**Development** (single-threaded, do not use in production):
 ```bash
 python app.py
 ```
 
-Server starts at `http://127.0.0.1:5000` with hot-reload enabled (`debug=True`).
+**Production** (gunicorn, multi-worker):
+```bash
+gunicorn "app:create_app()" -c gunicorn.conf.py
+```
+
+Server starts at `http://0.0.0.0:5000` by default. The `GUNICORN_PORT` env var changes the port.
+
+> **Note:** `debug=True` has been removed. Running `python app.py` now starts Flask in production mode with a warning reminding you to use gunicorn for real deployments.
 
 ---
 
@@ -149,7 +218,9 @@ Once the server is running, open:
 http://127.0.0.1:5000/docs/
 ```
 
-Use the Swagger UI to explore every endpoint, fill in parameters, and fire live requests directly from the browser. The raw OpenAPI spec is at `/apispec_1.json`.
+All endpoints that require authentication show a lock icon. Use the **Authorize** button (top right) to enter your Bearer token once and it will be sent with every request you fire from the UI.
+
+The raw OpenAPI spec is at `/apispec_1.json`.
 
 ---
 
@@ -157,15 +228,27 @@ Use the Swagger UI to explore every endpoint, fill in parameters, and fire live 
 
 All endpoints are under the `/api` prefix. Request/response bodies are JSON. Path parameters are **case-insensitive** unless noted.
 
+**Authentication is required on all endpoints** except `GET /api/health` and `POST /api/auth/login`. Pass the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your_token>
+```
+
+**Role permissions:**
+
+| Role | Can do |
+|---|---|
+| `user` | Read-only — GET endpoints only |
+| `superuser` | Read + all write operations on items and production lines |
+| `admin` | Everything — including user management and audit logs |
+
 ---
 
 ### Health
 
 #### `GET /api/health`
 
-Quick liveness check.
-
-**Request:** no body, no parameters.
+Quick liveness check. No authentication required.
 
 **Response `200`:**
 ```json
@@ -174,11 +257,91 @@ Quick liveness check.
 
 ---
 
+### Authentication
+
+#### `POST /api/auth/login`
+
+Authenticate and receive a JWT access token. Rate limited to **10 requests per IP per minute**.
+
+**Request Body:**
+
+| Field | Type | Required |
+|---|---|---|
+| `username` | string | **Yes** |
+| `password` | string | **Yes** |
+
+**Example:**
+```json
+{ "username": "alice_smith", "password": "SecurePass123!" }
+```
+
+**Response `200`:**
+```json
+{
+  "message": "Login successful",
+  "access_token": "eyJ0eXAiOiJKV1Q...",
+  "token_type": "Bearer",
+  "user": {
+    "id": 1,
+    "username": "alice_smith",
+    "role": "superuser"
+  }
+}
+```
+
+**Error responses:** `400` missing fields, `401` invalid credentials, `403` account disabled, `429` rate limit exceeded.
+
+---
+
+#### `POST /api/auth/register`
+
+Create a new user account. **Admin only.** Rate limited to **5 requests per IP per minute**.
+
+**Request Body:**
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `username` | string | **Yes** | 3–50 characters |
+| `password` | string | **Yes** | Minimum 8 characters |
+| `role` | string | No | `user` (default), `superuser`, or `admin` |
+
+**Response `201`:**
+```json
+{
+  "message": "User created successfully",
+  "user_id": 3,
+  "username": "bob_jones",
+  "role": "user"
+}
+```
+
+**Error responses:** `400` invalid fields, `401` not authenticated, `403` admin required, `409` username taken, `429` rate limit exceeded.
+
+---
+
+#### `GET /api/auth/me`
+
+Return the currently authenticated user's details.
+
+**Response `200`:**
+```json
+{
+  "id": 1,
+  "username": "alice_smith",
+  "role": "superuser",
+  "is_active": true,
+  "created_at": "2026-01-15T08:30:00+00:00",
+  "updated_at": "2026-01-15T08:30:00+00:00"
+}
+```
+
+---
+
 ### Items
 
 #### `GET /api/items`
 
-Browse or search item codes. Returns a summary list (no activities).
+Browse or search item codes. Returns a paginated summary list (no activities). Requires `user` role or higher.
 
 **Query Parameters:**
 
@@ -186,31 +349,39 @@ Browse or search item codes. Returns a summary list (no activities).
 |---|---|---|---|---|
 | `q` | string | No | — | Partial, case-insensitive match on `inventory_id` or `revision_descr` |
 | `limit` | integer | No | 50 | Max results returned (capped at 1000) |
+| `offset` | integer | No | 0 | Number of records to skip, for pagination |
 
-**Example:** `GET /api/items?q=anti fouling&limit=10`
+**Example:** `GET /api/items?q=anti fouling&limit=10&offset=0`
 
 **Response `200`:**
 ```json
-[
-  {
-    "inventory_id": "1AF2202L",
-    "revision_descr": "PG ANTI FOULING PAINT RED 4L",
-    "revision": "03",
-    "product_type": "Finished Good (FG)",
-    "quantity": 4,
-    "bm_production_line": null,
-    "bm_production_line_code": null,
-    "fg_production_line": "L01 - L1 COATINGS",
-    "fg_production_line_code": "L01"
-  }
-]
+{
+  "total": 42,
+  "limit": 10,
+  "offset": 0,
+  "results": [
+    {
+      "inventory_id": "1AF2202L",
+      "revision_descr": "PG ANTI FOULING PAINT RED 4L",
+      "revision": "03",
+      "product_type": "Finished Good (FG)",
+      "quantity": 4,
+      "bm_production_line": null,
+      "bm_production_line_code": null,
+      "fg_production_line": "L01 - L1 COATINGS",
+      "fg_production_line_code": "L01"
+    }
+  ]
+}
 ```
+
+> **Note:** The response now includes `total`, `limit`, and `offset` fields so clients can detect when results are truncated and paginate accordingly. The items array is under the `results` key.
 
 ---
 
 #### `POST /api/items`
 
-Create a new product with optional activities.
+Create a new product with optional activities. Requires `superuser` or `admin` role.
 
 **Request Body:**
 
@@ -219,11 +390,11 @@ Create a new product with optional activities.
 | `inventory_id` | string | **Yes** | Unique item code |
 | `revision_descr` | string | **Yes** | Product description |
 | `product_type` | string | **Yes** | `"Finished Good (FG)"` or `"Base Material (BM)"` |
-| `quantity` | number | No | Defaults to `1` |
+| `quantity` | number | No | Must be a whole number. Defaults to `1` |
 | `fg_production_line` | string | No | Full name of the FG production line |
-| `fg_production_line_code` | string | No | Code of the FG production line (e.g. `L01`) |
+| `fg_production_line_code` | string | No | Must exist in production_lines |
 | `bm_production_line` | string | No | Full name of the BM production line |
-| `bm_production_line_code` | string | No | Code of the BM production line |
+| `bm_production_line_code` | string | No | Must exist in production_lines |
 | `notes` | string | No | Free-text notes |
 | `activities` | array | No | List of activity objects (see below) |
 
@@ -265,13 +436,13 @@ Each object in `activities`:
 }
 ```
 
-**Error responses:** `400` missing fields, `409` item code already exists.
+**Error responses:** `400` missing/invalid fields or unknown production line code, `409` item code already exists.
 
 ---
 
 #### `GET /api/items/{item_code}`
 
-Look up full routing details for a single item, including all activities.
+Look up full routing details for a single item, including all activities. Requires `user` role or higher.
 
 **Path Parameter:** `item_code` — the inventory ID (case-insensitive).
 
@@ -315,22 +486,22 @@ Look up full routing details for a single item, including all activities.
 
 #### `PATCH /api/items/{item_code}`
 
-Update product metadata. **Revision is auto-incremented on every save.**
+Update product metadata. **Revision is auto-incremented on every save.** Requires `superuser` or `admin` role.
 
 **Path Parameter:** `item_code`
 
 **Request Body** — send only the fields you want to change:
 
-| Field | Type |
-|---|---|
-| `revision_descr` | string |
-| `notes` | string |
-| `quantity` | number |
-| `product_type` | string |
-| `fg_production_line` | string |
-| `fg_production_line_code` | string |
-| `bm_production_line` | string |
-| `bm_production_line_code` | string |
+| Field | Type | Notes |
+|---|---|---|
+| `revision_descr` | string | |
+| `notes` | string | |
+| `quantity` | number | Must be a whole number |
+| `product_type` | string | `"Finished Good (FG)"`, `"Base Material (BM)"`, or `"Other / Intermediate"` |
+| `fg_production_line` | string | |
+| `fg_production_line_code` | string | |
+| `bm_production_line` | string | |
+| `bm_production_line_code` | string | |
 
 **Example:**
 ```json
@@ -352,7 +523,7 @@ Update product metadata. **Revision is auto-incremented on every save.**
 
 #### `DELETE /api/items/{item_code}`
 
-Permanently delete a product and **all** of its activities (cascades at DB level).
+Permanently delete a product and **all** of its activities (cascades at DB level). Requires `superuser` or `admin` role.
 
 **Path Parameter:** `item_code`
 
@@ -365,7 +536,7 @@ Permanently delete a product and **all** of its activities (cascades at DB level
 
 #### `POST /api/items/{item_code}/activities`
 
-Add one new activity to an existing product. **Revision is auto-incremented.**
+Add one new activity to an existing product. **Revision is auto-incremented.** Requires `superuser` or `admin` role.
 
 **Path Parameter:** `item_code`
 
@@ -410,7 +581,7 @@ Add one new activity to an existing product. **Revision is auto-incremented.**
 
 #### `PATCH /api/items/{item_code}/activities/{activity_id}`
 
-Update one specific activity by its database ID. **Revision is auto-incremented.**
+Update one specific activity by its database ID. **Revision is auto-incremented.** Requires `superuser` or `admin` role.
 
 **Path Parameters:** `item_code`, `activity_id` (integer)
 
@@ -446,7 +617,7 @@ Update one specific activity by its database ID. **Revision is auto-incremented.
 
 #### `DELETE /api/items/{item_code}/activities/{activity_id}`
 
-Remove one activity from a product. **Revision is auto-incremented.**
+Remove one activity from a product. **Revision is auto-incremented.** Requires `superuser` or `admin` role.
 
 **Path Parameters:** `item_code`, `activity_id` (integer)
 
@@ -467,9 +638,18 @@ Remove one activity from a product. **Revision is auto-incremented.**
 
 ### Production Lines
 
+All production line endpoints require `superuser` or `admin` role.
+
 #### `GET /api/production-lines`
 
-List all production lines and their activity templates.
+List production lines and their activity templates. Supports pagination.
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `limit` | integer | No | 50 | Max lines returned (capped at 200) |
+| `offset` | integer | No | 0 | Number of lines to skip |
 
 **Response `200`:**
 ```json
@@ -542,7 +722,7 @@ Get a single production line and its activities.
 
 #### `PATCH /api/production-lines/{line_code}`
 
-Rename a production line (name only — does not affect activities).
+Rename a production line. **Also updates the cached name on all products that reference this line**, so `GET /api/items` responses stay consistent after a rename.
 
 **Path Parameter:** `line_code`
 
@@ -608,7 +788,7 @@ Each activity in the array:
 
 #### `DELETE /api/production-lines/{line_code}`
 
-Delete a production line and all of its activity templates. Will return `409` if any product still references this line.
+Delete a production line and all of its activity templates. Returns `409` if any product still references this line.
 
 **Path Parameter:** `line_code`
 
@@ -701,23 +881,134 @@ Delete a single activity from a production line.
 
 ---
 
+### Logs
+
+Both log endpoints require `admin` role.
+
+#### `GET /api/logs`
+
+List audit log entries with filtering and pagination.
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `page` | integer | No | 1 | Page number (1-based) |
+| `per_page` | integer | No | 50 | Entries per page (max 200) |
+| `username` | string | No | — | Filter by exact username |
+| `action` | string | No | — | Partial, case-insensitive match on action |
+| `target_type` | string | No | — | `product`, `activity`, `user`, or `logs` |
+| `from_date` | string | No | — | ISO-8601 date e.g. `2026-01-01` — inclusive start |
+| `to_date` | string | No | — | ISO-8601 date e.g. `2026-06-30` — inclusive end |
+
+**Response `200`:**
+```json
+{
+  "page": 1,
+  "per_page": 50,
+  "total": 143,
+  "total_pages": 3,
+  "logs": [
+    {
+      "id": 99,
+      "logged_at": "2026-05-10 14:32:01 UTC",
+      "username": "alice_smith",
+      "user_role": "superuser",
+      "action": "Updated product",
+      "description": "'alice_smith' updated product '1AF2202L'. Fields changed: notes. Revision 03 → 04.",
+      "target_type": "product",
+      "target_id": "1AF2202L",
+      "ip_address": "192.168.1.45",
+      "extra": { "fields_updated": ["notes"], "old_revision": "03", "new_revision": "04" }
+    }
+  ]
+}
+```
+
+**Error responses:** `400` invalid date format, `403` admin required.
+
+---
+
+#### `DELETE /api/logs/cleanup`
+
+Purge log entries older than N days.
+
+**Query Parameter:**
+
+| Parameter | Type | Required | Default |
+|---|---|---|---|
+| `days` | integer | No | 90 |
+
+**Example:** `DELETE /api/logs/cleanup?days=30`
+
+**Response `200`:**
+```json
+{
+  "message": "Deleted 57 log entries older than 30 days.",
+  "rows_deleted": 57,
+  "days_threshold": 30
+}
+```
+
+---
+
 ## 7. Error Responses
 
 All errors return JSON with at minimum an `"error"` key.
 
 | HTTP Status | Meaning |
 |---|---|
-| `400` | Bad request — missing required fields, invalid JSON, or empty value where one is required |
+| `400` | Bad request — missing required fields, invalid JSON, invalid parameter value |
+| `401` | Unauthorized — no token provided or token is invalid/expired |
+| `403` | Forbidden — valid token but insufficient role |
 | `404` | Resource not found — item code or production line does not exist |
-| `409` | Conflict — duplicate code/name, or attempting to delete a record still referenced by others |
+| `409` | Conflict — duplicate code/name, or deleting a record still referenced by others |
+| `429` | Too many requests — rate limit exceeded, wait and retry |
 | `500` | Internal server error — check server logs |
+| `503` | Service unavailable — DB connection pool exhausted or database unreachable, retry shortly |
 
 **Example `400`:**
 ```json
 { "error": "inventory_id, revision_descr, and product_type are required" }
 ```
 
+**Example `401`:**
+```json
+{ "error": "Invalid or expired token." }
+```
+
+**Example `403`:**
+```json
+{
+  "error": "Permission denied.",
+  "required_roles": ["admin"],
+  "your_role": "user"
+}
+```
+
 **Example `409`:**
 ```json
 { "error": "Item code already exists", "inventory_id": "1AF2202L" }
 ```
+
+**Example `503`:**
+```json
+{
+  "error": "Server is under heavy load. Please retry in a moment.",
+  "code": "db_pool_exhausted"
+}
+```
+
+---
+
+## 8. Rate Limiting
+
+Rate limits are applied per IP address. Limits are configurable via `.env`.
+
+| Endpoint | Default limit |
+|---|---|
+| `POST /api/auth/login` | 10 requests / minute |
+| `POST /api/auth/register` | 5 requests / minute |
+| All other endpoints | 300 requests / minute |
+
+When a limit is exceeded the API returns `429 Too Many Requests`. Wait for the current minute window to pass before retrying.

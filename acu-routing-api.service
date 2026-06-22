@@ -1,0 +1,52 @@
+# systemd service unit for the ACU Routing API
+#
+# Installation:
+#   sudo cp acu-routing-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable acu-routing-api
+#   sudo systemctl start  acu-routing-api
+#
+# Useful commands:
+#   sudo systemctl status  acu-routing-api
+#   sudo journalctl -u     acu-routing-api -f        # live logs
+#   sudo systemctl restart acu-routing-api
+#
+# ── Edit the paths below to match your actual server layout ──────────────────
+# INSTALL_DIR   : where the project lives (contains app.py, .env, etc.)
+# VENV_DIR      : path to your Python virtual environment
+# APP_USER      : the OS user that should run the process (NOT root)
+
+[Unit]
+Description=ACU Routing API (gunicorn)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=notify
+
+# ── Change these three lines to match your server ────────────────────────────
+User=appuser
+WorkingDirectory=/opt/acu-routing-api
+ExecStart=/opt/acu-routing-api/venv/bin/gunicorn "app:create_app()" -c gunicorn.conf.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Load .env file (systemd doesn't source it automatically)
+EnvironmentFile=/opt/acu-routing-api/.env
+
+# Restart policy: restart on crash, but not on clean exit (code 0)
+Restart=on-failure
+RestartSec=5s
+
+# Give workers 30s to finish in-flight requests before force-killing on stop/restart
+TimeoutStopSec=35s
+
+# Write stdout/stderr to journald (view with: journalctl -u acu-routing-api -f)
+StandardOutput=journal
+StandardError=journal
+
+# Basic hardening — limits what the process can access on the server
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -12,7 +12,7 @@ fresh session. Direct callers of get_db_session() are expected to call
 _session_factory.remove() when done; the managed context manager handles
 this automatically.
 """
-
+from __future__ import annotations
 import logging
 from contextlib import contextmanager
 

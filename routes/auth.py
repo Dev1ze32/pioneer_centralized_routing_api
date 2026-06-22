@@ -1,21 +1,17 @@
 """
 Authentication blueprint — registration and login.
 
-Endpoints
----------
-    POST /api/auth/register   Admin-only. Creates a user with any role.
-    POST /api/auth/login      Authenticate, receive a JWT access token.
-    GET  /api/auth/me         Return the currently authenticated user.
-
-FIX #6 — login() now uses managed_db_session() (which calls .remove() on
-the scoped-session registry) instead of a bare get_db_session() / .close()
-pair that did not properly release the scoped session.
+Rate limits (applied per remote IP via Flask-Limiter):
+    POST /api/auth/login     — Config.RATE_LIMIT_LOGIN    (default 10/minute)
+    POST /api/auth/register  — Config.RATE_LIMIT_REGISTER (default 5/minute)
 """
 
 import logging
 
 from flask import Blueprint, jsonify, request, g
 
+from extension import limiter
+from config import Config
 from routes.utils.auth_utils import (
     hash_password,
     verify_password,
@@ -32,16 +28,14 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
 def _require_admin(f):
-    """Shorthand: require valid JWT + admin role."""
     return require_auth(require_role("admin")(f))
 
 
-# -----------------------------------------------------------------------------
-# POST /api/auth/register  (admin only)
-# -----------------------------------------------------------------------------
+# ── POST /api/auth/register ───────────────────────────────────────────────────
 
 @auth_bp.post("/register")
 @_require_admin
+@limiter.limit(Config.RATE_LIMIT_REGISTER)
 def register():
     """
     Create a new user account. Admin only.
@@ -83,6 +77,8 @@ def register():
         description: Admin access required
       409:
         description: Username already exists
+      429:
+        description: Too many requests
     """
     body = request.get_json(force=True, silent=True)
     if not body:
@@ -143,13 +139,10 @@ def register():
     }), 201
 
 
-# -----------------------------------------------------------------------------
-# POST /api/auth/login
-# FIX #6: use managed_db_session() so the scoped session is properly released
-# via .remove() rather than leaving the scope dirty with .close().
-# -----------------------------------------------------------------------------
+# ── POST /api/auth/login ──────────────────────────────────────────────────────
 
 @auth_bp.post("/login")
+@limiter.limit(Config.RATE_LIMIT_LOGIN)
 def login():
     """
     Authenticate and receive a JWT access token.
@@ -180,6 +173,8 @@ def login():
         description: Invalid username or password
       403:
         description: Account is disabled
+      429:
+        description: Too many login attempts
     """
     body = request.get_json(force=True, silent=True)
     if not body:
@@ -191,12 +186,9 @@ def login():
     if not username or not password:
         return jsonify({"error": "username and password are required"}), 400
 
-    # FIX #6: managed_db_session() calls factory.remove() on exit,
-    # properly releasing the scoped session back to the pool.
     user = None
     with managed_db_session() as session:
         user = session.query(User).filter_by(username=username).first()
-        # Expunge so we can safely use the user object after the session closes
         if user is not None:
             session.expunge(user)
 
@@ -209,7 +201,6 @@ def login():
     if not verify_password(password, user.password_hash):
         return jsonify({"error": "Invalid username or password"}), 401
 
-    # Transparent rehash if Argon2 parameters have changed
     if check_needs_rehash(user.password_hash):
         new_hash = hash_password(password)
         with managed_db_session() as s:
@@ -231,9 +222,7 @@ def login():
     }), 200
 
 
-# -----------------------------------------------------------------------------
-# GET /api/auth/me
-# -----------------------------------------------------------------------------
+# ── GET /api/auth/me ──────────────────────────────────────────────────────────
 
 @auth_bp.get("/me")
 @require_auth
