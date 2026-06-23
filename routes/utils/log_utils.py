@@ -112,7 +112,7 @@ def purge_old_logs(days: int = 90) -> int:
             result = conn.execute(
                 text(
                     "DELETE FROM activity_logs "
-                    "WHERE logged_at < NOW() - (INTERVAL '1 day' * :days)"
+                    "WHERE logged_at::date <= CURRENT_DATE - :days"
                 ),
                 {"days": int(days)},
             )

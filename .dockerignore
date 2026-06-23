@@ -1,0 +1,37 @@
+# Never bake secrets or local state into the image
+.env
+*.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments (deps come from requirements.txt in the build stage)
+venv/
+.venv/
+env/
+
+# Dev / editor noise
+.git/
+.gitignore
+.DS_Store
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Test artefacts
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg-info/
+
+# Deployment files that don't belong in the image
+acu-routing-api.service
+DEPLOYMENT.md
+
+# Local data files (loaded via init-db/ instead)
+acu_routing_parsed.json

@@ -19,11 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at      TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    -- Only allow valid roles: user (read-only), superuser (read/write),
-    -- admin (full access including user management)
-    CONSTRAINT users_role_check
-        CHECK (role IN ('user', 'superuser', 'admin'))
+    CONSTRAINT valid_role CHECK (role IN ('user', 'superuser', 'admin'))
+    
 );
 
 -- Index for fast username lookups during login

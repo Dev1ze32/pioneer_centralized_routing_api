@@ -6,17 +6,13 @@
 CREATE TABLE IF NOT EXISTS activity_logs (
     id          BIGSERIAL PRIMARY KEY,
     logged_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-    -- Who did it
     user_id     INTEGER     REFERENCES users(id) ON DELETE SET NULL,
     username    VARCHAR(50) NOT NULL,           -- snapshot in case user is deleted
     user_role   VARCHAR(20) NOT NULL,
 
-    -- What happened (human-readable)
     action      VARCHAR(80) NOT NULL,           -- e.g. "Deleted product"
     description TEXT        NOT NULL,           -- full sentence
     
-    -- Extra context (optional, nullable)
     target_type VARCHAR(40),                    -- "product" | "activity" | "user" | "session"
     target_id   VARCHAR(100),                   -- inventory_id, activity id, user id, etc.
     ip_address  VARCHAR(45),                    -- IPv4 or IPv6

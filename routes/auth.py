@@ -10,7 +10,7 @@ import logging
 
 from flask import Blueprint, jsonify, request, g
 
-from extension import limiter
+from extension import limiter          # ← extension.py, not app.py
 from config import Config
 from routes.utils.auth_utils import (
     hash_password,

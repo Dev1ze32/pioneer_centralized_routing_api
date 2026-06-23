@@ -9,6 +9,10 @@ not-rolled-back) transactions.
 FIX #1 — all read-only endpoints also use managed_connection() so any
 mid-query error is always followed by an explicit rollback before the
 connection is returned to the pool.
+
+FIX #23 — create_item() now calls log_action() after a successful insert
+so product creation is recorded in the audit log, consistent with all other
+mutating endpoints.
 """
 
 from flask import Blueprint, jsonify, request
@@ -17,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 
 from db import managed_connection
 from routes.utils.decorators import require_auth, require_superuser_or_admin
+from routes.utils.log_utils import log_action
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 
@@ -232,6 +237,27 @@ def create_item():
                 )
 
             # managed_connection() commits on clean exit
+
+        # FIX #23: log the creation after the transaction commits successfully.
+        # Placed outside the with-block so it only runs on clean exit,
+        # and outside the try/except so errors here don't suppress the 201.
+        log_action(
+            action="Created product",
+            description=(
+                f"Product '{inventory_id}' (type: {product_type}) was created "
+                f"with {len(raw_activities)} "
+                f"activit{'y' if len(raw_activities) == 1 else 'ies'}."
+            ),
+            target_type="product",
+            target_id=inventory_id,
+            extra={
+                "product_type":            product_type,
+                "revision_descr":          revision_descr,
+                "fg_production_line_code": body.get("fg_production_line_code"),
+                "bm_production_line_code": body.get("bm_production_line_code"),
+                "activity_count":          len(raw_activities),
+            },
+        )
 
         return jsonify({
             "message":      "Product created",

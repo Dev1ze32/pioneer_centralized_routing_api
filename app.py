@@ -18,12 +18,74 @@ from flask_cors import CORS
 from sqlalchemy.exc import TimeoutError as SATimeoutError, OperationalError
 
 from config import Config
+from extension import limiter          # ← imported from extension.py, not defined here
 from routes import register_blueprints
-from extension import limiter
+
+
+def _init_database():
+    """
+    Ensure all ORM tables exist and seed the first admin user if needed.
+
+    - create_all() is idempotent when run alone, but with multiple gunicorn
+      workers booting simultaneously there is a race on CREATE TABLE / sequence.
+      We catch IntegrityError so losing workers don't crash.
+    - The admin seed only runs when the users table is completely empty,
+      so it won't interfere with an already-populated database.
+    """
+    from db import _get_engine
+    from routes.models import Base, User, managed_db_session
+    from sqlalchemy.exc import IntegrityError, ProgrammingError
+    from sqlalchemy import inspect as sa_inspect
+
+    engine = _get_engine()
+    log = logging.getLogger(__name__)
+
+    # ── Create tables (race-safe) ─────────────────────────────────────────────
+    try:
+        Base.metadata.create_all(engine, checkfirst=True)
+        log.info("Database tables verified / created.")
+    except (IntegrityError, ProgrammingError):
+        # Another gunicorn worker already created the tables — that's fine.
+        log.info("Database tables already created by another worker.")
+
+    # Verify the table actually exists before trying to seed
+    inspector = sa_inspect(engine)
+    if not inspector.has_table("users"):
+        log.warning(
+            "'users' table not yet visible — another worker may still be "
+            "creating it. Skipping admin seed for this worker."
+        )
+        return
+
+    # ── Seed initial admin (race-safe) ────────────────────────────────────────
+    import os
+    admin_user = os.getenv("INITIAL_ADMIN_USERNAME", "")
+    admin_pass = os.getenv("INITIAL_ADMIN_PASSWORD", "")
+
+    if admin_user and admin_pass:
+        try:
+            with managed_db_session() as session:
+                if session.query(User).count() == 0:
+                    from routes.utils.auth_utils import hash_password
+                    session.add(User(
+                        username=admin_user,
+                        password_hash=hash_password(admin_pass),
+                        role="admin",
+                        is_active=True,
+                    ))
+                    log.info("Seeded initial admin user '%s'.", admin_user)
+                else:
+                    log.info("Users table is not empty — skipping admin seed.")
+        except IntegrityError:
+            # Another worker already inserted the admin — that's fine.
+            log.info("Admin user already seeded by another worker.")
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
+
+    # ── Database — create tables + seed admin on first run ─────────────────────
+    _init_database()
 
     # ── CORS ──────────────────────────────────────────────────────────────────
     CORS(app)
@@ -35,7 +97,7 @@ def create_app() -> Flask:
         "specs_route": "/docs/",
     }
 
-    # ── Rate limiter ──────────────────────────────────────────────────────────
+    # ── Rate limiter — binds the already-created limiter to this app ──────────
     limiter.init_app(app)
 
     # ── Blueprints (must come before Swagger so routes are registered first) ──
