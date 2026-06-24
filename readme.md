@@ -17,6 +17,7 @@ All write endpoints require authentication. Read endpoints require a valid token
    - [Health](#health)
    - [Authentication](#authentication)
    - [Items](#items)
+   - [Archive](#archive)
    - [Production Lines](#production-lines)
    - [Logs](#logs)
 7. [Error Responses](#7-error-responses)
@@ -31,7 +32,7 @@ routing_api/
 ├── app.py                      # Flask app factory + entry point
 ├── config.py                   # All configuration (DB, JWT, pool, rate limits, waitress)
 ├── db.py                       # SQLAlchemy connection pool helper
-├── waitress_server.py          # Waitress production server entry point
+├── server.py          # Waitress production server entry point
 ├── schema.sql                  # Creates all tables
 ├── load_data.py                # Loads acu_routing_parsed.json into the database
 ├── requirements.txt            # Python dependencies
@@ -199,8 +200,14 @@ python app.py
 
 **Production** (waitress, multi-threaded):
 ```bash
-python waitress_server.py
+python server.py
 ```
+
+**Windows Background Service**:
+If deploying on a bare-metal Windows Server, you can install the API as an auto-restarting background service.
+1. Run `install_service.ps1` as Administrator
+2. The service will start automatically on boot and restart if it crashes.
+3. Logs are written to the `logs/` directory.
 
 Server starts at `http://0.0.0.0:5000` by default. The `WAITRESS_PORT` env var changes the port.
 
@@ -538,7 +545,7 @@ Add one new activity to an existing product. **Revision is auto-incremented.** R
 
 **Path Parameter:** `item_code`
 
-**Query Parameter (optional):** `skip_revision=1` — add the activity without bumping the revision (useful for bulk loading).
+**Query Parameter (optional):** `skip_revision=1` — add the activity without bumping the revision or creating an archive snapshot (useful for batch loading).
 
 **Request Body:**
 
@@ -629,6 +636,61 @@ Remove one activity from a product. **Revision is auto-incremented.** Requires `
   "activity_id": 42,
   "old_revision": "06",
   "new_revision": "07"
+}
+```
+
+---
+
+### Archive
+
+Both archive endpoints require `superuser` or `admin` role.
+
+#### `GET /api/items/{item_code}/revisions`
+
+List all historical revisions (snapshots) for a product, newest first.
+
+**Path Parameter:** `item_code`
+
+**Response `200`:**
+```json
+{
+  "inventory_id": "1AF2202L",
+  "total": 2,
+  "page": 1,
+  "per_page": 50,
+  "total_pages": 1,
+  "revisions": [
+    {
+      "id": 102,
+      "revision": "02",
+      "archived_by": "alice_smith",
+      "archived_at": "2026-06-24 09:30:00 UTC"
+    }
+  ]
+}
+```
+
+---
+
+#### `GET /api/items/{item_code}/revisions/{revision}`
+
+Retrieve the full snapshot of a product and its activities at a specific past revision.
+
+**Path Parameters:** `item_code`, `revision` (e.g. "02")
+
+**Response `200`:**
+```json
+{
+  "id": 102,
+  "inventory_id": "1AF2202L",
+  "revision": "02",
+  "archived_by": "alice_smith",
+  "archived_at": "2026-06-24 09:30:00 UTC",
+  "snapshot": {
+    "revision": "02",
+    "quantity": 4,
+    "activities": [ ... ]
+  }
 }
 ```
 

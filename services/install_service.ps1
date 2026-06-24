@@ -31,8 +31,9 @@ $ServiceName    = "ACURoutingAPI"
 $ServiceDisplay = "ACU Routing API"
 $ServiceDesc    = "ACU Routing API (Waitress/Flask) — auto-restarts on failure"
 
-# Detect the folder where this script lives (the project root)
-$ProjectDir     = Split-Path -Parent $MyInvocation.MyCommand.Path
+# Detect the folder where this script lives, then go up one level to the project root
+$ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectDir = Split-Path -Parent $ScriptDir
 
 # Find python.exe — prefer the venv inside the project folder
 $VenvPython     = Join-Path $ProjectDir "venv\Scripts\python.exe"
@@ -51,7 +52,7 @@ if (Test-Path $VenvPython) {
     exit 1
 }
 
-$ServerScript   = Join-Path $ProjectDir "waitress_server.py"
+$ServerScript   = Join-Path $ProjectDir "server.py"
 $LogDir         = Join-Path $ProjectDir "logs"
 $NSSMPath       = Join-Path $ProjectDir "nssm\nssm.exe"
 

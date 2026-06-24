@@ -49,6 +49,6 @@ if __name__ == "__main__":
         channel_timeout=120,
         # Max request header size (128 KB — generous for Swagger)
         max_request_header_size=131072,
-        # Max request body size (100 MB — adjust if you accept large uploads)
-        max_request_body_size=104857600,
+        # Max request body size (1 MB — strict limit to prevent OOM crashes)
+        max_request_body_size=1048576,
     )

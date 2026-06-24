@@ -12,7 +12,7 @@ Development entry point (single-threaded, do NOT use in production)
 
 import logging
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flasgger import Swagger
 from flask_cors import CORS
 from sqlalchemy.exc import TimeoutError as SATimeoutError, OperationalError
@@ -136,6 +136,21 @@ def create_app() -> Flask:
     def handle_internal_error(e):
         logging.getLogger(__name__).exception("Unhandled 500: %s", e)
         return jsonify({"error": "An internal server error occurred."}), 500
+
+    @app.after_request
+    def log_request(response):
+        # Skip logging health checks so they don't spam the terminal
+        if request.path == "/api/health":
+            return response
+            
+        logging.getLogger("access").info(
+            "%s - %s %s %s",
+            request.remote_addr,
+            request.method,
+            request.full_path,
+            response.status_code
+        )
+        return response
 
     return app
 
