@@ -35,6 +35,6 @@ limiter = Limiter(
     default_limits=[Config.RATE_LIMIT_DEFAULT],
     # In-memory storage is fine for a single-server internal deployment.
     # Switch to storage_uri="redis://localhost:6379" if you scale to
-    # multiple gunicorn processes on separate machines.
+    # multiple server processes on separate machines.
     storage_uri="memory://",
 )

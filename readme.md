@@ -29,9 +29,9 @@ All write endpoints require authentication. Read endpoints require a valid token
 ```
 routing_api/
 ├── app.py                      # Flask app factory + entry point
-├── config.py                   # All configuration (DB, JWT, pool, rate limits, gunicorn)
+├── config.py                   # All configuration (DB, JWT, pool, rate limits, waitress)
 ├── db.py                       # SQLAlchemy connection pool helper
-├── gunicorn.conf.py            # Gunicorn production server configuration
+├── waitress_server.py          # Waitress production server entry point
 ├── schema.sql                  # Creates all tables
 ├── load_data.py                # Loads acu_routing_parsed.json into the database
 ├── requirements.txt            # Python dependencies
@@ -176,11 +176,9 @@ RATE_LIMIT_LOGIN=10/minute
 RATE_LIMIT_REGISTER=5/minute
 RATE_LIMIT_DEFAULT=300/minute
 
-# Gunicorn (production only)
-GUNICORN_WORKERS=4
-GUNICORN_THREADS=4
-GUNICORN_PORT=5000
-GUNICORN_TIMEOUT=60
+# Waitress (production only)
+WAITRESS_THREADS=8
+WAITRESS_PORT=5000
 ```
 
 ### c) Create the database and load data
@@ -199,14 +197,14 @@ python load_data.py acu_routing_parsed.json
 python app.py
 ```
 
-**Production** (gunicorn, multi-worker):
+**Production** (waitress, multi-threaded):
 ```bash
-gunicorn "app:create_app()" -c gunicorn.conf.py
+python waitress_server.py
 ```
 
-Server starts at `http://0.0.0.0:5000` by default. The `GUNICORN_PORT` env var changes the port.
+Server starts at `http://0.0.0.0:5000` by default. The `WAITRESS_PORT` env var changes the port.
 
-> **Note:** `debug=True` has been removed. Running `python app.py` now starts Flask in production mode with a warning reminding you to use gunicorn for real deployments.
+> **Note:** `debug=True` has been removed. Running `python app.py` now starts Flask in production mode with a warning reminding you to use waitress for real deployments.
 
 ---
 

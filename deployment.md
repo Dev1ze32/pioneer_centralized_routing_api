@@ -83,15 +83,30 @@ netsh advfirewall firewall add rule `
 
 ---
 
-## Bare metal / systemd deployment (Linux only)
+## Bare metal deployment
 
-### Prerequisites
+### On Windows (native)
+
+```powershell
+# 1. Install Python 3.12+ from python.org
+# 2. Open PowerShell in the project folder
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+copy .env.example .env
+notepad .env   # fill in values
+python waitress_server.py
+```
+
+### On Linux (systemd)
+
+#### Prerequisites
 ```bash
 sudo apt install python3.12 python3.12-venv libpq-dev   # Debian/Ubuntu
 sudo useradd -r -s /bin/false appuser
 ```
 
-### Install
+#### Install
 ```bash
 sudo mkdir -p /opt/acu-routing-api
 sudo chown appuser:appuser /opt/acu-routing-api
@@ -103,7 +118,7 @@ sudo -u appuser cp .env.example .env && nano .env
 sudo -u appuser venv/bin/python load_data.py acu_routing_parsed.json
 ```
 
-### Install as a system service
+#### Install as a system service
 ```bash
 # Edit User=, WorkingDirectory=, ExecStart= paths in the file first
 sudo cp acu-routing-api.service /etc/systemd/system/
@@ -119,20 +134,18 @@ sudo journalctl -u acu-routing-api -f   # live logs
 
 | Variable | Default | Rule of thumb |
 |---|---|---|
-| `GUNICORN_WORKERS` | 4 | `(2 × CPU cores) + 1` |
-| `GUNICORN_THREADS` | 4 | 2–4 per worker |
-| `DB_POOL_SIZE` | 20 | = workers × threads |
+| `WAITRESS_THREADS` | 8 | Higher = more concurrent requests (default 8 handles most workloads) |
+| `DB_POOL_SIZE` | 20 | >= WAITRESS_THREADS |
 | `DB_MAX_OVERFLOW` | 10 | burst headroom on top of pool |
 | `DB_POOL_TIMEOUT` | 10s | seconds before queued request gets a 503 |
 | `DB_STATEMENT_TIMEOUT_MS` | 30000 | Postgres kills queries longer than this |
 | `RATE_LIMIT_LOGIN` | 10/minute | per IP — raise if internal tools need more |
 | `RATE_LIMIT_DEFAULT` | 300/minute | per IP across all other endpoints |
 
-**Pool sizing example for a 4-core machine:**
+**Pool sizing example:**
 ```
-GUNICORN_WORKERS=9    # (2×4)+1
-GUNICORN_THREADS=4
-DB_POOL_SIZE=36       # 9×4
+WAITRESS_THREADS=16
+DB_POOL_SIZE=20        # >= threads
 DB_MAX_OVERFLOW=10
 ```
 
@@ -141,4 +154,6 @@ After changing `.env`, restart with:
 docker compose up -d --build api   # Docker
 # or
 sudo systemctl restart acu-routing-api   # systemd
+# or (Windows native)
+# Stop the running waitress_server.py process and re-run: python waitress_server.py
 ```

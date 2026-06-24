@@ -3,7 +3,7 @@ ACU Routing API — application factory.
 
 Production entry point
 ----------------------
-    gunicorn "app:create_app()" -c gunicorn.conf.py
+    python waitress_server.py
 
 Development entry point (single-threaded, do NOT use in production)
 --------------------------------------------------------------------
@@ -26,9 +26,9 @@ def _init_database():
     """
     Ensure all ORM tables exist and seed the first admin user if needed.
 
-    - create_all() is idempotent when run alone, but with multiple gunicorn
-      workers booting simultaneously there is a race on CREATE TABLE / sequence.
-      We catch IntegrityError so losing workers don't crash.
+    - create_all() is idempotent when run alone, but in concurrent startup
+      scenarios there is a race on CREATE TABLE / sequence.
+      We catch IntegrityError so the losing thread doesn't crash.
     - The admin seed only runs when the users table is completely empty,
       so it won't interfere with an already-populated database.
     """
@@ -45,7 +45,7 @@ def _init_database():
         Base.metadata.create_all(engine, checkfirst=True)
         log.info("Database tables verified / created.")
     except (IntegrityError, ProgrammingError):
-        # Another gunicorn worker already created the tables — that's fine.
+        # Another thread/process already created the tables — that's fine.
         log.info("Database tables already created by another worker.")
 
     # Verify the table actually exists before trying to seed
@@ -140,14 +140,14 @@ def create_app() -> Flask:
     return app
 
 
-# ── Dev runner — gunicorn ignores this block entirely ─────────────────────────
+# ── Dev runner — waitress_server.py is the production entry point ─────────────
 if __name__ == "__main__":
     import warnings
     warnings.warn(
         "Running with Flask's built-in dev server. "
         "This is single-threaded and NOT suitable for production. "
-        "Use:  gunicorn 'app:create_app()' -c gunicorn.conf.py",
+        "Use:  python waitress_server.py",
         stacklevel=1,
     )
     app = create_app()
-    app.run(host="0.0.0.0", debug=False, port=Config.GUNICORN_PORT)
+    app.run(host="0.0.0.0", debug=False, port=Config.WAITRESS_PORT)

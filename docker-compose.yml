@@ -2,7 +2,7 @@
 #
 # Services:
 #   db      — PostgreSQL 16
-#   api     — Flask + Gunicorn
+#   api     — Flask + Waitress
 #   backup  — Automated weekly + monthly pg_dump backups
 #
 # Usage:
@@ -56,7 +56,7 @@ services:
       DB_HOST: db
 
     ports:
-      - "${GUNICORN_PORT:-5000}:5000"
+      - "${WAITRESS_PORT:-5000}:5000"
 
     depends_on:
       db:

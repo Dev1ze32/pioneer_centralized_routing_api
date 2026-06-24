@@ -28,6 +28,11 @@ FIX #16 — _increment_revision() now guards against non-numeric revision
           strings (e.g. manually-edited "A3") by logging a warning instead of
           silently resetting to "01", and preserves the existing value as the
           base rather than hard-coding 0.
+
+ARCHIVE — before every revision bump, snapshot_product() writes the current
+          state (product row + activities) to product_revisions inside the
+          same transaction. If the update rolls back, the snapshot rolls back
+          too, so the archive is always consistent.
 """
 
 import logging
@@ -40,6 +45,7 @@ from sqlalchemy.engine import Connection
 from db import get_connection, release_connection
 from routes.utils.decorators import require_superuser_or_admin
 from routes.utils.log_utils import log_action
+from routes.utils.archive_utilities import snapshot_product
 
 logger = logging.getLogger(__name__)
 
@@ -224,6 +230,12 @@ def update_product_metadata(item_code):
 
         set_clause = ", ".join(f"{col} = :{col}" for col in updates)
         params = {**updates, "canonical_id": canonical_id}
+
+        # ARCHIVE: snapshot the current state BEFORE applying the update,
+        # inside the same transaction so it rolls back together on error.
+        actor_name = getattr(getattr(g, "current_user", None), "username", "unknown")
+        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+
         conn.execute(
             text(f"UPDATE products SET {set_clause} WHERE inventory_id = :canonical_id"),
             params,
@@ -374,12 +386,16 @@ def add_activity(item_code):
 
         old_revision  = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
+
+        # ARCHIVE: snapshot current state before the revision bump.
+        actor      = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+
         new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
 
         conn.commit()
 
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
         log_action(
             action="Added activity",
             description=(
@@ -510,12 +526,16 @@ def update_activity(item_code, activity_id):
 
         old_revision  = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
+
+        # ARCHIVE: snapshot current state before the revision bump.
+        actor      = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+
         new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
 
         conn.commit()
 
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
         changed_fields = ", ".join(sorted(updates.keys()))
         log_action(
             action="Updated activity",
@@ -604,6 +624,13 @@ def delete_activity(item_code, activity_id):
             }), 404
 
         activity_name = act_row["activity_name"]
+        old_revision  = product["revision"]
+
+        # ARCHIVE: snapshot BEFORE the delete so the removed activity is still
+        # included in the stored snapshot — then delete, then bump revision.
+        actor      = getattr(g, "current_user", None)
+        actor_name = actor.username if actor else "unknown"
+        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
 
         conn.execute(
             text(
@@ -613,14 +640,11 @@ def delete_activity(item_code, activity_id):
             {"activity_id": activity_id, "canonical_id": canonical_id},
         )
 
-        old_revision  = product["revision"]
         skip_revision = request.args.get("skip_revision", "0") == "1"
         new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
 
         conn.commit()
 
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
         log_action(
             action="Deleted activity",
             description=(

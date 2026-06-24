@@ -17,17 +17,17 @@
 # APP_USER      : the OS user that should run the process (NOT root)
 
 [Unit]
-Description=ACU Routing API (gunicorn)
+Description=ACU Routing API (waitress)
 After=network.target postgresql.service
 Wants=postgresql.service
 
 [Service]
-Type=notify
+Type=simple
 
 # ── Change these three lines to match your server ────────────────────────────
 User=appuser
 WorkingDirectory=/opt/acu-routing-api
-ExecStart=/opt/acu-routing-api/venv/bin/gunicorn "app:create_app()" -c gunicorn.conf.py
+ExecStart=/opt/acu-routing-api/venv/bin/python waitress_server.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Load .env file (systemd doesn't source it automatically)

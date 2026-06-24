@@ -23,8 +23,8 @@ class Config:
     DB_PASSWORD = os.getenv("DB_PASSWORD", "postgres")
 
     # ── Connection pool ───────────────────────────────────────────────────────
-    # Rule of thumb: pool_size >= workers × threads per worker.
-    # Default tuned for gunicorn 4 workers × 4 threads = 16 slots.
+    # Rule of thumb: pool_size >= number of server threads.
+    # Default tuned for waitress with 8 threads.
     # max_overflow gives burst headroom; total max DB connections = pool_size + max_overflow.
     DB_POOL_SIZE            = int(os.getenv("DB_POOL_SIZE",            "20"))
     DB_MAX_OVERFLOW         = int(os.getenv("DB_MAX_OVERFLOW",         "10"))
@@ -52,8 +52,6 @@ class Config:
     RATE_LIMIT_REGISTER = os.getenv("RATE_LIMIT_REGISTER", "5/minute")
     RATE_LIMIT_DEFAULT  = os.getenv("RATE_LIMIT_DEFAULT",  "300/minute")
 
-    # ── Gunicorn (read by gunicorn.conf.py) ───────────────────────────────────
-    GUNICORN_WORKERS = int(os.getenv("GUNICORN_WORKERS", "4"))
-    GUNICORN_THREADS = int(os.getenv("GUNICORN_THREADS", "4"))
-    GUNICORN_PORT    = int(os.getenv("GUNICORN_PORT",    "5000"))
-    GUNICORN_TIMEOUT = int(os.getenv("GUNICORN_TIMEOUT", "60"))
+    # ── Waitress (read by waitress_server.py) ─────────────────────────────────
+    WAITRESS_THREADS = int(os.getenv("WAITRESS_THREADS", "8"))
+    WAITRESS_PORT    = int(os.getenv("WAITRESS_PORT",    "5000"))

@@ -1,23 +1,26 @@
 """
-Blueprint registration helper.
+Blueprint registration — imported by app.py's create_app().
 
-All blueprints are registered here so app.py stays a thin factory.
+Add new blueprints here; order only matters if two blueprints define
+overlapping URL rules (they shouldn't).
 """
 
 from flask import Flask
 
-from .auth import auth_bp
-from .health import health_bp
-from .items import items_bp
-from .production_lines import production_lines_bp
-from .update import update_bp
-from .logs import logs_bp
-
 
 def register_blueprints(app: Flask) -> None:
-    app.register_blueprint(auth_bp)              # /api/auth/*
-    app.register_blueprint(health_bp)            # /api/health
-    app.register_blueprint(items_bp)             # /api/items
-    app.register_blueprint(production_lines_bp)  # /api/production-lines
-    app.register_blueprint(update_bp)            # /api/items (PATCH/DELETE)
-    app.register_blueprint(logs_bp)              # /api/logs  (admin only)
+    from routes.health           import health_bp
+    from routes.auth             import auth_bp
+    from routes.items            import items_bp
+    from routes.update           import update_bp
+    from routes.logs             import logs_bp
+    from routes.production_lines import production_lines_bp
+    from routes.archive          import archive_bp   # ← revision history
+
+    app.register_blueprint(health_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(items_bp)
+    app.register_blueprint(update_bp)
+    app.register_blueprint(logs_bp)
+    app.register_blueprint(production_lines_bp)
+    app.register_blueprint(archive_bp)
