@@ -136,6 +136,24 @@ Write-Host "Registering API as a background Windows Service..." -ForegroundColor
 $InstallScript = Join-Path $ProjectDir "services\install_service.ps1"
 & powershell -ExecutionPolicy Bypass -File $InstallScript
 
+# ── 7. Install Automated Backup Tasks ──────────────────────────
+Write-Host ""
+Write-Host "Registering automated database backup tasks..." -ForegroundColor Cyan
+
+$BackupScript = Join-Path $ProjectDir "scripts\backup_db.ps1"
+
+# Weekly Task (Sundays at 2:00 AM)
+$WeeklyAction  = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$BackupScript`" -Type weekly"
+$WeeklyTrigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Sunday -At 2:00AM
+Register-ScheduledTask -Action $WeeklyAction -Trigger $WeeklyTrigger -TaskName "ACURoutingAPI_WeeklyBackup" -Description "Weekly backup of routing_db" -User "NT AUTHORITY\SYSTEM" -RunLevel Highest -Force | Out-Null
+
+# Monthly Task (1st of every month at 3:00 AM)
+# Using schtasks.exe since PowerShell 5.1 New-ScheduledTaskTrigger doesn't cleanly support "1st of the month"
+$SchTasksArgs = "/create /tn `"ACURoutingAPI_MonthlyBackup`" /tr `"`"powershell.exe`" -ExecutionPolicy Bypass -WindowStyle Hidden -File `"`"$BackupScript`"`" -Type monthly`" /sc monthly /d 1 /st 03:00 /ru `"NT AUTHORITY\SYSTEM`" /rl HIGHEST /f"
+Start-Process -FilePath "schtasks.exe" -ArgumentList $SchTasksArgs -Wait -WindowStyle Hidden
+
+Write-Host "[OK] Backup tasks registered in Windows Task Scheduler." -ForegroundColor Green
+
 Write-Host ""
 Write-Host "=======================================================" -ForegroundColor Green
 Write-Host " SETUP COMPLETE! " -ForegroundColor Green
