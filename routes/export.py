@@ -4,11 +4,13 @@ from flask import Blueprint, send_file, current_app, jsonify
 from routes.utils.decorators import require_superuser_or_admin
 from sqlalchemy import text
 from db import managed_connection
+from extension import limiter
 
 export_bp = Blueprint('export_bp', __name__)
 
 @export_bp.route('/api/export', methods=['GET'])
 @require_superuser_or_admin
+@limiter.limit("2/minute")
 def export_excel():
     """
     Export all products and their activities to an Excel file.
@@ -30,14 +32,15 @@ def export_excel():
                 a.type AS "Type",
                 a.item_id AS "Item ID",
                 a.activity_name AS "ACTIVITIES",
-                a.class AS "CLASS",
+                a."class" AS "CLASS",
                 a.class_1 AS "CLASS.1",
                 a.pax AS "Pax",
                 a.machine AS "Machine",
                 a.time_min AS "Time (min)"
             FROM products p
             LEFT JOIN activities a ON p.inventory_id = a.inventory_id
-            ORDER BY p.inventory_id, a.sort_order;
+            ORDER BY p.inventory_id, a.sort_order
+            LIMIT 50000;
         """)
         
         with managed_connection() as conn:
@@ -75,7 +78,7 @@ def export_excel():
                         cell_length = len(str(cell.value))
                         if cell_length > max_length:
                             max_length = cell_length
-                except:
+                except Exception:
                     pass
             
             # Set the width: Add a little padding, but cap it at a maximum of 40 characters

@@ -247,14 +247,14 @@ def get_revision(item_code, revision):
             {"canonical_id": canonical_id, "revision": revision},
         ).mappings().first()
 
-    if row is None:
-        return jsonify({
-            "error":        "Revision not found for this item code",
-            "inventory_id": canonical_id,
-            "revision":     revision,
-        }), 404
+        if row is None:
+            return jsonify({
+                "error":        "Revision not found for this item code",
+                "inventory_id": canonical_id,
+                "revision":     revision,
+            }), 404
 
-    result = dict(row)
+        result = dict(row)
 
     # snapshot is returned from psycopg2 as a dict already (JSONB auto-decode);
     # guard against the rare case where it arrives as a raw string.

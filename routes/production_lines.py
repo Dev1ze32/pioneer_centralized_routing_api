@@ -196,82 +196,79 @@ def update_production_line(line_code):
                 "error": f"Activity at index {idx} must have an integer sort_order"
             }), 400
 
-    conn = get_connection()
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code, production_line_name FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code)"
-            ),
-            {"line_code": line_code},
-        )
-        existing = result.mappings().first()
-        if existing is None:
-            return jsonify({"error": "Production line not found", "line_code": line_code}), 404
-
-        canonical_code = existing["production_line_code"]
-        old_name       = existing["production_line_name"]
-
-        if new_name:
-            conn.execute(
+        with managed_connection() as conn:
+            result = conn.execute(
                 text(
-                    "UPDATE production_lines SET production_line_name = :new_name "
-                    "WHERE production_line_code = :canonical_code"
+                    "SELECT production_line_code, production_line_name FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
                 ),
-                {"new_name": new_name, "canonical_code": canonical_code},
+                {"line_code": line_code},
             )
+            existing = result.mappings().first()
+            if existing is None:
+                return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
-        conn.execute(
-            text("DELETE FROM line_activities WHERE production_line_code = :canonical_code"),
-            {"canonical_code": canonical_code},
-        )
-        for act in activities:
+            canonical_code = existing["production_line_code"]
+            old_name       = existing["production_line_name"]
+
+            if new_name:
+                conn.execute(
+                    text(
+                        "UPDATE production_lines SET production_line_name = :new_name "
+                        "WHERE production_line_code = :canonical_code"
+                    ),
+                    {"new_name": new_name, "canonical_code": canonical_code},
+                )
+
             conn.execute(
-                text(
-                    """
-                    INSERT INTO line_activities
-                        (production_line_code, activity_name, sort_order, stage)
-                    VALUES (:canonical_code, :activity_name, :sort_order, :stage)
-                    """
+                text("DELETE FROM line_activities WHERE production_line_code = :canonical_code"),
+                {"canonical_code": canonical_code},
+            )
+            for act in activities:
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO line_activities
+                            (production_line_code, activity_name, sort_order, stage)
+                        VALUES (:canonical_code, :activity_name, :sort_order, :stage)
+                        """
+                    ),
+                    {
+                        "canonical_code": canonical_code,
+                        "activity_name":  act["activity_name"].strip(),
+                        "sort_order":     act["sort_order"],
+                        "stage":          act.get("stage"),
+                    },
+                )
+
+            conn.commit()
+
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Replaced production line activities",
+                description=(
+                    f"'{actor_name}' replaced all activities on line '{canonical_code}' "
+                    f"({new_name or old_name}). "
+                    f"New activity count: {len(activities)}."
                 ),
-                {
-                    "canonical_code": canonical_code,
-                    "activity_name":  act["activity_name"].strip(),
-                    "sort_order":     act["sort_order"],
-                    "stage":          act.get("stage"),
+                target_type="production_line",
+                target_id=canonical_code,
+                extra={
+                    "name_changed":    new_name is not None and new_name != old_name,
+                    "new_name":        new_name or old_name,
+                    "activities_set":  len(activities),
                 },
             )
 
-        conn.commit()
-
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Replaced production line activities",
-            description=(
-                f"'{actor_name}' replaced all activities on line '{canonical_code}' "
-                f"({new_name or old_name}). "
-                f"New activity count: {len(activities)}."
-            ),
-            target_type="production_line",
-            target_id=canonical_code,
-            extra={
-                "name_changed":    new_name is not None and new_name != old_name,
-                "new_name":        new_name or old_name,
-                "activities_set":  len(activities),
-            },
-        )
-
-        return jsonify({
-            "message":    "Production line updated",
-            "line_code":  canonical_code,
-            "activities": len(activities),
-        })
+            return jsonify({
+                "message":    "Production line updated",
+                "line_code":  canonical_code,
+                "activities": len(activities),
+            })
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @production_lines_bp.post("/production-lines")
@@ -318,56 +315,52 @@ def create_production_line():
             "error": "Both production_line_code and production_line_name are required"
         }), 400
 
-    conn = get_connection()
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code)"
-            ),
-            {"line_code": line_code},
-        )
-        if result.mappings().first() is not None:
+        with managed_connection() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT production_line_code FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                ),
+                {"line_code": line_code},
+            )
+            if result.mappings().first() is not None:
+                return jsonify({
+                    "error":     "Production line code already exists",
+                    "line_code": line_code,
+                }), 409
+
+            conn.execute(
+                text(
+                    "INSERT INTO production_lines (production_line_code, production_line_name) "
+                    "VALUES (:line_code, :line_name)"
+                ),
+                {"line_code": line_code, "line_name": line_name},
+            )
+
+            conn.commit()
+
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Created production line",
+                description=(
+                    f"'{actor_name}' created production line '{line_code}' ({line_name})."
+                ),
+                target_type="production_line",
+                target_id=line_code,
+                extra={"production_line_name": line_name},
+            )
+
             return jsonify({
-                "error":     "Production line code already exists",
-                "line_code": line_code,
-            }), 409
-
-        conn.execute(
-            text(
-                "INSERT INTO production_lines (production_line_code, production_line_name) "
-                "VALUES (:line_code, :line_name)"
-            ),
-            {"line_code": line_code, "line_name": line_name},
-        )
-
-        conn.commit()
-
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Created production line",
-            description=(
-                f"'{actor_name}' created production line '{line_code}' ({line_name})."
-            ),
-            target_type="production_line",
-            target_id=line_code,
-            extra={"production_line_name": line_name},
-        )
-
-        return jsonify({
-            "message":               "Production line created",
-            "production_line_code":  line_code,
-            "production_line_name":  line_name,
-        }), 201
-    except IntegrityError:
-        conn.rollback()
+                "message":               "Production line created",
+                "production_line_code":  line_code,
+                "production_line_name":  line_name,
+            }), 201
+    except IntegrityError as e:
         return jsonify({"error": "Production line code already exists", "line_code": line_code}), 409
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @production_lines_bp.patch("/production-lines/<line_code>")
@@ -410,70 +403,67 @@ def rename_production_line(line_code):
 
     new_name = body["production_line_name"].strip()
 
-    conn = get_connection()
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code, production_line_name FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code)"
-            ),
-            {"line_code": line_code},
-        )
-        row = result.mappings().first()
-        if row is None:
-            return jsonify({"error": "Production line not found", "line_code": line_code}), 404
+        with managed_connection() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT production_line_code, production_line_name FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                ),
+                {"line_code": line_code},
+            )
+            row = result.mappings().first()
+            if row is None:
+                return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
-        canonical_code = row["production_line_code"]
-        old_name       = row["production_line_name"]
+            canonical_code = row["production_line_code"]
+            old_name       = row["production_line_name"]
 
-        conn.execute(
-            text(
-                "UPDATE production_lines SET production_line_name = :new_name "
-                "WHERE production_line_code = :canonical_code"
-            ),
-            {"new_name": new_name, "canonical_code": canonical_code},
-        )
-        # Cascade new name to all products that reference this line
-        conn.execute(
-            text(
-                "UPDATE products SET fg_production_line = :new_name "
-                "WHERE fg_production_line_code = :canonical_code"
-            ),
-            {"new_name": new_name, "canonical_code": canonical_code},
-        )
-        conn.execute(
-            text(
-                "UPDATE products SET bm_production_line = :new_name "
-                "WHERE bm_production_line_code = :canonical_code"
-            ),
-            {"new_name": new_name, "canonical_code": canonical_code},
-        )
+            conn.execute(
+                text(
+                    "UPDATE production_lines SET production_line_name = :new_name "
+                    "WHERE production_line_code = :canonical_code"
+                ),
+                {"new_name": new_name, "canonical_code": canonical_code},
+            )
+            # Cascade new name to all products that reference this line
+            conn.execute(
+                text(
+                    "UPDATE products SET fg_production_line = :new_name "
+                    "WHERE fg_production_line_code = :canonical_code"
+                ),
+                {"new_name": new_name, "canonical_code": canonical_code},
+            )
+            conn.execute(
+                text(
+                    "UPDATE products SET bm_production_line = :new_name "
+                    "WHERE bm_production_line_code = :canonical_code"
+                ),
+                {"new_name": new_name, "canonical_code": canonical_code},
+            )
 
-        conn.commit()
+            conn.commit()
 
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Renamed production line",
-            description=(
-                f"'{actor_name}' renamed production line '{canonical_code}' "
-                f"from '{old_name}' to '{new_name}'."
-            ),
-            target_type="production_line",
-            target_id=canonical_code,
-            extra={"old_name": old_name, "new_name": new_name},
-        )
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Renamed production line",
+                description=(
+                    f"'{actor_name}' renamed production line '{canonical_code}' "
+                    f"from '{old_name}' to '{new_name}'."
+                ),
+                target_type="production_line",
+                target_id=canonical_code,
+                extra={"old_name": old_name, "new_name": new_name},
+            )
 
-        return jsonify({
-            "message":               "Production line renamed",
-            "production_line_code":  canonical_code,
-            "production_line_name":  new_name,
-        })
+            return jsonify({
+                "message":               "Production line renamed",
+                "production_line_code":  canonical_code,
+                "production_line_name":  new_name,
+            })
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @production_lines_bp.delete("/production-lines/<line_code>")
@@ -500,67 +490,66 @@ def delete_production_line(line_code):
       500:
         description: Internal server error
     """
-    conn = get_connection()
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code, production_line_name FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code)"
-            ),
-            {"line_code": line_code},
-        )
-        row = result.mappings().first()
-        if row is None:
-            return jsonify({"error": "Production line not found", "line_code": line_code}), 404
+        with managed_connection() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT production_line_code, production_line_name FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                ),
+                {"line_code": line_code},
+            )
+            row = result.mappings().first()
+            if row is None:
+                return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
-        canonical_code = row["production_line_code"]
-        line_name      = row["production_line_name"]
+            canonical_code = row["production_line_code"]
+            line_name      = row["production_line_name"]
 
-        result = conn.execute(
-            text(
-                """
-                SELECT inventory_id FROM products
-                WHERE bm_production_line_code = :canonical_code
-                   OR fg_production_line_code  = :canonical_code
-                   OR bm_production_line ILIKE :code_prefix
-                   OR fg_production_line ILIKE :code_prefix
-                LIMIT 1
-                """
-            ),
-            {"canonical_code": canonical_code, "code_prefix": f"{canonical_code} - %"},
-        )
-        if result.mappings().first() is not None:
+            result = conn.execute(
+                text(
+                    """
+                    SELECT inventory_id FROM products
+                    WHERE bm_production_line_code = :canonical_code
+                       OR fg_production_line_code  = :canonical_code
+                       OR bm_production_line ILIKE :code_prefix
+                       OR fg_production_line ILIKE :code_prefix
+                    LIMIT 1
+                    """
+                ),
+                {"canonical_code": canonical_code, "code_prefix": f"{canonical_code} - %"},
+            )
+            if result.mappings().first() is not None:
+                return jsonify({
+                    "error":     "Production line is still in use by one or more products and cannot be deleted",
+                    "line_code": canonical_code,
+                }), 409
+
+            conn.execute(
+                text("DELETE FROM production_lines WHERE production_line_code = :canonical_code"),
+                {"canonical_code": canonical_code},
+            )
+
+            conn.commit()
+
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Deleted production line",
+                description=(
+                    f"'{actor_name}' deleted production line '{canonical_code}' ({line_name})."
+                ),
+                target_type="production_line",
+                target_id=canonical_code,
+                extra={"production_line_name": line_name},
+            )
+
             return jsonify({
-                "error":     "Production line is still in use by one or more products and cannot be deleted",
-                "line_code": canonical_code,
-            }), 409
-
-        conn.execute(
-            text("DELETE FROM production_lines WHERE production_line_code = :canonical_code"),
-            {"canonical_code": canonical_code},
-        )
-
-        conn.commit()
-
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Deleted production line",
-            description=(
-                f"'{actor_name}' deleted production line '{canonical_code}' ({line_name})."
-            ),
-            target_type="production_line",
-            target_id=canonical_code,
-            extra={"production_line_name": line_name},
-        )
-
-        return jsonify({
-            "message":               "Production line deleted",
-            "production_line_code":  canonical_code,
-        })
+                "message":               "Production line deleted",
+                "production_line_code":  canonical_code,
+            })
 
     except IntegrityError as e:
-        conn.rollback()
         pgcode = getattr(getattr(e, "orig", None), "pgcode", None)
         if pgcode == _FK_VIOLATION:
             return jsonify({
@@ -569,10 +558,7 @@ def delete_production_line(line_code):
             }), 409
         return jsonify({"error": str(e)}), 500
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @production_lines_bp.post("/production-lines/<line_code>/activities")
@@ -620,100 +606,96 @@ def add_line_activity(line_code):
     if not body or not (body.get("activity_name") or "").strip():
         return jsonify({"error": "activity_name is required and must be non-empty"}), 400
 
-    conn = get_connection()
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code) FOR UPDATE"
-            ),
-            {"line_code": line_code},
-        )
-        row = result.mappings().first()
-        if row is None:
-            return jsonify({"error": "Production line not found", "line_code": line_code}), 404
-
-        canonical_code = row["production_line_code"]
-        sort_order     = body.get("sort_order")
-        activity_name  = body["activity_name"].strip()
-
-        if sort_order is None:
+        with managed_connection() as conn:
             result = conn.execute(
                 text(
-                    """
-                    INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
-                    VALUES (
-                        :canonical_code, :activity_name,
-                        (SELECT COALESCE(MAX(sort_order), 0) + 1
-                         FROM line_activities WHERE production_line_code = :canonical_code),
-                        :stage
-                    )
-                    RETURNING id, sort_order
-                    """
+                    "SELECT production_line_code FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code) FOR UPDATE"
                 ),
-                {
-                    "canonical_code": canonical_code,
-                    "activity_name":  activity_name,
-                    "stage":          body.get("stage"),
+                {"line_code": line_code},
+            )
+            row = result.mappings().first()
+            if row is None:
+                return jsonify({"error": "Production line not found", "line_code": line_code}), 404
+
+            canonical_code = row["production_line_code"]
+            sort_order     = body.get("sort_order")
+            activity_name  = body["activity_name"].strip()
+
+            if sort_order is None:
+                result = conn.execute(
+                    text(
+                        """
+                        INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
+                        VALUES (
+                            :canonical_code, :activity_name,
+                            (SELECT COALESCE(MAX(sort_order), 0) + 1
+                             FROM line_activities WHERE production_line_code = :canonical_code),
+                            :stage
+                        )
+                        RETURNING id, sort_order
+                        """
+                    ),
+                    {
+                        "canonical_code": canonical_code,
+                        "activity_name":  activity_name,
+                        "stage":          body.get("stage"),
+                    },
+                )
+            else:
+                result = conn.execute(
+                    text(
+                        """
+                        INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
+                        VALUES (:canonical_code, :activity_name, :sort_order, :stage)
+                        RETURNING id, sort_order
+                        """
+                    ),
+                    {
+                        "canonical_code": canonical_code,
+                        "activity_name":  activity_name,
+                        "sort_order":     sort_order,
+                        "stage":          body.get("stage"),
+                    },
+                )
+
+            result_row       = result.mappings().first()
+            new_id           = result_row["id"]
+            final_sort_order = result_row["sort_order"]
+
+            conn.commit()
+
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Added line activity",
+                description=(
+                    f"'{actor_name}' added activity '{activity_name}' (ID {new_id}) "
+                    f"to production line '{canonical_code}' at sort_order {final_sort_order}."
+                ),
+                target_type="production_line",
+                target_id=canonical_code,
+                extra={
+                    "activity_id":   new_id,
+                    "activity_name": activity_name,
+                    "sort_order":    final_sort_order,
                 },
             )
-        else:
-            result = conn.execute(
-                text(
-                    """
-                    INSERT INTO line_activities (production_line_code, activity_name, sort_order, stage)
-                    VALUES (:canonical_code, :activity_name, :sort_order, :stage)
-                    RETURNING id, sort_order
-                    """
-                ),
-                {
-                    "canonical_code": canonical_code,
-                    "activity_name":  activity_name,
-                    "sort_order":     sort_order,
-                    "stage":          body.get("stage"),
-                },
-            )
 
-        result_row       = result.mappings().first()
-        new_id           = result_row["id"]
-        final_sort_order = result_row["sort_order"]
-
-        conn.commit()
-
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Added line activity",
-            description=(
-                f"'{actor_name}' added activity '{activity_name}' (ID {new_id}) "
-                f"to production line '{canonical_code}' at sort_order {final_sort_order}."
-            ),
-            target_type="production_line",
-            target_id=canonical_code,
-            extra={
-                "activity_id":   new_id,
-                "activity_name": activity_name,
-                "sort_order":    final_sort_order,
-            },
-        )
-
-        return jsonify({
-            "message":               "Activity added",
-            "production_line_code":  canonical_code,
-            "activity_id":           new_id,
-            "sort_order":            final_sort_order,
-        }), 201
-    except IntegrityError:
-        conn.rollback()
+            return jsonify({
+                "message":               "Activity added",
+                "production_line_code":  canonical_code,
+                "activity_id":           new_id,
+                "sort_order":            final_sort_order,
+            }), 201
+    except IntegrityError as e:
         return jsonify({
             "error":     "This activity already exists on this production line",
             "line_code": line_code,
         }), 409
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @production_lines_bp.patch("/production-lines/<line_code>/activities/<int:activity_id>")
@@ -771,79 +753,75 @@ def update_line_activity(line_code, activity_id):
             "updatable_fields": sorted(UPDATABLE_LINE_ACTIVITY_FIELDS),
         }), 400
 
-    conn = get_connection()
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code)"
-            ),
-            {"line_code": line_code},
-        )
-        row = result.mappings().first()
-        if row is None:
-            return jsonify({"error": "Production line not found", "line_code": line_code}), 404
+        with managed_connection() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT production_line_code FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                ),
+                {"line_code": line_code},
+            )
+            row = result.mappings().first()
+            if row is None:
+                return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
-        canonical_code = row["production_line_code"]
+            canonical_code = row["production_line_code"]
 
-        result = conn.execute(
-            text(
-                "SELECT id FROM line_activities "
-                "WHERE id = :activity_id AND production_line_code = :canonical_code"
-            ),
-            {"activity_id": activity_id, "canonical_code": canonical_code},
-        )
-        if result.mappings().first() is None:
+            result = conn.execute(
+                text(
+                    "SELECT id FROM line_activities "
+                    "WHERE id = :activity_id AND production_line_code = :canonical_code"
+                ),
+                {"activity_id": activity_id, "canonical_code": canonical_code},
+            )
+            if result.mappings().first() is None:
+                return jsonify({
+                    "error":       "Activity not found for this production line",
+                    "activity_id": activity_id,
+                    "line_code":   canonical_code,
+                }), 404
+
+            set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+            params = {**updates, "activity_id": activity_id, "canonical_code": canonical_code}
+            conn.execute(
+                text(
+                    f"UPDATE line_activities SET {set_clause} "
+                    f"WHERE id = :activity_id AND production_line_code = :canonical_code"
+                ),
+                params,
+            )
+
+            conn.commit()
+
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            changed_fields = ", ".join(sorted(updates.keys()))
+            log_action(
+                action="Updated line activity",
+                description=(
+                    f"'{actor_name}' updated activity ID {activity_id} "
+                    f"on production line '{canonical_code}'. "
+                    f"Fields changed: {changed_fields}."
+                ),
+                target_type="production_line",
+                target_id=canonical_code,
+                extra={"activity_id": activity_id, "fields_updated": list(updates.keys())},
+            )
+
             return jsonify({
-                "error":       "Activity not found for this production line",
-                "activity_id": activity_id,
-                "line_code":   canonical_code,
-            }), 404
-
-        set_clause = ", ".join(f"{col} = :{col}" for col in updates)
-        params = {**updates, "activity_id": activity_id, "canonical_code": canonical_code}
-        conn.execute(
-            text(
-                f"UPDATE line_activities SET {set_clause} "
-                f"WHERE id = :activity_id AND production_line_code = :canonical_code"
-            ),
-            params,
-        )
-
-        conn.commit()
-
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        changed_fields = ", ".join(sorted(updates.keys()))
-        log_action(
-            action="Updated line activity",
-            description=(
-                f"'{actor_name}' updated activity ID {activity_id} "
-                f"on production line '{canonical_code}'. "
-                f"Fields changed: {changed_fields}."
-            ),
-            target_type="production_line",
-            target_id=canonical_code,
-            extra={"activity_id": activity_id, "fields_updated": list(updates.keys())},
-        )
-
-        return jsonify({
-            "message":               "Activity updated",
-            "production_line_code":  canonical_code,
-            "activity_id":           activity_id,
-            "fields_updated":        list(updates.keys()),
-        })
-    except IntegrityError:
-        conn.rollback()
+                "message":               "Activity updated",
+                "production_line_code":  canonical_code,
+                "activity_id":           activity_id,
+                "fields_updated":        list(updates.keys()),
+            })
+    except IntegrityError as e:
         return jsonify({
             "error":     "This activity name already exists on this production line",
             "line_code": line_code,
         }), 409
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 @production_lines_bp.delete("/production-lines/<line_code>/activities/<int:activity_id>")

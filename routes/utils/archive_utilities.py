@@ -119,7 +119,24 @@ def snapshot_product(
         },
     )
 
+    # ── 5. Cleanup old revisions (keep last 50) ───────────────────────────────
+    conn.execute(
+        text(
+            """
+            DELETE FROM product_revisions
+            WHERE inventory_id = :inventory_id
+              AND id NOT IN (
+                  SELECT id FROM product_revisions
+                  WHERE inventory_id = :inventory_id
+                  ORDER BY archived_at DESC
+                  LIMIT 50
+              )
+            """
+        ),
+        {"inventory_id": inventory_id},
+    )
+
     logger.debug(
-        "Archived snapshot for '%s' rev %s (by %s).",
+        "Archived snapshot for '%s' rev %s (by %s) and cleaned old revisions.",
         inventory_id, revision, archived_by or "unknown",
     )

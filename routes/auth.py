@@ -202,11 +202,14 @@ def login():
         return jsonify({"error": "Invalid username or password"}), 401
 
     if check_needs_rehash(user.password_hash):
-        new_hash = hash_password(password)
-        with managed_db_session() as s:
-            refreshed = s.query(User).filter_by(id=user.id).first()
-            if refreshed:
-                refreshed.password_hash = new_hash
+        try:
+            new_hash = hash_password(password)
+            with managed_db_session() as s:
+                refreshed = s.query(User).filter_by(id=user.id).first()
+                if refreshed:
+                    refreshed.password_hash = new_hash
+        except Exception:
+            logger.warning("Password rehash failed — login continues without rehash.")
 
     token = create_access_token(user_id=user.id, role=user.role)
 

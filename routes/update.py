@@ -42,7 +42,7 @@ from flask import Blueprint, jsonify, request, g
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from db import get_connection, release_connection
+from db import managed_connection
 from routes.utils.decorators import require_superuser_or_admin
 from routes.utils.log_utils import log_action
 from routes.utils.archive_utilities import snapshot_product
@@ -216,67 +216,62 @@ def update_product_metadata(item_code):
             "updatable_fields": sorted(UPDATABLE_PRODUCT_FIELDS),
         }), 400
 
-    conn = get_connection()
     try:
-        # FIX #10: FOR UPDATE prevents two concurrent PATCHes from both
-        # reading the same revision and both writing the same incremented value.
-        product = _fetch_product(conn, item_code, for_update=True)
-        if product is None:
-            return jsonify({"error": "Item not found", "item_code": item_code}), 404
+        with managed_connection() as conn:
+            # FIX #10: FOR UPDATE prevents two concurrent PATCHes from both
+            # reading the same revision and both writing the same incremented value.
+            product = _fetch_product(conn, item_code, for_update=True)
+            if product is None:
+                return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id = product["inventory_id"]
-        old_revision = product["revision"]
-        new_revision = _increment_revision(old_revision)
+            canonical_id = product["inventory_id"]
+            old_revision = product["revision"]
+            new_revision = _increment_revision(old_revision)
 
-        set_clause = ", ".join(f"{col} = :{col}" for col in updates)
-        params = {**updates, "canonical_id": canonical_id}
+            set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+            params = {**updates, "canonical_id": canonical_id}
 
-        # ARCHIVE: snapshot the current state BEFORE applying the update,
-        # inside the same transaction so it rolls back together on error.
-        actor_name = getattr(getattr(g, "current_user", None), "username", "unknown")
-        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+            # ARCHIVE: snapshot the current state BEFORE applying the update,
+            # inside the same transaction so it rolls back together on error.
+            actor_name = getattr(getattr(g, "current_user", None), "username", "unknown")
+            snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
 
-        conn.execute(
-            text(f"UPDATE products SET {set_clause} WHERE inventory_id = :canonical_id"),
-            params,
-        )
-        conn.execute(
-            text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
-            {"new_revision": new_revision, "canonical_id": canonical_id},
-        )
+            conn.execute(
+                text(f"UPDATE products SET {set_clause} WHERE inventory_id = :canonical_id"),
+                params,
+            )
+            conn.execute(
+                text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
+                {"new_revision": new_revision, "canonical_id": canonical_id},
+            )
 
-        conn.commit()
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            changed_fields = ", ".join(sorted(updates.keys()))
+            log_action(
+                action="Updated product",
+                description=(
+                    f"'{actor_name}' updated product '{canonical_id}'. "
+                    f"Fields changed: {changed_fields}. "
+                    f"Revision {old_revision} → {new_revision}."
+                ),
+                target_type="product",
+                target_id=canonical_id,
+                extra={"fields_updated": list(updates.keys()),
+                       "old_revision": old_revision,
+                       "new_revision": new_revision},
+            )
 
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        changed_fields = ", ".join(sorted(updates.keys()))
-        log_action(
-            action="Updated product",
-            description=(
-                f"'{actor_name}' updated product '{canonical_id}'. "
-                f"Fields changed: {changed_fields}. "
-                f"Revision {old_revision} → {new_revision}."
-            ),
-            target_type="product",
-            target_id=canonical_id,
-            extra={"fields_updated": list(updates.keys()),
-                   "old_revision": old_revision,
-                   "new_revision": new_revision},
-        )
-
-        return jsonify({
-            "message":        "Product metadata updated",
-            "inventory_id":   canonical_id,
-            "old_revision":   old_revision,
-            "new_revision":   new_revision,
-            "fields_updated": list(updates.keys()),
-        })
+            return jsonify({
+                "message":        "Product metadata updated",
+                "inventory_id":   canonical_id,
+                "old_revision":   old_revision,
+                "new_revision":   new_revision,
+                "fields_updated": list(updates.keys()),
+            })
 
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 # ── 2. Add a single activity ──────────────────────────────────────────────────
@@ -347,84 +342,79 @@ def add_activity(item_code):
     if not activity_name:
         return jsonify({"error": "activity_name cannot be empty"}), 400
 
-    conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code, for_update=True)
-        if product is None:
-            return jsonify({"error": "Item not found", "item_code": item_code}), 404
+        with managed_connection() as conn:
+            product = _fetch_product(conn, item_code, for_update=True)
+            if product is None:
+                return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id = product["inventory_id"]
+            canonical_id = product["inventory_id"]
 
-        result = conn.execute(
-            text(
-                """
-                INSERT INTO activities
-                    (inventory_id, type, item_id,
-                     activity_name, class, class_1, pax, machine, time_min, sort_order)
-                VALUES (:inventory_id, :type, :item_id, :activity_name, :class, :class_1,
-                        :pax, :machine, :time_min,
-                        (SELECT COALESCE(MAX(sort_order), 0) + 1
-                         FROM activities WHERE inventory_id = :inventory_id))
-                RETURNING id, sort_order
-                """
-            ),
-            {
+            result = conn.execute(
+                text(
+                    """
+                    INSERT INTO activities
+                        (inventory_id, type, item_id,
+                         activity_name, class, class_1, pax, machine, time_min, sort_order)
+                    VALUES (:inventory_id, :type, :item_id, :activity_name, :class, :class_1,
+                            :pax, :machine, :time_min,
+                            (SELECT COALESCE(MAX(sort_order), 0) + 1
+                             FROM activities WHERE inventory_id = :inventory_id))
+                    RETURNING id, sort_order
+                    """
+                ),
+                {
+                    "inventory_id": canonical_id,
+                    "type":         body.get("type", "Labor"),
+                    "item_id":      body.get("item_id", activity_name),
+                    "activity_name": activity_name,
+                    "class":        body.get("class", "DL"),
+                    "class_1":      body.get("class_1", "DL"),
+                    "pax":          body["pax"],
+                    "machine":      body["machine"],
+                    "time_min":     body["time_min"],
+                },
+            )
+            result_row  = result.mappings().first()
+            new_id      = result_row["id"]
+            next_order  = result_row["sort_order"]
+
+            old_revision  = product["revision"]
+            skip_revision = request.args.get("skip_revision", "0") == "1"
+
+            # ARCHIVE: snapshot current state before the revision bump.
+            actor      = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+
+            new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
+
+            log_action(
+                action="Added activity",
+                description=(
+                    f"'{actor_name}' added activity '{activity_name}' (ID {new_id}) "
+                    f"to product '{canonical_id}'. "
+                    f"Revision {old_revision} → {new_revision}."
+                ),
+                target_type="activity",
+                target_id=str(new_id),
+                extra={"inventory_id": canonical_id,
+                       "activity_name": activity_name,
+                       "old_revision": old_revision,
+                       "new_revision": new_revision},
+            )
+
+            return jsonify({
+                "message":      "Activity added",
                 "inventory_id": canonical_id,
-                "type":         body.get("type", "Labor"),
-                "item_id":      body.get("item_id", activity_name),
-                "activity_name": activity_name,
-                "class":        body.get("class", "DL"),
-                "class_1":      body.get("class_1", "DL"),
-                "pax":          body["pax"],
-                "machine":      body["machine"],
-                "time_min":     body["time_min"],
-            },
-        )
-        result_row  = result.mappings().first()
-        new_id      = result_row["id"]
-        next_order  = result_row["sort_order"]
-
-        old_revision  = product["revision"]
-        skip_revision = request.args.get("skip_revision", "0") == "1"
-
-        # ARCHIVE: snapshot current state before the revision bump.
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
-
-        new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
-
-        conn.commit()
-
-        log_action(
-            action="Added activity",
-            description=(
-                f"'{actor_name}' added activity '{activity_name}' (ID {new_id}) "
-                f"to product '{canonical_id}'. "
-                f"Revision {old_revision} → {new_revision}."
-            ),
-            target_type="activity",
-            target_id=str(new_id),
-            extra={"inventory_id": canonical_id,
-                   "activity_name": activity_name,
-                   "old_revision": old_revision,
-                   "new_revision": new_revision},
-        )
-
-        return jsonify({
-            "message":      "Activity added",
-            "inventory_id": canonical_id,
-            "activity_id":  new_id,
-            "sort_order":   next_order,
-            "old_revision": old_revision,
-            "new_revision": new_revision,
-        }), 201
+                "activity_id":  new_id,
+                "sort_order":   next_order,
+                "old_revision": old_revision,
+                "new_revision": new_revision,
+            }), 201
 
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 # ── 3. Update a single activity ───────────────────────────────────────────────
@@ -494,79 +484,74 @@ def update_activity(item_code, activity_id):
             "updatable_fields": sorted(UPDATABLE_ACTIVITY_FIELDS),
         }), 400
 
-    conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code, for_update=True)
-        if product is None:
-            return jsonify({"error": "Item not found", "item_code": item_code}), 404
+        with managed_connection() as conn:
+            product = _fetch_product(conn, item_code, for_update=True)
+            if product is None:
+                return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id = product["inventory_id"]
+            canonical_id = product["inventory_id"]
 
-        result = conn.execute(
-            text("SELECT id FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
-            {"activity_id": activity_id, "canonical_id": canonical_id},
-        )
-        if result.mappings().first() is None:
+            result = conn.execute(
+                text("SELECT id FROM activities WHERE id = :activity_id AND inventory_id = :canonical_id"),
+                {"activity_id": activity_id, "canonical_id": canonical_id},
+            )
+            if result.mappings().first() is None:
+                return jsonify({
+                    "error":       "Activity not found for this product",
+                    "activity_id": activity_id,
+                    "item_code":   canonical_id,
+                }), 404
+
+            # FIX #8: build the SET clause with double-quoted reserved-word columns
+            set_clause = _build_set_clause(updates)
+            params = {**updates, "activity_id": activity_id, "canonical_id": canonical_id}
+            conn.execute(
+                text(
+                    f"UPDATE activities SET {set_clause} "
+                    f"WHERE id = :activity_id AND inventory_id = :canonical_id"
+                ),
+                params,
+            )
+
+            old_revision  = product["revision"]
+            skip_revision = request.args.get("skip_revision", "0") == "1"
+
+            # ARCHIVE: snapshot current state before the revision bump.
+            actor      = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+
+            new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
+
+            changed_fields = ", ".join(sorted(updates.keys()))
+            log_action(
+                action="Updated activity",
+                description=(
+                    f"'{actor_name}' updated activity ID {activity_id} "
+                    f"on product '{canonical_id}'. "
+                    f"Fields changed: {changed_fields}. "
+                    f"Revision {old_revision} → {new_revision}."
+                ),
+                target_type="activity",
+                target_id=str(activity_id),
+                extra={"inventory_id": canonical_id,
+                       "fields_updated": list(updates.keys()),
+                       "old_revision": old_revision,
+                       "new_revision": new_revision},
+            )
+
             return jsonify({
-                "error":       "Activity not found for this product",
-                "activity_id": activity_id,
-                "item_code":   canonical_id,
-            }), 404
-
-        # FIX #8: build the SET clause with double-quoted reserved-word columns
-        set_clause = _build_set_clause(updates)
-        params = {**updates, "activity_id": activity_id, "canonical_id": canonical_id}
-        conn.execute(
-            text(
-                f"UPDATE activities SET {set_clause} "
-                f"WHERE id = :activity_id AND inventory_id = :canonical_id"
-            ),
-            params,
-        )
-
-        old_revision  = product["revision"]
-        skip_revision = request.args.get("skip_revision", "0") == "1"
-
-        # ARCHIVE: snapshot current state before the revision bump.
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
-
-        new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
-
-        conn.commit()
-
-        changed_fields = ", ".join(sorted(updates.keys()))
-        log_action(
-            action="Updated activity",
-            description=(
-                f"'{actor_name}' updated activity ID {activity_id} "
-                f"on product '{canonical_id}'. "
-                f"Fields changed: {changed_fields}. "
-                f"Revision {old_revision} → {new_revision}."
-            ),
-            target_type="activity",
-            target_id=str(activity_id),
-            extra={"inventory_id": canonical_id,
-                   "fields_updated": list(updates.keys()),
-                   "old_revision": old_revision,
-                   "new_revision": new_revision},
-        )
-
-        return jsonify({
-            "message":        "Activity updated",
-            "inventory_id":   canonical_id,
-            "activity_id":    activity_id,
-            "fields_updated": list(updates.keys()),
-            "old_revision":   old_revision,
-            "new_revision":   new_revision,
-        })
+                "message":        "Activity updated",
+                "inventory_id":   canonical_id,
+                "activity_id":    activity_id,
+                "fields_updated": list(updates.keys()),
+                "old_revision":   old_revision,
+                "new_revision":   new_revision,
+            })
 
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 # ── 4. Delete a single activity ───────────────────────────────────────────────
@@ -598,81 +583,76 @@ def delete_activity(item_code, activity_id):
       500:
         description: Internal server error
     """
-    conn = get_connection()
     try:
-        # FIX #3: use for_update=True so the revision bump is protected by a
-        # row-level lock, consistent with add_activity and update_activity.
-        product = _fetch_product(conn, item_code, for_update=True)
-        if product is None:
-            return jsonify({"error": "Item not found", "item_code": item_code}), 404
+        with managed_connection() as conn:
+            # FIX #3: use for_update=True so the revision bump is protected by a
+            # row-level lock, consistent with add_activity and update_activity.
+            product = _fetch_product(conn, item_code, for_update=True)
+            if product is None:
+                return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id = product["inventory_id"]
+            canonical_id = product["inventory_id"]
 
-        act_row = conn.execute(
-            text(
-                "SELECT id, activity_name FROM activities "
-                "WHERE id = :activity_id AND inventory_id = :canonical_id"
-            ),
-            {"activity_id": activity_id, "canonical_id": canonical_id},
-        ).mappings().first()
+            act_row = conn.execute(
+                text(
+                    "SELECT id, activity_name FROM activities "
+                    "WHERE id = :activity_id AND inventory_id = :canonical_id"
+                ),
+                {"activity_id": activity_id, "canonical_id": canonical_id},
+            ).mappings().first()
 
-        if act_row is None:
+            if act_row is None:
+                return jsonify({
+                    "error":       "Activity not found for this product",
+                    "activity_id": activity_id,
+                    "item_code":   canonical_id,
+                }), 404
+
+            activity_name = act_row["activity_name"]
+            old_revision  = product["revision"]
+
+            # ARCHIVE: snapshot BEFORE the delete so the removed activity is still
+            # included in the stored snapshot — then delete, then bump revision.
+            actor      = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
+
+            conn.execute(
+                text(
+                    "DELETE FROM activities "
+                    "WHERE id = :activity_id AND inventory_id = :canonical_id"
+                ),
+                {"activity_id": activity_id, "canonical_id": canonical_id},
+            )
+
+            skip_revision = request.args.get("skip_revision", "0") == "1"
+            new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
+
+            log_action(
+                action="Deleted activity",
+                description=(
+                    f"'{actor_name}' deleted activity '{activity_name}' (ID {activity_id}) "
+                    f"from product '{canonical_id}'. "
+                    f"Revision {old_revision} → {new_revision}."
+                ),
+                target_type="activity",
+                target_id=str(activity_id),
+                extra={"inventory_id": canonical_id,
+                       "activity_name": activity_name,
+                       "old_revision": old_revision,
+                       "new_revision": new_revision},
+            )
+
             return jsonify({
-                "error":       "Activity not found for this product",
-                "activity_id": activity_id,
-                "item_code":   canonical_id,
-            }), 404
-
-        activity_name = act_row["activity_name"]
-        old_revision  = product["revision"]
-
-        # ARCHIVE: snapshot BEFORE the delete so the removed activity is still
-        # included in the stored snapshot — then delete, then bump revision.
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        snapshot_product(conn, canonical_id, old_revision, archived_by=actor_name)
-
-        conn.execute(
-            text(
-                "DELETE FROM activities "
-                "WHERE id = :activity_id AND inventory_id = :canonical_id"
-            ),
-            {"activity_id": activity_id, "canonical_id": canonical_id},
-        )
-
-        skip_revision = request.args.get("skip_revision", "0") == "1"
-        new_revision  = _bump_revision(conn, canonical_id, old_revision) if not skip_revision else old_revision
-
-        conn.commit()
-
-        log_action(
-            action="Deleted activity",
-            description=(
-                f"'{actor_name}' deleted activity '{activity_name}' (ID {activity_id}) "
-                f"from product '{canonical_id}'. "
-                f"Revision {old_revision} → {new_revision}."
-            ),
-            target_type="activity",
-            target_id=str(activity_id),
-            extra={"inventory_id": canonical_id,
-                   "activity_name": activity_name,
-                   "old_revision": old_revision,
-                   "new_revision": new_revision},
-        )
-
-        return jsonify({
-            "message":      "Activity deleted",
-            "inventory_id": canonical_id,
-            "activity_id":  activity_id,
-            "old_revision": old_revision,
-            "new_revision": new_revision,
-        })
+                "message":      "Activity deleted",
+                "inventory_id": canonical_id,
+                "activity_id":  activity_id,
+                "old_revision": old_revision,
+                "new_revision": new_revision,
+            })
 
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
 
 
 # ── 5. Delete an entire product ───────────────────────────────────────────────
@@ -700,52 +680,47 @@ def delete_product(item_code):
       500:
         description: Internal server error
     """
-    conn = get_connection()
     try:
-        product = _fetch_product(conn, item_code, for_update=True)
-        if product is None:
-            return jsonify({"error": "Item not found", "item_code": item_code}), 404
+        with managed_connection() as conn:
+            product = _fetch_product(conn, item_code, for_update=True)
+            if product is None:
+                return jsonify({"error": "Item not found", "item_code": item_code}), 404
 
-        canonical_id   = product["inventory_id"]
-        revision_descr = product["revision_descr"]
-        revision       = product["revision"]
+            canonical_id   = product["inventory_id"]
+            revision_descr = product["revision_descr"]
+            revision       = product["revision"]
 
-        act_count_row = conn.execute(
-            text("SELECT COUNT(*) AS cnt FROM activities WHERE inventory_id = :canonical_id"),
-            {"canonical_id": canonical_id},
-        ).mappings().first()
-        activity_count = act_count_row["cnt"] if act_count_row else 0
+            act_count_row = conn.execute(
+                text("SELECT COUNT(*) AS cnt FROM activities WHERE inventory_id = :canonical_id"),
+                {"canonical_id": canonical_id},
+            ).mappings().first()
+            activity_count = act_count_row["cnt"] if act_count_row else 0
 
-        conn.execute(
-            text("DELETE FROM products WHERE inventory_id = :canonical_id"),
-            {"canonical_id": canonical_id},
-        )
+            conn.execute(
+                text("DELETE FROM products WHERE inventory_id = :canonical_id"),
+                {"canonical_id": canonical_id},
+            )
 
-        conn.commit()
+            actor      = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Deleted product",
+                description=(
+                    f"'{actor_name}' permanently deleted product '{canonical_id}' "
+                    f"(\"{revision_descr}\", Revision {revision}) "
+                    f"along with its {activity_count} activit{'y' if activity_count == 1 else 'ies'}."
+                ),
+                target_type="product",
+                target_id=canonical_id,
+                extra={"revision": revision,
+                       "revision_descr": revision_descr,
+                       "activities_deleted": activity_count},
+            )
 
-        actor      = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Deleted product",
-            description=(
-                f"'{actor_name}' permanently deleted product '{canonical_id}' "
-                f"(\"{revision_descr}\", Revision {revision}) "
-                f"along with its {activity_count} activit{'y' if activity_count == 1 else 'ies'}."
-            ),
-            target_type="product",
-            target_id=canonical_id,
-            extra={"revision": revision,
-                   "revision_descr": revision_descr,
-                   "activities_deleted": activity_count},
-        )
-
-        return jsonify({
-            "message":      "Product deleted",
-            "inventory_id": canonical_id,
-        })
+            return jsonify({
+                "message":      "Product deleted",
+                "inventory_id": canonical_id,
+            })
 
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)
