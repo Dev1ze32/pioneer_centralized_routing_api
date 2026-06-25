@@ -45,9 +45,9 @@ def load_data():
 
         activity_insert_query = """
             INSERT INTO activities (
-                inventory_id, type, item_id, qty_required, activity_name, 
+                inventory_id, type, item_id, activity_name, 
                 class, class_1, pax, machine, time_min, sort_order
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
         """
 
         print(f"Loading {len(data)} products into the database...")
@@ -84,7 +84,6 @@ def load_data():
                     inv_id,
                     act.get("type"),
                     act.get("item_id"),
-                    act.get("qty_required"),
                     act.get("activities"),
                     act.get("class"),
                     act.get("class_1"),

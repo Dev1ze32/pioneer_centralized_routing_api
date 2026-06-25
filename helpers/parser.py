@@ -93,15 +93,12 @@ def classify_product(activities_list):
         return 'Other / Intermediate'
 
 def parse_acu_routing(filepath: str) -> dict:
-    """Parse the ACU routing CSV into a dict keyed by Inventory ID and classify them."""
-    df = pd.read_csv(filepath, encoding="utf-8-sig")
+    """Parse the ACU routing Excel file into a dict keyed by Inventory ID and classify them."""
+    # Ensure openpyxl is installed to read .xlsx files
+    df = pd.read_excel(filepath)
 
-    # 1. Filter: Type == Labor, CLASS == DL, CLASS.1 == DL
-    filtered = df[
-        (df["Type"] == "Labor")
-        & (df["CLASS"] == "DL")
-        & (df["CLASS.1"] == "DL")
-    ]
+    # 1. Filter: Type == Labor
+    filtered = df[df["Type"] == "Labor"]
 
     # 2. Keep only the columns we care about
     available = [c for c in SOURCE_COLUMNS if c in filtered.columns]
@@ -129,6 +126,12 @@ def parse_acu_routing(filepath: str) -> dict:
             for old_key, new_key in ACTIVITY_FIELDS.items()
             if old_key in available
         }
+        
+        # Override these fields to be empty (null) for now as requested
+        activity["pax"] = None
+        activity["machine"] = None
+        activity["time_min"] = None
+
         result[inv_id]["activities"].append(activity)
 
     # 4. Apply Classification Logic after grouping
@@ -140,7 +143,7 @@ def parse_acu_routing(filepath: str) -> dict:
 
 
 if __name__ == "__main__":
-    SOURCE_FILE = "FY26_ACU_Routing.csv"
+    SOURCE_FILE = "FY26 ACU Routing.xlsx"
     
     # 1. Define the specific output folder path
     OUTPUT_DIR = "./output"
