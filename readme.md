@@ -46,6 +46,7 @@ routing_api/
     ├── logs.py                 # GET /api/logs, DELETE /api/logs/cleanup (admin only)
     ├── production_lines.py     # CRUD for /api/production-lines
     ├── update.py               # PATCH/DELETE for items and their activities
+    ├── export.py               # GET /api/export (Excel generator)
     └── utils/
         ├── auth_utils.py       # Argon2 password hashing, JWT creation and decoding
         ├── decorators.py       # @require_auth, @require_role, @require_superuser_or_admin
@@ -638,6 +639,16 @@ Remove one activity from a product. **Revision is auto-incremented.** Requires `
   "new_revision": "07"
 }
 ```
+
+---
+
+### Export
+
+#### `GET /api/export`
+Generates and downloads a `.xlsx` Excel file containing all products and their associated activities. The data is flattened so that each activity is on its own row alongside its parent product data, mimicking the original ACU Routing template structure.
+
+**Authentication:** Required (`@require_superuser_or_admin`)
+**Response Type:** `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
 
 ---
 
