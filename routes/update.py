@@ -724,3 +724,187 @@ def delete_product(item_code):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# ── 6. Bulk Update (Solves Concurrency & Rate Limiting) ───────────────────────
+
+@update_bp.put("/items/<item_code>/bulk")
+@require_superuser_or_admin
+def bulk_update_item(item_code):
+    """
+    Perform a bulk update of product metadata and activities in a single transaction.
+    This solves the "Lost Update" concurrency problem by verifying expected_revision,
+    and solves Rate Limiting crashes by processing everything in one request.
+    ---
+    tags:
+      - Items
+    parameters:
+      - name: item_code
+        in: path
+        type: string
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            expected_revision:
+              type: string
+            product_updates:
+              type: object
+            activities_added:
+              type: array
+            activities_updated:
+              type: array
+            activities_deleted:
+              type: array
+    responses:
+      200:
+        description: Bulk update successful
+      400:
+        description: Invalid request body
+      404:
+        description: Item not found
+      409:
+        description: Revision mismatch (modified by another user)
+    """
+    body = request.get_json(force=True, silent=True)
+    if not body:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+
+    expected_revision = body.get("expected_revision")
+    if not expected_revision:
+        return jsonify({"error": "expected_revision is required to prevent lost updates"}), 400
+
+    product_updates    = body.get("product_updates", {})
+    activities_added   = body.get("activities_added", [])
+    activities_updated = body.get("activities_updated", [])
+    activities_deleted = body.get("activities_deleted", [])
+
+    try:
+        with managed_connection() as conn:
+            # 1. Fetch and Lock the product row
+            product = _fetch_product(conn, item_code, for_update=True)
+            if product is None:
+                return jsonify({"error": "Item not found", "item_code": item_code}), 404
+
+            canonical_id = product["inventory_id"]
+            db_revision  = product["revision"]
+
+            # 2. Concurrency Check (Optimistic Locking)
+            if db_revision != expected_revision:
+                return jsonify({
+                    "error": "Conflict: This document was modified by another user. Please refresh to see their changes.",
+                    "expected_revision": expected_revision,
+                    "db_revision": db_revision
+                }), 409
+
+            # 3. Archive current state before making ANY changes
+            actor      = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            snapshot_product(conn, canonical_id, db_revision, archived_by=actor_name)
+
+            # 4. Update Product Metadata (if any)
+            valid_updates = {k: v for k, v in product_updates.items() if k in UPDATABLE_PRODUCT_FIELDS}
+            if valid_updates:
+                if "quantity" in valid_updates and valid_updates["quantity"] is not None:
+                    valid_updates["quantity"] = float(valid_updates["quantity"])
+                
+                set_clause = ", ".join(f"{col} = :{col}" for col in valid_updates)
+                params = {**valid_updates, "canonical_id": canonical_id}
+                conn.execute(
+                    text(f"UPDATE products SET {set_clause} WHERE inventory_id = :canonical_id"),
+                    params,
+                )
+
+            # 5. Process Activities (Delete, Update, Add)
+            for act_id in activities_deleted:
+                conn.execute(
+                    text("DELETE FROM activities WHERE inventory_id = :canonical_id AND id = :act_id"),
+                    {"canonical_id": canonical_id, "act_id": act_id}
+                )
+
+            for act in activities_updated:
+                act_id = act.get("id")
+                if not act_id:
+                    continue
+                valid_act_updates = {k: v for k, v in act.items() if k in UPDATABLE_ACTIVITY_FIELDS}
+                if not valid_act_updates:
+                    continue
+                
+                set_parts = []
+                for col in valid_act_updates:
+                    col_quoted = _QUOTED_COLUMNS.get(col, col)
+                    set_parts.append(f"{col_quoted} = :v_{col}")
+                
+                act_params = {f"v_{col}": val for col, val in valid_act_updates.items()}
+                act_params["canonical_id"] = canonical_id
+                act_params["act_id"] = act_id
+
+                conn.execute(
+                    text(f"UPDATE activities SET {', '.join(set_parts)} WHERE inventory_id = :canonical_id AND id = :act_id"),
+                    act_params
+                )
+
+            for i, act in enumerate(activities_added, start=1):
+                activity_name = act.get("activity_name", "").strip()
+                if not activity_name:
+                    activity_name = act.get("activities", "").strip()
+                
+                conn.execute(
+                    text(
+                        """
+                        INSERT INTO activities
+                            (inventory_id, type, item_id, activity_name,
+                             class, class_1, pax, machine, time_min, sort_order)
+                        VALUES (:inventory_id, :type, :item_id, :activity_name,
+                                :class, :class_1, :pax, :machine, :time_min, :sort_order)
+                        """
+                    ),
+                    {
+                        "inventory_id": canonical_id,
+                        "type":         act.get("type", "Labor"),
+                        "item_id":      act.get("item_id", activity_name),
+                        "activity_name": activity_name,
+                        "class":        act.get("class", "DL"),
+                        "class_1":      act.get("class_1", "DL"),
+                        "pax":          act.get("pax", 0),
+                        "machine":      act.get("machine", 0),
+                        "time_min":     act.get("time_min", 0),
+                        "sort_order":   act.get("sort_order", i),
+                    },
+                )
+
+            # 6. Bump Revision
+            new_revision = _bump_revision(conn, canonical_id, db_revision)
+
+            # 7. Log Action
+            log_action(
+                action="Bulk updated product",
+                description=(
+                    f"'{actor_name}' performed a bulk update on '{canonical_id}'. "
+                    f"Revision {db_revision} → {new_revision}. "
+                    f"(+{len(activities_added)} -{len(activities_deleted)} *{len(activities_updated)} activities)"
+                ),
+                target_type="product",
+                target_id=canonical_id,
+                extra={
+                    "old_revision": db_revision,
+                    "new_revision": new_revision,
+                    "metadata_updated": list(valid_updates.keys()),
+                    "added_count": len(activities_added),
+                    "updated_count": len(activities_updated),
+                    "deleted_count": len(activities_deleted)
+                },
+            )
+
+            return jsonify({
+                "message":      "Bulk update successful",
+                "inventory_id": canonical_id,
+                "old_revision": db_revision,
+                "new_revision": new_revision,
+            })
+
+    except Exception as e:
+        logger.exception("Error in bulk_update_item")
+        return jsonify({"error": str(e)}), 500

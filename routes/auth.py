@@ -245,3 +245,182 @@ def me():
         description: Missing or invalid token
     """
     return jsonify(g.current_user.to_dict()), 200
+
+
+# ── GET /api/auth/users ───────────────────────────────────────────────────────
+
+@auth_bp.get("/users")
+@_require_admin
+def get_users():
+    """
+    Get a list of all users. Admin only.
+
+    ---
+    tags:
+      - Authentication
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: List of users
+      401:
+        description: Missing or invalid token
+      403:
+        description: Admin access required
+    """
+    with managed_db_session() as session:
+        users = session.query(User).order_by(User.username).all()
+        return jsonify([u.to_dict() for u in users]), 200
+
+
+# ── PATCH /api/auth/users/<user_id> ───────────────────────────────────────────
+
+@auth_bp.patch("/users/<user_id>")
+@_require_admin
+def update_user(user_id):
+    """
+    Update a user's details (password, role, active status). Admin only.
+
+    ---
+    tags:
+      - Authentication
+    security:
+      - Bearer: []
+    parameters:
+      - name: user_id
+        in: path
+        type: string
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            password:
+              type: string
+              minLength: 8
+            role:
+              type: string
+              enum: [user, superuser, admin]
+            is_active:
+              type: boolean
+    responses:
+      200:
+        description: User updated successfully
+      400:
+        description: Invalid fields
+      401:
+        description: Missing or invalid token
+      403:
+        description: Admin access required
+      404:
+        description: User not found
+    """
+    body = request.get_json(force=True, silent=True)
+    if not body:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+
+    new_password = body.get("password")
+    new_role = body.get("role")
+    new_is_active = body.get("is_active")
+
+    with managed_db_session() as session:
+        user = session.query(User).filter_by(id=user_id).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        changes = []
+
+        if new_password:
+            if len(new_password) < 8:
+                return jsonify({"error": "password must be at least 8 characters"}), 400
+            user.password_hash = hash_password(new_password)
+            changes.append("password reset")
+
+        if new_role:
+            requested_role = new_role.strip().lower()
+            if requested_role not in User.ROLES:
+                return jsonify({"error": f"Invalid role. Must be one of: {sorted(User.ROLES)}"}), 400
+            if user.role != requested_role:
+                changes.append(f"role changed from {user.role} to {requested_role}")
+                user.role = requested_role
+
+        if new_is_active is not None:
+            active_bool = bool(new_is_active)
+            if user.is_active != active_bool:
+                status = "enabled" if active_bool else "disabled"
+                changes.append(f"account {status}")
+                user.is_active = active_bool
+
+        if not changes:
+            return jsonify({"message": "No changes requested"}), 200
+
+        session.flush()
+
+        admin = g.current_user
+        log_action(
+            action="Updated user account",
+            description=f"Admin '{admin.username}' updated user '{user.username}': {', '.join(changes)}.",
+            target_type="user",
+            target_id=str(user.id),
+            extra={"changes": changes},
+        )
+
+        return jsonify({
+            "message": "User updated successfully",
+            "user": user.to_dict()
+        }), 200
+
+
+# ── DELETE /api/auth/users/<user_id> ──────────────────────────────────────────
+
+@auth_bp.delete("/users/<user_id>")
+@_require_admin
+def delete_user(user_id):
+    """
+    Delete a user account. Admin only.
+
+    ---
+    tags:
+      - Authentication
+    security:
+      - Bearer: []
+    parameters:
+      - name: user_id
+        in: path
+        type: string
+        required: true
+    responses:
+      200:
+        description: User deleted successfully
+      400:
+        description: Cannot delete the last admin
+      401:
+        description: Missing or invalid token
+      403:
+        description: Admin access required
+      404:
+        description: User not found
+    """
+    with managed_db_session() as session:
+        user = session.query(User).filter_by(id=user_id).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        if user.role == "admin":
+            admin_count = session.query(User).filter_by(role="admin").count()
+            if admin_count <= 1:
+                return jsonify({"error": "Cannot delete the last admin account."}), 400
+
+        # Log action before deleting
+        admin = g.current_user
+        log_action(
+            action="Deleted user account",
+            description=f"Admin '{admin.username}' deleted user '{user.username}' (role: {user.role}).",
+            target_type="user",
+            target_id=str(user.id),
+        )
+
+        session.delete(user)
+        return jsonify({"message": f"User '{user.username}' deleted successfully"}), 200

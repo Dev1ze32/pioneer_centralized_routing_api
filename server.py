@@ -53,7 +53,8 @@ if __name__ == "__main__":
     # 2. Wrap your app with WhiteNoise. 
     # Point 'root' to your website folder (e.g., the 'frontend' folder we ignored in Git)
     # index_file=True tells it to automatically serve index.html when people visit the base URL
-    app_with_static = WhiteNoise(app, root=os.path.join("frontend", "Routing-Frontend"), index_file=True)
+    # autorefresh=True forces WhiteNoise to read from disk and tells browsers NOT to cache.
+    app_with_static = WhiteNoise(app, root=os.path.join("frontend", "asd"), index_file=True, autorefresh=True)
 
     host = "0.0.0.0"
     port = Config.WAITRESS_PORT
