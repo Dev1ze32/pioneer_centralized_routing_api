@@ -37,7 +37,7 @@ COPY --chown=appuser:appuser . .
 # Switch to non-root user
 USER appuser
 
-# Expose the port waitress will bind to (matches WAITRESS_PORT / default 5000)
+# Expose the port Waitress will bind to (matches WAITRESS_PORT / default 5000)
 EXPOSE 5000
 
 # Health check — Docker marks container unhealthy if this fails 3× in a row.
@@ -45,5 +45,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"
 
-# Entrypoint: waitress_server.py reads config from .env via Config
-CMD ["python", "waitress_server.py"]
+# Entrypoint: server.py reads all config from environment variables via Config
+CMD ["python", "server.py"]
