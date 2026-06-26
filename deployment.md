@@ -19,7 +19,9 @@ The host server must have the following installed:
    cp .env.example .env
    nano .env
    ```
-3. *(Optional)* If you have an existing database dump (e.g. `backup.sql`), place it inside the `init-db/` folder. Docker will automatically ingest it on the very first boot.
+3. *(Optional)* If you have an existing database dump (e.g. `routing_db_backup.sql`), place it inside the `init-db/` folder.
+   > [!IMPORTANT]  
+   > Docker will automatically ingest this `.sql` file **only on the very first boot** of a new database volume. If you accidentally boot without it and need to restart the ingestion, you MUST delete the existing empty database volume using `docker compose down -v` first.
 
 ## 2. Booting the Server
 
@@ -30,18 +32,20 @@ docker compose up -d --build
 ```
 
 **What this does:**
-- Downloads the official PostgreSQL image.
-- Builds the `api` container (installs Python dependencies via `requirements.txt`).
-- Builds the `backup` container (installs cron schedules for auto-backups).
+- Downloads the official **PostgreSQL 18** image (upgraded to v18 to support modern pg_dumps from Windows machines).
+- Builds the `api` container and forces binding to `0.0.0.0` to ensure network accessibility.
+- Builds the `backup` container.
 - Creates an isolated internal network.
-- Boots everything up safely.
 
-## 3. Accessing the Website
+## 3. Accessing the Website & Network Rules
 
-Once the `api` container is running, it binds to port **5000** on the host. 
+Once the `api` container is running, it binds to port **8080** (or whatever `WAITRESS_PORT` is set to in your `.env`) on all network interfaces (`0.0.0.0`). 
 
-You can access the website in any browser on your network by navigating to:
-`http://<ubuntu-server-ip>:5000`
+If you are developing locally on a Windows machine using WSL2/Ubuntu, the IP addresses behave specifically:
+
+- **`http://localhost:8080`** — **(Recommended for local dev)** Docker automatically bridges this securely to your Windows browser.
+- **`http://192.168.x.x:8080`** — **(Required for LAN access)** Use your physical Windows Wi-Fi or Ethernet IP if you want to access the app from your phone or another computer in the office. You may need to Allow Port 8080 in Windows Defender Firewall.
+- **`http://172.19.x.x:8080`** — **(Not recommended)** This is the WSL virtual network IP. Windows Firewall treats this as a "Public" adapter and will actively block browser traffic to it from the Windows side (`ERR_CONNECTION_REFUSED`).
 
 ---
 

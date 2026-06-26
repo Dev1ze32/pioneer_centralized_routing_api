@@ -1,7 +1,7 @@
 # ACU Routing API — Docker Compose
 #
 # Services:
-#   db      — PostgreSQL 16
+#   db      — PostgreSQL 18
 #   api     — Flask + Waitress
 #   backup  — Automated weekly + monthly pg_dump backups
 #
@@ -16,7 +16,7 @@ services:
 
   # ── PostgreSQL ──────────────────────────────────────────────────────────────
   db:
-    image: postgres:16-alpine
+    image: postgres:18
     container_name: acu-routing-db
     restart: unless-stopped
 
@@ -26,7 +26,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be set in .env}
 
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       - ./init-db:/docker-entrypoint-initdb.d:ro
 
     healthcheck:
@@ -56,7 +56,7 @@ services:
       DB_HOST: db
 
     ports:
-      - "${WAITRESS_PORT:-5000}:5000"
+      - "0.0.0.0:${WAITRESS_PORT:-5000}:${WAITRESS_PORT:-5000}"
 
     depends_on:
       db:
