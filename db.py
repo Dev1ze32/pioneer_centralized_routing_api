@@ -55,7 +55,7 @@ def _get_engine() -> Engine:
     global _engine
     if _engine is None:
         url = URL.create(
-            drivername="postgresql+psycopg2",
+            drivername="postgresql+psycopg",
             username=Config.DB_USER,
             password=Config.DB_PASSWORD,
             host=Config.DB_HOST,

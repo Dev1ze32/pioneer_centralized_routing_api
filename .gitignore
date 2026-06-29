@@ -70,3 +70,13 @@ Thumbs.db
 ==============================
 frontend/
 routing_db_backup.sql
+# GESF developer logs (developer-only, not for remote)
+.dev-logs/
+
+greenscore ges
+security/
+reports/
+controls/
+compliance/
+.ges/
+.github/

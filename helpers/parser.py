@@ -127,6 +127,11 @@ def parse_acu_routing(filepath: str) -> dict:
             if old_key in available
         }
         
+        import re
+        raw_activity = str(activity.get("activities", "") or "").strip()
+        # Remove line code prefixes like 'L01 ', 'L04A ', 'SIPS ' from the activity name
+        activity["activities"] = re.sub(r'^(?:L\d+[A-Z]?|SIPS)\s+', '', raw_activity).strip()
+
         # Override these fields to be empty (null) for now as requested
         activity["pax"] = None
         activity["machine"] = None
