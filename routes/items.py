@@ -54,7 +54,9 @@ def get_item(item_code):
                 SELECT inventory_id, revision_descr, revision, notes, product_type,
                        quantity,
                        bm_production_line, bm_production_line_code,
-                       fg_production_line, fg_production_line_code
+                       fg_production_line, fg_production_line_code,
+                       total_run_time, total_labor_min, total_mc_min,
+                       total_dl_units, total_dl, total_voh, total_foh
                 FROM products
                 WHERE UPPER(inventory_id) = UPPER(:item_code)
                 """
@@ -70,7 +72,8 @@ def get_item(item_code):
             text(
                 """
                 SELECT id, type, item_id, activity_name AS activities,
-                       class, class_1, pax, machine, time_min
+                       class, class_1, pax, machine, time_min,
+                       run_time, labor_min, mc_min, dl_units, dl, voh, foh
                 FROM activities
                 WHERE inventory_id = :inventory_id
                 ORDER BY sort_order
@@ -100,18 +103,16 @@ def create_item():
         required: true
         schema:
           type: object
-          required: [inventory_id, revision_descr, product_type]
+          required: [inventory_id]
           properties:
             inventory_id:
               type: string
-              example: 1AF2202L
             revision_descr:
               type: string
             quantity:
               type: number
             product_type:
               type: string
-              enum: ["Finished Good (FG)", "Base Material (BM)"]
             fg_production_line:
               type: string
             fg_production_line_code:
@@ -124,32 +125,58 @@ def create_item():
               type: string
             activities:
               type: array
+              items:
+                type: object
+                properties:
+                  activity_name:
+                    type: string
+                  pax:
+                    type: integer
+                  machine:
+                    type: integer
+                  time_min:
+                    type: number
+                  run_time:
+                    type: number
+                  labor_min:
+                    type: number
+                  mc_min:
+                    type: number
+                  dl_units:
+                    type: number
+                  dl:
+                    type: number
+                  voh:
+                    type: number
+                  foh:
+                    type: number
     responses:
       201:
-        description: Product created
+        description: Product created successfully
       400:
-        description: Missing required fields or invalid JSON
+        description: Validation error
       409:
         description: Item code already exists
-      500:
-        description: Internal server error
     """
     body = request.get_json(force=True, silent=True)
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    inventory_id   = (body.get("inventory_id")   or "").strip()
-    revision_descr = (body.get("revision_descr") or "").strip()
-    product_type   = (body.get("product_type")   or "").strip()
+    inventory_id = (body.get("inventory_id") or "").strip()
+    if not inventory_id:
+        return jsonify({"error": "inventory_id is required"}), 400
 
-    if not inventory_id or not revision_descr or not product_type:
-        return jsonify({"error": "inventory_id, revision_descr, and product_type are required"}), 400
+    revision_descr = body.get("revision_descr", "")
+    product_type   = body.get("product_type", "")
+    quantity       = body.get("quantity")
 
-    quantity = body.get("quantity", 1)
-    try:
-        quantity = float(quantity)
-    except (TypeError, ValueError):
-        return jsonify({"error": "quantity must be a number"}), 400
+    if quantity in (None, ""):
+        quantity = 0.0
+    else:
+        try:
+            quantity = float(quantity)
+        except (TypeError, ValueError):
+            return jsonify({"error": "quantity must be a number"}), 400
     if quantity != int(quantity):
         return jsonify({"error": "quantity must be a whole number"}), 400
 
@@ -190,10 +217,14 @@ def create_item():
                     INSERT INTO products
                         (inventory_id, revision_descr, revision, quantity, product_type,
                          fg_production_line, fg_production_line_code,
-                         bm_production_line, bm_production_line_code, notes)
+                         bm_production_line, bm_production_line_code, notes,
+                         total_run_time, total_labor_min, total_mc_min,
+                         total_dl_units, total_dl, total_voh, total_foh)
                     VALUES (:inventory_id, :revision_descr, :revision, :quantity, :product_type,
                             :fg_production_line, :fg_production_line_code,
-                            :bm_production_line, :bm_production_line_code, :notes)
+                            :bm_production_line, :bm_production_line_code, :notes,
+                            :total_run_time, :total_labor_min, :total_mc_min,
+                            :total_dl_units, :total_dl, :total_voh, :total_foh)
                     """
                 ),
                 {
@@ -207,6 +238,13 @@ def create_item():
                     "bm_production_line":      body.get("bm_production_line"),
                     "bm_production_line_code": body.get("bm_production_line_code"),
                     "notes":                   body.get("notes"),
+                    "total_run_time":  body.get("total_run_time",  0.0),
+                    "total_labor_min": body.get("total_labor_min", 0.0),
+                    "total_mc_min":    body.get("total_mc_min",    0.0),
+                    "total_dl_units":  body.get("total_dl_units",  0.0),
+                    "total_dl":        body.get("total_dl",        0.0),
+                    "total_voh":       body.get("total_voh",       0.0),
+                    "total_foh":       body.get("total_foh",       0.0),
                 },
             )
 
@@ -217,9 +255,11 @@ def create_item():
                         """
                         INSERT INTO activities
                             (inventory_id, type, item_id, activity_name,
-                             class, class_1, pax, machine, time_min, sort_order)
+                             class, class_1, pax, machine, time_min, sort_order,
+                             run_time, labor_min, mc_min, dl_units, dl, voh, foh)
                         VALUES (:inventory_id, :type, :item_id, :activity_name,
-                                :class, :class_1, :pax, :machine, :time_min, :sort_order)
+                                :class, :class_1, :pax, :machine, :time_min, :sort_order,
+                                :run_time, :labor_min, :mc_min, :dl_units, :dl, :voh, :foh)
                         """
                     ),
                     {
@@ -233,10 +273,15 @@ def create_item():
                         "machine":      act.get("machine", 0),
                         "time_min":     act.get("time_min", 0),
                         "sort_order":   act.get("sort_order", i),
+                        "run_time":     act.get("run_time", 0.0),
+                        "labor_min":    act.get("labor_min", 0.0),
+                        "mc_min":       act.get("mc_min", 0.0),
+                        "dl_units":     act.get("dl_units", 0.0),
+                        "dl":           act.get("dl", 0.0),
+                        "voh":          act.get("voh", 0.0),
+                        "foh":          act.get("foh", 0.0),
                     },
                 )
-
-            # managed_connection() commits on clean exit
 
         # FIX #23: log the creation after the transaction commits successfully.
         # Placed outside the with-block so it only runs on clean exit,

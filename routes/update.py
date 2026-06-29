@@ -62,6 +62,14 @@ UPDATABLE_PRODUCT_FIELDS = {
     "fg_production_line",
     "fg_production_line_code",
     "product_type",
+    # Totals — computed & sent by frontend on every save
+    "total_run_time",
+    "total_labor_min",
+    "total_mc_min",
+    "total_dl_units",
+    "total_dl",
+    "total_voh",
+    "total_foh",
 }
 
 REQUIRED_ACTIVITY_FIELDS = ("activity_name", "pax", "machine", "time_min")
@@ -69,6 +77,7 @@ REQUIRED_ACTIVITY_FIELDS = ("activity_name", "pax", "machine", "time_min")
 UPDATABLE_ACTIVITY_FIELDS = {
     "activity_name", "type", "item_id",
     "class", "class_1", "pax", "machine", "time_min", "sort_order",
+    "run_time", "labor_min", "mc_min", "dl_units", "dl", "voh", "foh",
 }
 
 # FIX #8: columns whose names are SQL reserved words must be double-quoted
@@ -355,9 +364,11 @@ def add_activity(item_code):
                     """
                     INSERT INTO activities
                         (inventory_id, type, item_id,
-                         activity_name, class, class_1, pax, machine, time_min, sort_order)
+                         activity_name, class, class_1, pax, machine, time_min,
+                         run_time, labor_min, mc_min, dl_units, dl, voh, foh, sort_order)
                     VALUES (:inventory_id, :type, :item_id, :activity_name, :class, :class_1,
                             :pax, :machine, :time_min,
+                            :run_time, :labor_min, :mc_min, :dl_units, :dl, :voh, :foh,
                             (SELECT COALESCE(MAX(sort_order), 0) + 1
                              FROM activities WHERE inventory_id = :inventory_id))
                     RETURNING id, sort_order
@@ -373,6 +384,13 @@ def add_activity(item_code):
                     "pax":          body["pax"],
                     "machine":      body["machine"],
                     "time_min":     body["time_min"],
+                    "run_time":     body.get("run_time", 0.0),
+                    "labor_min":    body.get("labor_min", 0.0),
+                    "mc_min":       body.get("mc_min", 0.0),
+                    "dl_units":     body.get("dl_units", 0.0),
+                    "dl":           body.get("dl", 0.0),
+                    "voh":          body.get("voh", 0.0),
+                    "foh":          body.get("foh", 0.0),
                 },
             )
             result_row  = result.mappings().first()
@@ -856,9 +874,11 @@ def bulk_update_item(item_code):
                         """
                         INSERT INTO activities
                             (inventory_id, type, item_id, activity_name,
-                             class, class_1, pax, machine, time_min, sort_order)
+                             class, class_1, pax, machine, time_min, sort_order,
+                             run_time, labor_min, mc_min, dl_units, dl, voh, foh)
                         VALUES (:inventory_id, :type, :item_id, :activity_name,
-                                :class, :class_1, :pax, :machine, :time_min, :sort_order)
+                                :class, :class_1, :pax, :machine, :time_min, :sort_order,
+                                :run_time, :labor_min, :mc_min, :dl_units, :dl, :voh, :foh)
                         """
                     ),
                     {
@@ -872,6 +892,13 @@ def bulk_update_item(item_code):
                         "machine":      act.get("machine", 0),
                         "time_min":     act.get("time_min", 0),
                         "sort_order":   act.get("sort_order", i),
+                        "run_time":     act.get("run_time", 0.0),
+                        "labor_min":    act.get("labor_min", 0.0),
+                        "mc_min":       act.get("mc_min", 0.0),
+                        "dl_units":     act.get("dl_units", 0.0),
+                        "dl":           act.get("dl", 0.0),
+                        "voh":          act.get("voh", 0.0),
+                        "foh":          act.get("foh", 0.0),
                     },
                 )
 
