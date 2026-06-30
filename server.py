@@ -63,7 +63,7 @@ app_with_static = WhiteNoise(
     app,
     root=os.path.join(os.path.dirname(__file__), "frontend", "asd"),
     index_file=True,
-    autorefresh=False,
+    autorefresh=True,  # Re-reads files from disk; keeps static up-to-date without restart
 )
 
 # ── Server ────────────────────────────────────────────────────────────────────

@@ -718,6 +718,15 @@ def delete_product(item_code):
             ).mappings().first()
             activity_count = act_count_row["cnt"] if act_count_row else 0
 
+            # Manually cascade delete to prevent orphaned records in case foreign keys are not strictly enforced
+            conn.execute(
+                text("DELETE FROM product_revisions WHERE inventory_id = :canonical_id"),
+                {"canonical_id": canonical_id},
+            )
+            conn.execute(
+                text("DELETE FROM activities WHERE inventory_id = :canonical_id"),
+                {"canonical_id": canonical_id},
+            )
             conn.execute(
                 text("DELETE FROM products WHERE inventory_id = :canonical_id"),
                 {"canonical_id": canonical_id},
