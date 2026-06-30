@@ -93,20 +93,22 @@ def _increment_revision(current: Optional[str]) -> str:
     """
     Increment a zero-padded two-digit revision string.
 
-    FIX #16: non-numeric strings (e.g. "A3" from a manual DB edit) no longer
-    silently reset the counter to "01". Instead, we log a warning and keep
-    the existing string as the base for the integer conversion attempt,
-    falling back to 0 only when truly unparseable.
+    BUG-12 FIX: When the revision string is non-numeric (e.g. "A3" from a
+    manual DB edit), the old code reset the counter to 1, potentially
+    bumping BACKWARD (e.g. revision 5 → "A3" → "01"). Now we log a warning
+    and return the existing string unchanged so no backward jump can occur.
+    Only parseable integers are incremented.
     """
     try:
         num = int(current or "0") + 1
     except (ValueError, TypeError):
         logger.warning(
             "Could not parse revision %r as an integer — "
-            "resetting counter from 0. Check the DB for unexpected values.",
+            "keeping existing value unchanged. Check the DB for unexpected values.",
             current,
         )
-        num = 1
+        # Return the existing string as-is; caller can decide what to do.
+        return current or "01"
     return f"0{num}" if num < 10 else str(num)
 
 

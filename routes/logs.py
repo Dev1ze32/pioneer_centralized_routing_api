@@ -138,12 +138,15 @@ def list_logs():
         params["target_type"] = filter_target_type
 
     if filter_from_date:
-        # Use explicit cast via PostgreSQL function to avoid space-before-:: ambiguity
-        conditions.append("logged_at >= :from_date::timestamptz")
+        # BUG-06 FIX: Use CAST(:param AS type) instead of :param::type.
+        # The :: shorthand on a bind parameter can confuse psycopg3's
+        # prepared-statement cache in some configurations. CAST() is
+        # unambiguous and works correctly across all driver versions.
+        conditions.append("logged_at >= CAST(:from_date AS timestamptz)")
         params["from_date"] = filter_from_date
 
     if filter_to_date:
-        conditions.append("logged_at < (:to_date::date + INTERVAL '1 day')")
+        conditions.append("logged_at < (CAST(:to_date AS date) + INTERVAL '1 day')")
         params["to_date"] = filter_to_date
 
     where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""

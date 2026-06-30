@@ -63,7 +63,11 @@ class Config:
     # Flask-Limiter format: "N/period" where period = second | minute | hour | day
     RATE_LIMIT_LOGIN    = os.getenv("RATE_LIMIT_LOGIN",    "10/minute")
     RATE_LIMIT_REGISTER = os.getenv("RATE_LIMIT_REGISTER", "5/minute")
-    RATE_LIMIT_DEFAULT  = os.getenv("RATE_LIMIT_DEFAULT",  "300/minute")
+    # Low-Risk fix: raised from 300/minute → 2000/minute.
+    # The bulk-update endpoint means a full save is now 1 request, but 3-4
+    # concurrent users from the same office IP could still hit the old limit.
+    # The login endpoint keeps its own strict 10/minute limit unchanged.
+    RATE_LIMIT_DEFAULT  = os.getenv("RATE_LIMIT_DEFAULT",  "2000/minute")
 
     # ── Waitress (read by waitress_server.py) ─────────────────────────────────
     WAITRESS_THREADS = _safe_int.__func__("WAITRESS_THREADS", "8")

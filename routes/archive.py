@@ -161,6 +161,9 @@ def list_revisions(item_code):
         "page":         page,
         "per_page":     per_page,
         "total_pages":  max(1, -(-total // per_page)),
+        # BUG-13 NOTE: each row includes its unique `id` field so callers can
+        # pass ?snapshot_id=<id> to get_revision() to pin to one specific
+        # snapshot when multiple exist for the same revision string.
         "revisions":    [dict(r) for r in rows],
     }), 200
 
@@ -225,27 +228,58 @@ def get_revision(item_code, revision):
     """
     canonical_id = item_code.upper()
 
+    # BUG-13 FIX: When multiple snapshots share the same revision string
+    # (e.g. intermediate snapshots from a bulk-update), ORDER BY archived_at DESC
+    # LIMIT 1 silently returns only the most recent one, making older snapshots
+    # unreachable. The optional ?snapshot_id=<id> parameter lets callers pin to
+    # a specific archive row by its unique primary key.
+    snapshot_id = request.args.get("snapshot_id", None, type=int)
+
     with managed_connection() as conn:
-        row = conn.execute(
-            text(
-                """
-                SELECT
-                    id,
-                    inventory_id,
-                    revision,
-                    snapshot,
-                    archived_by,
-                    TO_CHAR(archived_at AT TIME ZONE 'UTC',
-                            'YYYY-MM-DD HH24:MI:SS UTC') AS archived_at
-                FROM product_revisions
-                WHERE UPPER(inventory_id) = :canonical_id
-                  AND revision            = :revision
-                ORDER BY archived_at DESC
-                LIMIT 1
-                """
-            ),
-            {"canonical_id": canonical_id, "revision": revision},
-        ).mappings().first()
+        if snapshot_id is not None:
+            # Exact lookup by primary key — unambiguous.
+            row = conn.execute(
+                text(
+                    """
+                    SELECT
+                        id,
+                        inventory_id,
+                        revision,
+                        snapshot,
+                        archived_by,
+                        TO_CHAR(archived_at AT TIME ZONE 'UTC',
+                                'YYYY-MM-DD HH24:MI:SS UTC') AS archived_at
+                    FROM product_revisions
+                    WHERE UPPER(inventory_id) = :canonical_id
+                      AND revision            = :revision
+                      AND id                  = :snapshot_id
+                    """
+                ),
+                {"canonical_id": canonical_id, "revision": revision,
+                 "snapshot_id": snapshot_id},
+            ).mappings().first()
+        else:
+            # Default: most recent snapshot for this revision (original behaviour).
+            row = conn.execute(
+                text(
+                    """
+                    SELECT
+                        id,
+                        inventory_id,
+                        revision,
+                        snapshot,
+                        archived_by,
+                        TO_CHAR(archived_at AT TIME ZONE 'UTC',
+                                'YYYY-MM-DD HH24:MI:SS UTC') AS archived_at
+                    FROM product_revisions
+                    WHERE UPPER(inventory_id) = :canonical_id
+                      AND revision            = :revision
+                    ORDER BY archived_at DESC
+                    LIMIT 1
+                    """
+                ),
+                {"canonical_id": canonical_id, "revision": revision},
+            ).mappings().first()
 
         if row is None:
             return jsonify({
