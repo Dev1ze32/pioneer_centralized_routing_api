@@ -242,8 +242,6 @@ def update_production_line(line_code):
                     },
                 )
 
-            conn.commit()
-
             actor = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
             log_action(
@@ -337,8 +335,6 @@ def create_production_line():
                 ),
                 {"line_code": line_code, "line_name": line_name},
             )
-
-            conn.commit()
 
             actor = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
@@ -442,8 +438,6 @@ def rename_production_line(line_code):
                 {"new_name": new_name, "canonical_code": canonical_code},
             )
 
-            conn.commit()
-
             actor = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
             log_action(
@@ -529,8 +523,6 @@ def delete_production_line(line_code):
                 text("DELETE FROM production_lines WHERE production_line_code = :canonical_code"),
                 {"canonical_code": canonical_code},
             )
-
-            conn.commit()
 
             actor = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
@@ -664,8 +656,6 @@ def add_line_activity(line_code):
             new_id           = result_row["id"]
             final_sort_order = result_row["sort_order"]
 
-            conn.commit()
-
             actor = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
             log_action(
@@ -792,8 +782,6 @@ def update_line_activity(line_code, activity_id):
                 params,
             )
 
-            conn.commit()
-
             actor = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
             changed_fields = ", ".join(sorted(updates.keys()))
@@ -850,68 +838,65 @@ def delete_line_activity(line_code, activity_id):
       500:
         description: Internal server error
     """
-    conn = get_connection()
+    # BUG-02 FIX: Rewritten to use managed_connection() so the connection is
+    # always safely returned to the pool, even on early return or exception.
     try:
-        result = conn.execute(
-            text(
-                "SELECT production_line_code FROM production_lines "
-                "WHERE UPPER(production_line_code) = UPPER(:line_code)"
-            ),
-            {"line_code": line_code},
-        )
-        row = result.mappings().first()
-        if row is None:
-            return jsonify({"error": "Production line not found", "line_code": line_code}), 404
+        with managed_connection() as conn:
+            result = conn.execute(
+                text(
+                    "SELECT production_line_code FROM production_lines "
+                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                ),
+                {"line_code": line_code},
+            )
+            row = result.mappings().first()
+            if row is None:
+                return jsonify({"error": "Production line not found", "line_code": line_code}), 404
 
-        canonical_code = row["production_line_code"]
+            canonical_code = row["production_line_code"]
 
-        act_row = conn.execute(
-            text(
-                "SELECT id, activity_name FROM line_activities "
-                "WHERE id = :activity_id AND production_line_code = :canonical_code"
-            ),
-            {"activity_id": activity_id, "canonical_code": canonical_code},
-        ).mappings().first()
+            act_row = conn.execute(
+                text(
+                    "SELECT id, activity_name FROM line_activities "
+                    "WHERE id = :activity_id AND production_line_code = :canonical_code"
+                ),
+                {"activity_id": activity_id, "canonical_code": canonical_code},
+            ).mappings().first()
 
-        if act_row is None:
+            if act_row is None:
+                return jsonify({
+                    "error":       "Activity not found for this production line",
+                    "activity_id": activity_id,
+                    "line_code":   canonical_code,
+                }), 404
+
+            activity_name = act_row["activity_name"]
+
+            conn.execute(
+                text(
+                    "DELETE FROM line_activities "
+                    "WHERE id = :activity_id AND production_line_code = :canonical_code"
+                ),
+                {"activity_id": activity_id, "canonical_code": canonical_code},
+            )
+
+            actor = getattr(g, "current_user", None)
+            actor_name = actor.username if actor else "unknown"
+            log_action(
+                action="Deleted line activity",
+                description=(
+                    f"'{actor_name}' deleted activity '{activity_name}' (ID {activity_id}) "
+                    f"from production line '{canonical_code}'."
+                ),
+                target_type="production_line",
+                target_id=canonical_code,
+                extra={"activity_id": activity_id, "activity_name": activity_name},
+            )
+
             return jsonify({
-                "error":       "Activity not found for this production line",
-                "activity_id": activity_id,
-                "line_code":   canonical_code,
-            }), 404
-
-        activity_name = act_row["activity_name"]
-
-        conn.execute(
-            text(
-                "DELETE FROM line_activities "
-                "WHERE id = :activity_id AND production_line_code = :canonical_code"
-            ),
-            {"activity_id": activity_id, "canonical_code": canonical_code},
-        )
-
-        conn.commit()
-
-        actor = getattr(g, "current_user", None)
-        actor_name = actor.username if actor else "unknown"
-        log_action(
-            action="Deleted line activity",
-            description=(
-                f"'{actor_name}' deleted activity '{activity_name}' (ID {activity_id}) "
-                f"from production line '{canonical_code}'."
-            ),
-            target_type="production_line",
-            target_id=canonical_code,
-            extra={"activity_id": activity_id, "activity_name": activity_name},
-        )
-
-        return jsonify({
-            "message":               "Activity deleted",
-            "production_line_code":  canonical_code,
-            "activity_id":           activity_id,
-        })
+                "message":               "Activity deleted",
+                "production_line_code":  canonical_code,
+                "activity_id":           activity_id,
+            })
     except Exception as e:
-        conn.rollback()
         return jsonify({"error": str(e)}), 500
-    finally:
-        release_connection(conn)

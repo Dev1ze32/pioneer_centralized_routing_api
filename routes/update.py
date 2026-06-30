@@ -237,7 +237,9 @@ def update_product_metadata(item_code):
             old_revision = product["revision"]
             new_revision = _increment_revision(old_revision)
 
-            set_clause = ", ".join(f"{col} = :{col}" for col in updates)
+            # BUG-03 FIX: Use _build_set_clause() so reserved SQL words (e.g.
+            # any future reserved-word column) are automatically double-quoted.
+            set_clause = _build_set_clause(updates)
             params = {**updates, "canonical_id": canonical_id}
 
             # ARCHIVE: snapshot the current state BEFORE applying the update,
@@ -828,7 +830,10 @@ def bulk_update_item(item_code):
                 if "quantity" in valid_updates and valid_updates["quantity"] is not None:
                     valid_updates["quantity"] = float(valid_updates["quantity"])
                 
-                set_clause = ", ".join(f"{col} = :{col}" for col in valid_updates)
+                # BUG-05 FIX: Use _build_set_clause() for product metadata to
+                # stay consistent with the single-update path and handle any
+                # reserved SQL word columns safely.
+                set_clause = _build_set_clause(valid_updates)
                 params = {**valid_updates, "canonical_id": canonical_id}
                 conn.execute(
                     text(f"UPDATE products SET {set_clause} WHERE inventory_id = :canonical_id"),

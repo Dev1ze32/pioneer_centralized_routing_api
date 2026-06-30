@@ -270,12 +270,19 @@ def get_users():
     """
     with managed_db_session() as session:
         users = session.query(User).order_by(User.username).all()
+        # BUG-04 FIX: Expunge all ORM objects before the session closes so
+        # that to_dict() cannot lazy-load anything after session teardown.
+        # This prevents DetachedInstanceError if relationships are ever added.
+        session.expunge_all()
         return jsonify([u.to_dict() for u in users]), 200
 
 
 # ── PATCH /api/auth/users/<user_id> ───────────────────────────────────────────
 
-@auth_bp.patch("/users/<user_id>")
+# BUG-09 FIX: Use <int:user_id> so Flask coerces and validates the path
+# parameter. Sending a non-integer (e.g. /users/abc) now returns 404
+# from Flask's URL matcher instead of a 500 DataError from SQLAlchemy.
+@auth_bp.patch("/users/<int:user_id>")
 @_require_admin
 def update_user(user_id):
     """
@@ -375,7 +382,7 @@ def update_user(user_id):
 
 # ── DELETE /api/auth/users/<user_id> ──────────────────────────────────────────
 
-@auth_bp.delete("/users/<user_id>")
+@auth_bp.delete("/users/<int:user_id>")
 @_require_admin
 def delete_user(user_id):
     """
