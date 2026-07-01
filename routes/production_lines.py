@@ -119,7 +119,7 @@ def get_production_line(line_code):
                 """
                 SELECT production_line_code, production_line_name
                 FROM production_lines
-                WHERE UPPER(production_line_code) = UPPER(:line_code)
+                WHERE production_line_code = :line_code
                 """
             ),
             {"line_code": line_code},
@@ -134,7 +134,7 @@ def get_production_line(line_code):
                 """
                 SELECT id, activity_name, sort_order
                 FROM line_activities
-                WHERE UPPER(production_line_code) = UPPER(:line_code)
+                WHERE production_line_code = :line_code
                 ORDER BY sort_order
                 """
             ),
@@ -201,7 +201,7 @@ def update_production_line(line_code):
             result = conn.execute(
                 text(
                     "SELECT production_line_code, production_line_name FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                    "WHERE production_line_code = :line_code"
                 ),
                 {"line_code": line_code},
             )
@@ -318,7 +318,7 @@ def create_production_line():
             result = conn.execute(
                 text(
                     "SELECT production_line_code FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                    "WHERE production_line_code = :line_code"
                 ),
                 {"line_code": line_code},
             )
@@ -404,7 +404,7 @@ def rename_production_line(line_code):
             result = conn.execute(
                 text(
                     "SELECT production_line_code, production_line_name FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                    "WHERE production_line_code = :line_code"
                 ),
                 {"line_code": line_code},
             )
@@ -489,7 +489,7 @@ def delete_production_line(line_code):
             result = conn.execute(
                 text(
                     "SELECT production_line_code, production_line_name FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                    "WHERE production_line_code = :line_code"
                 ),
                 {"line_code": line_code},
             )
@@ -506,12 +506,10 @@ def delete_production_line(line_code):
                     SELECT inventory_id FROM products
                     WHERE bm_production_line_code = :canonical_code
                        OR fg_production_line_code  = :canonical_code
-                       OR bm_production_line ILIKE :code_prefix
-                       OR fg_production_line ILIKE :code_prefix
                     LIMIT 1
                     """
                 ),
-                {"canonical_code": canonical_code, "code_prefix": f"{canonical_code} - %"},
+                {"canonical_code": canonical_code},
             )
             if result.mappings().first() is not None:
                 return jsonify({
@@ -603,7 +601,7 @@ def add_line_activity(line_code):
             result = conn.execute(
                 text(
                     "SELECT production_line_code FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code) FOR UPDATE"
+                    "WHERE production_line_code = :line_code FOR UPDATE"
                 ),
                 {"line_code": line_code},
             )
@@ -623,7 +621,7 @@ def add_line_activity(line_code):
                         VALUES (
                             :canonical_code, :activity_name,
                             (SELECT COALESCE(MAX(sort_order), 0) + 1
-                             FROM line_activities WHERE production_line_code = :canonical_code),
+                             FROM line_activities WHERE production_line_code = CAST(:canonical_code AS VARCHAR)),
                             :stage
                         )
                         RETURNING id, sort_order
@@ -748,7 +746,7 @@ def update_line_activity(line_code, activity_id):
             result = conn.execute(
                 text(
                     "SELECT production_line_code FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                    "WHERE production_line_code = :line_code"
                 ),
                 {"line_code": line_code},
             )
@@ -845,7 +843,7 @@ def delete_line_activity(line_code, activity_id):
             result = conn.execute(
                 text(
                     "SELECT production_line_code FROM production_lines "
-                    "WHERE UPPER(production_line_code) = UPPER(:line_code)"
+                    "WHERE production_line_code = :line_code"
                 ),
                 {"line_code": line_code},
             )

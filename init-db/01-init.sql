@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
-\restrict c6YTJpluoXSCfa9acyfJb4yzz22iRGium9fHdYtYyw6Ire04imXfHeQWXUHf0hZ
+\restrict 3KDLJ9sFCX5udVk4MCig952ZYcsXWUevoYcnwa5Zi8wd191DpHCUdcwhMIu9NLS
 
--- Dumped from database version 18.4
--- Dumped by pg_dump version 18.4
+-- Dumped from database version 18.4 (Debian 18.4-1.pgdg13+1)
+-- Dumped by pg_dump version 18.4 (Debian 18.4-1.pgdg13+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -299,7 +299,7 @@ CREATE TABLE public.users (
     is_active boolean DEFAULT true NOT NULL,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
-    CONSTRAINT valid_role CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'superuser'::character varying, 'admin'::character varying])::text[])))
+    CONSTRAINT valid_role CHECK (((role)::text = ANY (ARRAY[('user'::character varying)::text, ('superuser'::character varying)::text, ('admin'::character varying)::text])))
 );
 
 
@@ -1020,6 +1020,7 @@ COPY public.activities (id, inventory_id, type, item_id, activity_name, class, c
 3419	1PGS9229	Labor	L01 PACKING/PALLETIZ	PACKING/PALLETIZ	DL	FOH	\N	\N	\N	3	\N	\N	\N	\N	\N	\N	\N
 3420	1PGS9233	Labor	L01 LABELING/CODING	LABELING/CODING	DL	DL	\N	\N	\N	1	\N	\N	\N	\N	\N	\N	\N
 3421	1PGS9233	Labor	L01 FILLING	FILLING	DL	VOH	\N	\N	\N	2	\N	\N	\N	\N	\N	\N	\N
+3587	1PUB9229	Labor	L01 TINTING	TINTING	DL	DL	\N	\N	\N	4	\N	\N	\N	\N	\N	\N	\N
 3422	1PGS9233	Labor	L01 PACKING/PALLETIZ	PACKING/PALLETIZ	DL	FOH	\N	\N	\N	3	\N	\N	\N	\N	\N	\N	\N
 3423	1PGT920G	Labor	L01 LABELING/CODING	LABELING/CODING	DL	DL	\N	\N	\N	1	\N	\N	\N	\N	\N	\N	\N
 3424	1PGT920G	Labor	L01 MIXING	MIXING	DL	VOH	\N	\N	\N	2	\N	\N	\N	\N	\N	\N	\N
@@ -1185,7 +1186,6 @@ COPY public.activities (id, inventory_id, type, item_id, activity_name, class, c
 3584	1PUB9229	Labor	L01 LABELING/CODING	LABELING/CODING	DL	DL	\N	\N	\N	1	\N	\N	\N	\N	\N	\N	\N
 3585	1PUB9229	Labor	L01 MIXING	MIXING	DL	VOH	\N	\N	\N	2	\N	\N	\N	\N	\N	\N	\N
 3586	1PUB9229	Labor	L01 MILLING	MILLING	DL	FOH	\N	\N	\N	3	\N	\N	\N	\N	\N	\N	\N
-3587	1PUB9229	Labor	L01 TINTING	TINTING	DL	DL	\N	\N	\N	4	\N	\N	\N	\N	\N	\N	\N
 3588	1PUB9229	Labor	L01 FILLING	FILLING	DL	VOH	\N	\N	\N	5	\N	\N	\N	\N	\N	\N	\N
 3589	1PUB9229	Labor	L01 PACKING/PALLETIZ	PACKING/PALLETIZ	DL	FOH	\N	\N	\N	6	\N	\N	\N	\N	\N	\N	\N
 3590	1PUB9233	Labor	L01 LABELING/CODING	LABELING/CODING	DL	DL	\N	\N	\N	1	\N	\N	\N	\N	\N	\N	\N
@@ -3115,22 +3115,14 @@ COPY public.activities (id, inventory_id, type, item_id, activity_name, class, c
 5514	1KRT5A9A12	Labor	L01 TINTING	TINTING	DL	FOH	\N	\N	\N	3	\N	\N	\N	\N	\N	\N	\N
 5515	1KRT5A9A12	Labor	L01 FILLING	FILLING	DL	DL	\N	\N	\N	4	\N	\N	\N	\N	\N	\N	\N
 5516	1KRT5A9A12	Labor	L01 PACKING/PALLETIZ	PACKING/PALLETIZ	DL	VOH	\N	\N	\N	5	\N	\N	\N	\N	\N	\N	\N
-5518	2101934	Labor	FILLING	FILLING	DL	DL	5	6	21	2	\N	\N	\N	\N	\N	\N	\N
-5517	2101934	Labor	CODING	CODING	DL	DL	1	4	24	1	\N	\N	\N	\N	\N	\N	\N
-5519	2101934	Labor	PACKING/PALLETI	PACKING/PALLETI	DL	DL	23	4	23	1	\N	\N	\N	\N	\N	\N	\N
 3252	1M2C2009	Labor	L06 LABELING/CODING	LABELING/CODING	DL	DL	1	2	0.13333	1	\N	\N	\N	\N	\N	\N	\N
 3253	1M2C2009	Labor	L06 FILLING	FILLING	DL	DL	2	3	5	2	\N	\N	\N	\N	\N	\N	\N
 3254	1M2C2009	Labor	L06 PACKING/PALLETIZ	PACKING/PALLETIZ	DL	DL	4	4	5	3	\N	\N	\N	\N	\N	\N	\N
 2929	1ENC2019	Labor	L06 LABELING/CODING	LABELING/CODING	DL	DL	2	4	12	1	\N	\N	\N	\N	\N	\N	\N
 2930	1ENC2019	Labor	L06 FILLING	FILLING	DL	DL	1	5	12	2	\N	\N	\N	\N	\N	\N	\N
 2931	1ENC2019	Labor	L06 PACKING/PALLETIZ	PACKING/PALLETIZ	DL	DL	2	3	90	3	\N	\N	\N	\N	\N	\N	\N
-5520	9090	Labor	MIXING	MIXING	DL	DL	1	23	4	1	4	4	92	1	4	4	4
 5522	8080	Labor	MIXING	MIXING	DL	DL	1	23	4	1	4	4	92	1	4	4	4
 5523	8080	Labor	FILLING	FILLING	DL	DL	4	4	12	2	12	48	48	1	48	12	12
-5521	9090	Labor	FILLING	FILLING	DL	DL	2	2	12	2	12	24	24	1	24	12	12
-5524	555	Labor	SEALING	SEALING	DL	DL	2	3	180	1	180	360	540	1	360	180	180
-5525	555	Labor	CAPPING	CAPPING	DL	DL	2	4	180	2	180	360	720	1	360	180	180
-5526	555	Labor	PACKING/PALLETI	PACKING/PALLETI	DL	DL	4	5	12	1	12	48	60	1	48	12	12
 5527	8080	Labor	SCOOPING	SCOOPING	DL	DL	2	4	5	1	5	10	20	1	10	5	5
 \.
 
@@ -3140,43 +3132,49 @@ COPY public.activities (id, inventory_id, type, item_id, activity_name, class, c
 --
 
 COPY public.activity_logs (id, logged_at, user_id, username, user_role, action, description, target_type, target_id, ip_address, extra) FROM stdin;
-313	2026-06-26 08:43:31.694734+08	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': account disabled.	user	5	192.168.50.65	{"changes": ["account disabled"]}
-315	2026-06-26 08:46:09.956949+08	5	eson	admin	Updated user account	Admin 'eson' updated user 'eson': role changed from admin to user.	user	5	192.168.50.65	{"changes": ["role changed from admin to user"]}
-316	2026-06-26 08:48:03.972813+08	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': role changed from user to superuser.	user	5	192.168.50.65	{"changes": ["role changed from user to superuser"]}
-317	2026-06-26 08:48:35.444853+08	2	dell	admin	Created user account	Admin 'dell' created a new 'admin' account for 'wendellpogi' (user ID 9).	user	9	192.168.50.65	{"new_username": "wendellpogi", "assigned_role": "admin"}
-318	2026-06-26 08:55:58.906809+08	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': password reset, role changed from superuser to user.	user	5	192.168.50.65	{"changes": ["password reset", "role changed from superuser to user"]}
-321	2026-06-26 09:39:43.848853+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on '8080'. Revision 08 → 09. (+2 -2 *0 activities)	product	8080	192.168.50.161	{"added_count": 2, "new_revision": "09", "old_revision": "08", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-324	2026-06-26 11:38:04.772265+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 00 → 01. (+2 -1 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "01", "old_revision": "00", "deleted_count": 1, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-325	2026-06-26 11:38:16.619541+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 01 → 02. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "02", "old_revision": "01", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-326	2026-06-26 11:38:24.282534+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 02 → 03. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "03", "old_revision": "02", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-328	2026-06-26 11:44:49.678809+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 00 → 01. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "01", "old_revision": "00", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-330	2026-06-29 08:33:51.790003+08	6	Eson	superuser	Created product	Product '2101934' (type: Finished Good (FG)) was created with 2 activities.	product	2101934	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  GALLON51", "bm_production_line_code": null, "fg_production_line_code": "L02"}
-332	2026-06-29 08:43:01.539215+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 01 → 02. (+2 -2 *0 activities)	product	2101934	192.168.50.86	{"added_count": 2, "new_revision": "02", "old_revision": "01", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-333	2026-06-29 08:46:03.264735+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 02 → 03. (+0 -0 *0 activities)	product	2101934	192.168.50.86	{"added_count": 0, "new_revision": "03", "old_revision": "02", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-335	2026-06-29 15:50:27.15204+08	6	Eson	superuser	Created product	Product '2101934' (type: Finished Good (FG)) was created with 2 activities.	product	2101934	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
-336	2026-06-29 15:51:17.918091+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 00 → 01. (+0 -0 *1 activities)	product	2101934	192.168.50.86	{"added_count": 0, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 1, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-337	2026-06-29 15:58:22.390577+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 01 → 02. (+1 -0 *0 activities)	product	2101934	192.168.50.86	{"added_count": 1, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-340	2026-06-29 16:22:11.239814+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '1ENC2019'. Revision 03 → 04. (+0 -0 *3 activities)	product	1ENC2019	192.168.50.86	{"added_count": 0, "new_revision": "04", "old_revision": "03", "deleted_count": 0, "updated_count": 3, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-341	2026-06-29 16:23:14.482883+08	6	Eson	superuser	Created product	Product '8080' (type: Finished Good (FG)) was created with 2 activities.	product	8080	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
-314	2026-06-26 08:44:04.701005+08	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': role changed from user to admin, account enabled.	user	5	192.168.50.65	{"changes": ["role changed from user to admin", "account enabled"]}
-322	2026-06-26 10:01:54.714062+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on '8080'. Revision 09 → 10. (+3 -2 *0 activities)	product	8080	192.168.50.65	{"added_count": 3, "new_revision": "10", "old_revision": "09", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-329	2026-06-26 11:45:19.647427+08	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 01 → 02. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "02", "old_revision": "01", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-331	2026-06-29 08:36:15.530708+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 00 → 01. (+2 -2 *0 activities)	product	2101934	192.168.50.86	{"added_count": 2, "new_revision": "01", "old_revision": "00", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-338	2026-06-29 16:00:21.039593+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '1M2C2009'. Revision 01 → 02. (+0 -0 *3 activities)	product	1M2C2009	192.168.50.86	{"added_count": 0, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 3, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-342	2026-06-29 16:23:51.372916+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '8080'. Revision 00 → 01. (+0 -0 *1 activities)	product	8080	192.168.50.86	{"added_count": 0, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 1, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-344	2026-06-29 17:20:09.68231+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '8080'. Revision 01 → 02. (+0 -0 *2 activities)	product	8080	192.168.50.86	{"added_count": 0, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 2, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
-345	2026-06-29 17:21:15.503386+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '9090'. Revision 01 → 02. (+0 -0 *1 activities)	product	9090	192.168.50.86	{"added_count": 0, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 1, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
-347	2026-06-29 17:28:34.746477+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '555'. Revision 00 → 01. (+1 -0 *0 activities)	product	555	192.168.50.86	{"added_count": 1, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
-348	2026-06-29 17:31:37.276398+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '8080'. Revision 02 → 03. (+1 -0 *0 activities)	product	8080	192.168.50.86	{"added_count": 1, "new_revision": "03", "old_revision": "02", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
-319	2026-06-26 09:08:36.472651+08	2	dell	admin	Deleted user account	Admin 'dell' deleted user 'Panda' (role: superuser).	user	8	192.168.50.65	\N
-320	2026-06-26 09:11:05.813967+08	2	dell	admin	Updated user account	Admin 'dell' updated user 'Aerial': account disabled.	user	7	192.168.50.65	{"changes": ["account disabled"]}
-323	2026-06-26 11:37:00.426206+08	4	macky	superuser	Created product	Product 'asd123' (type: Base Material (BM)) was created with 1 activity.	product	asd123	192.168.50.161	{"product_type": "Base Material (BM)", "activity_count": 1, "revision_descr": "asdsadasd", "bm_production_line_code": "L02", "fg_production_line_code": null}
-327	2026-06-26 11:44:33.483194+08	4	macky	superuser	Created product	Product 'asd123' (type: Finished Good (FG)) was created with 2 activities.	product	asd123	192.168.50.161	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "asdasd", "bm_production_line_code": null, "fg_production_line_code": "L02"}
-334	2026-06-29 10:52:08.058098+08	6	Eson	superuser	Created product	Product '9090' (type: Finished Good (FG)) was created with 2 activities.	product	9090	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  GALLON", "bm_production_line_code": null, "fg_production_line_code": "L04C"}
-339	2026-06-29 16:20:50.566848+08	6	Eson	superuser	Created product	Product '9090' (type: Finished Good (FG)) was created with 2 activities.	product	9090	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
-343	2026-06-29 16:57:23.702624+08	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '9090'. Revision 00 → 01. (+0 -0 *2 activities)	product	9090	192.168.50.86	{"added_count": 0, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 2, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
-346	2026-06-29 17:27:52.452579+08	6	Eson	superuser	Created product	Product '555' (type: Finished Good (FG)) was created with 2 activities.	product	555	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
-312	2026-06-26 08:32:34.698627+08	2	dell	admin	Purged old logs	dell deleted 67 audit log entries older than 1 days.	logs	\N	192.168.50.65	{"rows_deleted": 67, "days_threshold": 1}
+313	2026-06-26 00:43:31.694734+00	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': account disabled.	user	5	192.168.50.65	{"changes": ["account disabled"]}
+315	2026-06-26 00:46:09.956949+00	5	eson	admin	Updated user account	Admin 'eson' updated user 'eson': role changed from admin to user.	user	5	192.168.50.65	{"changes": ["role changed from admin to user"]}
+316	2026-06-26 00:48:03.972813+00	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': role changed from user to superuser.	user	5	192.168.50.65	{"changes": ["role changed from user to superuser"]}
+317	2026-06-26 00:48:35.444853+00	2	dell	admin	Created user account	Admin 'dell' created a new 'admin' account for 'wendellpogi' (user ID 9).	user	9	192.168.50.65	{"new_username": "wendellpogi", "assigned_role": "admin"}
+318	2026-06-26 00:55:58.906809+00	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': password reset, role changed from superuser to user.	user	5	192.168.50.65	{"changes": ["password reset", "role changed from superuser to user"]}
+321	2026-06-26 01:39:43.848853+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on '8080'. Revision 08 → 09. (+2 -2 *0 activities)	product	8080	192.168.50.161	{"added_count": 2, "new_revision": "09", "old_revision": "08", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+324	2026-06-26 03:38:04.772265+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 00 → 01. (+2 -1 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "01", "old_revision": "00", "deleted_count": 1, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+325	2026-06-26 03:38:16.619541+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 01 → 02. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "02", "old_revision": "01", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+326	2026-06-26 03:38:24.282534+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 02 → 03. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "03", "old_revision": "02", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+328	2026-06-26 03:44:49.678809+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 00 → 01. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "01", "old_revision": "00", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+330	2026-06-29 00:33:51.790003+00	6	Eson	superuser	Created product	Product '2101934' (type: Finished Good (FG)) was created with 2 activities.	product	2101934	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  GALLON51", "bm_production_line_code": null, "fg_production_line_code": "L02"}
+332	2026-06-29 00:43:01.539215+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 01 → 02. (+2 -2 *0 activities)	product	2101934	192.168.50.86	{"added_count": 2, "new_revision": "02", "old_revision": "01", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+333	2026-06-29 00:46:03.264735+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 02 → 03. (+0 -0 *0 activities)	product	2101934	192.168.50.86	{"added_count": 0, "new_revision": "03", "old_revision": "02", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+335	2026-06-29 07:50:27.15204+00	6	Eson	superuser	Created product	Product '2101934' (type: Finished Good (FG)) was created with 2 activities.	product	2101934	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
+336	2026-06-29 07:51:17.918091+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 00 → 01. (+0 -0 *1 activities)	product	2101934	192.168.50.86	{"added_count": 0, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 1, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+337	2026-06-29 07:58:22.390577+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 01 → 02. (+1 -0 *0 activities)	product	2101934	192.168.50.86	{"added_count": 1, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+340	2026-06-29 08:22:11.239814+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '1ENC2019'. Revision 03 → 04. (+0 -0 *3 activities)	product	1ENC2019	192.168.50.86	{"added_count": 0, "new_revision": "04", "old_revision": "03", "deleted_count": 0, "updated_count": 3, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+341	2026-06-29 08:23:14.482883+00	6	Eson	superuser	Created product	Product '8080' (type: Finished Good (FG)) was created with 2 activities.	product	8080	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
+314	2026-06-26 00:44:04.701005+00	2	dell	admin	Updated user account	Admin 'dell' updated user 'eson': role changed from user to admin, account enabled.	user	5	192.168.50.65	{"changes": ["role changed from user to admin", "account enabled"]}
+322	2026-06-26 02:01:54.714062+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on '8080'. Revision 09 → 10. (+3 -2 *0 activities)	product	8080	192.168.50.65	{"added_count": 3, "new_revision": "10", "old_revision": "09", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+329	2026-06-26 03:45:19.647427+00	4	macky	superuser	Bulk updated product	'macky' performed a bulk update on 'asd123'. Revision 01 → 02. (+2 -2 *0 activities)	product	asd123	192.168.50.161	{"added_count": 2, "new_revision": "02", "old_revision": "01", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+331	2026-06-29 00:36:15.530708+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '2101934'. Revision 00 → 01. (+2 -2 *0 activities)	product	2101934	192.168.50.86	{"added_count": 2, "new_revision": "01", "old_revision": "00", "deleted_count": 2, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+338	2026-06-29 08:00:21.039593+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '1M2C2009'. Revision 01 → 02. (+0 -0 *3 activities)	product	1M2C2009	192.168.50.86	{"added_count": 0, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 3, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+342	2026-06-29 08:23:51.372916+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '8080'. Revision 00 → 01. (+0 -0 *1 activities)	product	8080	192.168.50.86	{"added_count": 0, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 1, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+344	2026-06-29 09:20:09.68231+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '8080'. Revision 01 → 02. (+0 -0 *2 activities)	product	8080	192.168.50.86	{"added_count": 0, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 2, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
+345	2026-06-29 09:21:15.503386+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '9090'. Revision 01 → 02. (+0 -0 *1 activities)	product	9090	192.168.50.86	{"added_count": 0, "new_revision": "02", "old_revision": "01", "deleted_count": 0, "updated_count": 1, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
+347	2026-06-29 09:28:34.746477+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '555'. Revision 00 → 01. (+1 -0 *0 activities)	product	555	192.168.50.86	{"added_count": 1, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
+348	2026-06-29 09:31:37.276398+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '8080'. Revision 02 → 03. (+1 -0 *0 activities)	product	8080	192.168.50.86	{"added_count": 1, "new_revision": "03", "old_revision": "02", "deleted_count": 0, "updated_count": 0, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type", "total_run_time", "total_labor_min", "total_mc_min", "total_dl_units", "total_dl", "total_voh", "total_foh"]}
+319	2026-06-26 01:08:36.472651+00	2	dell	admin	Deleted user account	Admin 'dell' deleted user 'Panda' (role: superuser).	user	8	192.168.50.65	\N
+320	2026-06-26 01:11:05.813967+00	2	dell	admin	Updated user account	Admin 'dell' updated user 'Aerial': account disabled.	user	7	192.168.50.65	{"changes": ["account disabled"]}
+323	2026-06-26 03:37:00.426206+00	4	macky	superuser	Created product	Product 'asd123' (type: Base Material (BM)) was created with 1 activity.	product	asd123	192.168.50.161	{"product_type": "Base Material (BM)", "activity_count": 1, "revision_descr": "asdsadasd", "bm_production_line_code": "L02", "fg_production_line_code": null}
+327	2026-06-26 03:44:33.483194+00	4	macky	superuser	Created product	Product 'asd123' (type: Finished Good (FG)) was created with 2 activities.	product	asd123	192.168.50.161	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "asdasd", "bm_production_line_code": null, "fg_production_line_code": "L02"}
+334	2026-06-29 02:52:08.058098+00	6	Eson	superuser	Created product	Product '9090' (type: Finished Good (FG)) was created with 2 activities.	product	9090	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  GALLON", "bm_production_line_code": null, "fg_production_line_code": "L04C"}
+339	2026-06-29 08:20:50.566848+00	6	Eson	superuser	Created product	Product '9090' (type: Finished Good (FG)) was created with 2 activities.	product	9090	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
+343	2026-06-29 08:57:23.702624+00	6	Eson	superuser	Bulk updated product	'Eson' performed a bulk update on '9090'. Revision 00 → 01. (+0 -0 *2 activities)	product	9090	192.168.50.86	{"added_count": 0, "new_revision": "01", "old_revision": "00", "deleted_count": 0, "updated_count": 2, "metadata_updated": ["revision_descr", "notes", "quantity", "bm_production_line", "bm_production_line_code", "fg_production_line", "fg_production_line_code", "product_type"]}
+346	2026-06-29 09:27:52.452579+00	6	Eson	superuser	Created product	Product '555' (type: Finished Good (FG)) was created with 2 activities.	product	555	192.168.50.86	{"product_type": "Finished Good (FG)", "activity_count": 2, "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line_code": null, "fg_production_line_code": "L04A"}
+312	2026-06-26 00:32:34.698627+00	2	dell	admin	Purged old logs	dell deleted 67 audit log entries older than 1 days.	logs	\N	192.168.50.65	{"rows_deleted": 67, "days_threshold": 1}
+349	2026-07-01 00:55:36.557657+00	2	dell	admin	Deleted product	'dell' permanently deleted product '555' ("PG ANTI FOULING PAINT RED 4L", Revision 01) along with its 3 activities.	product	555	172.19.48.1	{"revision": "01", "revision_descr": "PG ANTI FOULING PAINT RED 4L", "activities_deleted": 3}
+350	2026-07-01 00:55:42.510672+00	2	dell	admin	Deleted product	'dell' permanently deleted product '9090' ("ALL PURPOSE EPOXY  QUART", Revision 02) along with its 2 activities.	product	9090	172.19.48.1	{"revision": "02", "revision_descr": "ALL PURPOSE EPOXY  QUART", "activities_deleted": 2}
+351	2026-07-01 00:55:49.282371+00	2	dell	admin	Deleted product	'dell' permanently deleted product '2101934' ("PG ANTI FOULING PAINT RED 4L", Revision 02) along with its 3 activities.	product	2101934	172.19.48.1	{"revision": "02", "revision_descr": "PG ANTI FOULING PAINT RED 4L", "activities_deleted": 3}
+352	2026-07-01 00:59:31.573744+00	4	macky	superuser	Created product	Product '2101934' (type: Finished Good (FG)) was created with 1 activity.	product	2101934	172.19.48.1	{"product_type": "Finished Good (FG)", "activity_count": 1, "revision_descr": "asd", "bm_production_line_code": null, "fg_production_line_code": "L01"}
+353	2026-07-01 01:00:13.66844+00	2	dell	admin	Deleted product	'dell' permanently deleted product '2101934' ("asd", Revision 00) along with its 1 activity.	product	2101934	172.19.48.1	{"revision": "00", "revision_descr": "asd", "activities_deleted": 1}
+354	2026-07-01 01:40:11.072991+00	2	dell	admin	Deleted production line	'dell' deleted production line 'SUBCON' (SUBCON).	production_line	SUBCON	172.19.48.1	{"production_line_name": "SUBCON"}
 \.
 
 
@@ -3346,7 +3344,6 @@ COPY public.line_activities (id, production_line_code, activity_name, sort_order
 847	SIPS	CUTTING (LAMINATE)	3	FG
 848	SIPS	GLUING	4	FG
 849	SIPS	PANEL ASSEMBLY	5	FG
-850	SUBCON	SUBCON	1	FG
 \.
 
 
@@ -3355,16 +3352,11 @@ COPY public.line_activities (id, production_line_code, activity_name, sort_order
 --
 
 COPY public.product_revisions (id, inventory_id, revision, snapshot, archived_by, archived_at) FROM stdin;
-4	2101934	00	{"notes": "CRN RD23-CR055", "quantity": 4.0, "revision": "00", "activities": [{"id": 5517, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "CODING", "machine": 2, "time_min": 24.0, "activities": "CODING", "sort_order": 1}, {"id": 5518, "pax": 5, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 6, "time_min": 21.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "2101934", "product_type": "Finished Good (FG)", "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line": null, "fg_production_line": "L4A ELASTO MIXING", "bm_production_line_code": null, "fg_production_line_code": "L04A"}	Eson	2026-06-29 15:51:17.902366+08
-5	2101934	01	{"notes": "CRN RD23-CR055", "quantity": 4.0, "revision": "01", "activities": [{"id": 5517, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "CODING", "machine": 4, "time_min": 24.0, "activities": "CODING", "sort_order": 1}, {"id": 5518, "pax": 5, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 6, "time_min": 21.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "2101934", "product_type": "Finished Good (FG)", "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line": "L4A ELASTO MIXING", "fg_production_line": "L4A ELASTO MIXING", "bm_production_line_code": "L04A", "fg_production_line_code": "L04A"}	Eson	2026-06-29 15:58:22.38242+08
-6	1M2C2009	01	{"notes": "PHASE 2 APM PACKAGE", "quantity": null, "revision": "01", "activities": [{"id": 3252, "pax": null, "type": "Labor", "class": "DL", "class_1": "VOH", "item_id": "L06 LABELING/CODING", "machine": null, "time_min": null, "activities": "LABELING/CODING", "sort_order": 1}, {"id": 3253, "pax": null, "type": "Labor", "class": "DL", "class_1": "FOH", "item_id": "L06 FILLING", "machine": null, "time_min": null, "activities": "FILLING", "sort_order": 2}, {"id": 3254, "pax": null, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "L06 PACKING/PALLETIZ", "machine": null, "time_min": null, "activities": "PACKING/PALLETIZ", "sort_order": 3}], "inventory_id": "1M2C2009", "product_type": "Finished Good (FG)", "revision_descr": "MARINE EPOXY GALLON", "bm_production_line": "L06 - L6 EPOXY LINE", "fg_production_line": "L06 - L6 EPOXY LINE", "bm_production_line_code": "L06", "fg_production_line_code": "L06"}	Eson	2026-06-29 16:00:21.015516+08
-7	1ENC2019	03	{"notes": "CRN RD25-CR019", "quantity": null, "revision": "03", "activities": [{"id": 2929, "pax": null, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "L06 LABELING/CODING", "machine": null, "time_min": null, "activities": "LABELING/CODING", "sort_order": 1}, {"id": 2930, "pax": null, "type": "Labor", "class": "DL", "class_1": "VOH", "item_id": "L06 FILLING", "machine": null, "time_min": null, "activities": "FILLING", "sort_order": 2}, {"id": 2931, "pax": null, "type": "Labor", "class": "DL", "class_1": "FOH", "item_id": "L06 PACKING/PALLETIZ", "machine": null, "time_min": null, "activities": "PACKING/PALLETIZ", "sort_order": 3}], "inventory_id": "1ENC2019", "product_type": "Finished Good (FG)", "revision_descr": "NON-SAG EPOXY 1/4 PINT", "bm_production_line": "L06 - L6 EPOXY LINE", "fg_production_line": "L06 - L6 EPOXY LINE", "bm_production_line_code": "L06", "fg_production_line_code": "L06"}	Eson	2026-06-29 16:22:11.186056+08
-8	8080	00	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "00", "activities": [{"id": 5522, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5523, "pax": 2, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 3, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "8080", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": null, "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": null, "fg_production_line_code": "L04A"}	Eson	2026-06-29 16:23:51.356123+08
-9	9090	00	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "00", "activities": [{"id": 5520, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5521, "pax": 2, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 3, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "9090", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": null, "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": null, "fg_production_line_code": "L04A"}	Eson	2026-06-29 16:57:23.646957+08
-10	8080	01	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "01", "activities": [{"id": 5522, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5523, "pax": 4, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 2, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "8080", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": "Line 04A ELASTO MIXING", "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": "L04A", "fg_production_line_code": "L04A"}	Eson	2026-06-29 17:20:09.619759+08
-11	9090	01	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "01", "activities": [{"id": 5520, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5521, "pax": 2, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 4, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "9090", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": "Line 04A ELASTO MIXING", "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": "L04A", "fg_production_line_code": "L04A"}	Eson	2026-06-29 17:21:15.491994+08
-12	555	00	{"notes": "PHASE 2 APM PACKAGE", "quantity": 1.0, "revision": "00", "activities": [{"id": 5524, "pax": 2, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "SEALING", "machine": 3, "time_min": 180.0, "activities": "SEALING", "sort_order": 1}, {"id": 5525, "pax": 2, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "CAPPING", "machine": 4, "time_min": 180.0, "activities": "CAPPING", "sort_order": 2}], "inventory_id": "555", "product_type": "Finished Good (FG)", "revision_descr": "PG ANTI FOULING PAINT RED 4L", "bm_production_line": null, "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": null, "fg_production_line_code": "L04A"}	Eson	2026-06-29 17:28:34.703602+08
-13	8080	02	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "02", "activities": [{"id": 5522, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5523, "pax": 4, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 4, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "8080", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": "Line 04A ELASTO MIXING", "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": "L04A", "fg_production_line_code": "L04A"}	Eson	2026-06-29 17:31:37.262493+08
+6	1M2C2009	01	{"notes": "PHASE 2 APM PACKAGE", "quantity": null, "revision": "01", "activities": [{"id": 3252, "pax": null, "type": "Labor", "class": "DL", "class_1": "VOH", "item_id": "L06 LABELING/CODING", "machine": null, "time_min": null, "activities": "LABELING/CODING", "sort_order": 1}, {"id": 3253, "pax": null, "type": "Labor", "class": "DL", "class_1": "FOH", "item_id": "L06 FILLING", "machine": null, "time_min": null, "activities": "FILLING", "sort_order": 2}, {"id": 3254, "pax": null, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "L06 PACKING/PALLETIZ", "machine": null, "time_min": null, "activities": "PACKING/PALLETIZ", "sort_order": 3}], "inventory_id": "1M2C2009", "product_type": "Finished Good (FG)", "revision_descr": "MARINE EPOXY GALLON", "bm_production_line": "L06 - L6 EPOXY LINE", "fg_production_line": "L06 - L6 EPOXY LINE", "bm_production_line_code": "L06", "fg_production_line_code": "L06"}	Eson	2026-06-29 08:00:21.015516+00
+7	1ENC2019	03	{"notes": "CRN RD25-CR019", "quantity": null, "revision": "03", "activities": [{"id": 2929, "pax": null, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "L06 LABELING/CODING", "machine": null, "time_min": null, "activities": "LABELING/CODING", "sort_order": 1}, {"id": 2930, "pax": null, "type": "Labor", "class": "DL", "class_1": "VOH", "item_id": "L06 FILLING", "machine": null, "time_min": null, "activities": "FILLING", "sort_order": 2}, {"id": 2931, "pax": null, "type": "Labor", "class": "DL", "class_1": "FOH", "item_id": "L06 PACKING/PALLETIZ", "machine": null, "time_min": null, "activities": "PACKING/PALLETIZ", "sort_order": 3}], "inventory_id": "1ENC2019", "product_type": "Finished Good (FG)", "revision_descr": "NON-SAG EPOXY 1/4 PINT", "bm_production_line": "L06 - L6 EPOXY LINE", "fg_production_line": "L06 - L6 EPOXY LINE", "bm_production_line_code": "L06", "fg_production_line_code": "L06"}	Eson	2026-06-29 08:22:11.186056+00
+8	8080	00	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "00", "activities": [{"id": 5522, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5523, "pax": 2, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 3, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "8080", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": null, "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": null, "fg_production_line_code": "L04A"}	Eson	2026-06-29 08:23:51.356123+00
+10	8080	01	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "01", "activities": [{"id": 5522, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5523, "pax": 4, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 2, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "8080", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": "Line 04A ELASTO MIXING", "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": "L04A", "fg_production_line_code": "L04A"}	Eson	2026-06-29 09:20:09.619759+00
+13	8080	02	{"notes": "CRN RD25-CR020", "quantity": 1.0, "revision": "02", "activities": [{"id": 5522, "pax": 1, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "MIXING", "machine": 23, "time_min": 4.0, "activities": "MIXING", "sort_order": 1}, {"id": 5523, "pax": 4, "type": "Labor", "class": "DL", "class_1": "DL", "item_id": "FILLING", "machine": 4, "time_min": 12.0, "activities": "FILLING", "sort_order": 2}], "inventory_id": "8080", "product_type": "Finished Good (FG)", "revision_descr": "ALL PURPOSE EPOXY  QUART", "bm_production_line": "Line 04A ELASTO MIXING", "fg_production_line": "Line 04A ELASTO MIXING", "bm_production_line_code": "L04A", "fg_production_line_code": "L04A"}	Eson	2026-06-29 09:31:37.262493+00
 \.
 
 
@@ -3395,7 +3387,6 @@ L12	Line 12 SPECIAL PRODUCTS - EPOXY BASED	L12 - L12 SPECIAL PRODUCTS - EPOXY BA
 L13	Line 13 SPECIAL PRODUCTS - WATER BASED	L13 - L13 SPECIAL PRODUCTS - WATER BASED
 L14	Line 14 SKIM COAT	L14 - L14 SKIM COAT
 SIPS	STRUCTURAL INSULATED PANEL	\N
-SUBCON	SUBCON	\N
 \.
 
 
@@ -3404,6 +3395,72 @@ SUBCON	SUBCON	\N
 --
 
 COPY public.products (inventory_id, revision_descr, revision, notes, bm_production_line, bm_production_line_code, fg_production_line, fg_production_line_code, product_type, quantity, total_run_time, total_labor_min, total_mc_min, total_dl_units, total_dl, total_voh, total_foh) FROM stdin;
+3D5F1B1G01	DURASTEEL FIVE EPOXY 15G TUBE STRIP	SC00	_	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGI00062	PG ANTI FOULING PAINT BLUE 4L	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000115	BM-PU BLACK TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000116	BM-PU YELLOW OXIDE TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000117	BM-PU WHITE BASE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000129	BM-PU YELLOW 74 TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000130	BM-PU SCARLET RED TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000143	BM-PU ORANGE RL70 TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000147	BULKMIX - PG SATIN CLEAR BASE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000148	BULKMIX -  ENAMEL CHOCO BROWN F8660	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000149	BULK MIX-ENAMEL PERMANENT RED R170	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+1KPH5A5J01	FG_KOPHENOL HIGHWAY YELLOW	00	PACKAGING MATERIAL: REUSE THE TIN PAIL OF KOPHENOL CREAM	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+1KRT5A9A12	KORETHAN TC UT6581 RAL 5011 URETHANE TOPCOAT SOLVENT BASED BLUE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+1M2C2009	MARINE EPOXY GALLON	02	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	1	\N	\N	\N	\N	\N	\N	\N
+1ENC2019	NON-SAG EPOXY 1/4 PINT	04	CRN RD25-CR019	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	1	\N	\N	\N	\N	\N	\N	\N
+8080	ALL PURPOSE EPOXY  QUART	03	CRN RD25-CR020	L04A - L4A ELASTO MIXING	L04A	L04A - L4A ELASTO MIXING	L04A	Finished Good (FG)	1	21	62	160	0	62	21	21
+FGP00055	LATEX PAINT SEMGLOSS WHITE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+1S1A0000	EPS F-TYPE 1.0-1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3D5F1B1L01	DURASTEEL FIVE EPOXY 35G TUBE	SC00	_	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MB41169	GIP-M.BOND 3G FLAG TYPE	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+B60000053	BULKMIX QDE SILVER GREY	00	REPROCESS	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+FGP00060	LATEX PAINT SG CLEAR BASE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00031	MAESTRO EPOXY GALLON	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00032	MAESTRO EPOXY QUART	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00033	MAESTRO EPOXY PINT	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00034	MAESTRO EPOXY 1/2 PINT	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00035	MAESTRO EPOXY 1/4 PINT	02	CRN RD25-CR019	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00065	PEARL GLAZE ANTI-FOULING PAINT 4L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00066	PEARL GLAZE ANTI-FOULING PAINT 1L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00092-IH	PAINTER'S BUDDY SKIMCOAT WHITE IN HOUSE	00	CRN RD24-CR027	L14 - L14 SKIM COAT	L14	L14 - L14 SKIM COAT	L14	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00103	PVC SOLVENT CEMENT 85ML	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00104	CONTACT BOND BOTTLE 50ML TWIN	01	PHASE 2 APM PACKAGE	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00105	CONTACT BOND 1L	02	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00106	CONTACT BOND 1 GALLON	02	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00111	PIPE JOINTING EPOXY PUTTY 1/2 PINT	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00114	CONTACT BOND 300ML BOTTLE	02	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00117	ELASTOSEAL CLEAR PISILITO	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00118	ELASTOSEAL CLEAR PISIL	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00119	ELASTOSEAL CLEAR CARTRIDGE	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00122	MIGHTY SEAL BIOCIDE 300ML	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00128	GF200 SPL COLOR  LIGHT GRAY HONDA ILOILO 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00129	GF200 SPL COLOR  LIGHT BEIGE HONDA ILOILO 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00141	ELASTOKWIK 4L	01	PHASE 2 APM PACKAGE	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00142	ELASTOKWIK 1L	01	PHASE 2 APM PACKAGE	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00143	ELASTOKWIK 1/2L	02	CRN RD23-CR025	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00144	ELASTOKWIK 1/4L	01	PHASE 2 APM PACKAGE	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00145	ELASTOKWIK 30 ML	01	PHASE 2 APM PACKAGE	L04C - L4C ATO FILLING	L04C	L04C - L4C ATO FILLING	L04C	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00146	ELASTOKWIK PISILITO	01	PHASE 2 APM PACKAGE	L04C - L4C ATO FILLING	L04C	L04C - L4C ATO FILLING	L04C	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00147	ELASTOKWIK PISIL	01	PHASE 2 APM PACKAGE	L04C - L4C ATO FILLING	L04C	L04C - L4C ATO FILLING	L04C	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00148	GF300 STD COLOR  WHITE 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00155	GF200 STD COLOR  TOYOTA DARK GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00158	GF200 SPL COLOR  TOYOTA YELLOW 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00159	CONTACT BOND 10ML SACHET	03	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00164	TRANSFORMER ADHESIVE PART A - RESIN	02	CRN RD25-CR028 (FOR REVIEW)	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00165	TRANSFORMER ADHESIVE PART B - HARDENER	02	CRN RD25-CR028 (FOR REVIEW)	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00167	GF300 SPL COLOR  GINEBRA GREEN	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00169	GF200 SPL COLOR  LIGHT GRAY ULTRADE 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00175	EPOXY STEEL PRIMER GRAY 1L	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00176	EPOXY STEEL PRIMER GRAY 4L	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00177	EPOXY STEEL PRIMER WHITE 4L	02	CRN RD23-CR043	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00178	EPOXY STEEL PRIMER WHITE 1L	02	CRN RD23-CR043	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00182	GF300 SPL COLOR  SULPICIO GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00185	GF200 SPL COLOR  NEON GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00186	EPOXY REDUCER 300ML BOTTLE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00187	EPOXY REDUCER 1L	02	CRN RD25-CR010	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00188	FRP ADHESIVE - COMPONENT B	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1AF2202L	PG ANTI FOULING PAINT RED 4L	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1AF29233	PG ANTI FOULING PAINT RED 1L	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1APC2009	ALL PURPOSE EPOXY  GALLON	03	CRN RD23-CR055	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3530,7 +3587,7 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 1LVC2009	CONCRETE EPOXY LOW VISCOSITY GALLON	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1LVC2010	CONCRETE EPOXY LOW VISCOSITY QUART	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1LWG922L	GF300 SPL COLOR  LIWAYWAY GRAY 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-1M101069	M. BOND 3 GMS.-WHITE UNPRINTED	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+1M101069	M. BOND 3 GMS.-WHITE UNPRINTED	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1M2C2010	MARINE EPOXY QUART	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1M2C2012	MARINE EPOXY PINT	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1M2C2016	MARINE EPOXY 1/2 PINT	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3560,6 +3617,7 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 1PBI9229	PEARL GLAZE GLOSS SAFETY BLACK 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PBI9233	PEARL GLAZE GLOSS SAFETY BLACK 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PBL9229	PEARL GLAZE GLOSS SAFETY BLACK 4L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+4ETF6A1I01	ELASTOSEAL 25G SAMPLE	00	PAPL	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PBL9233	PEARL GLAZE GLOSS SAFETY BLACK 1L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PBS9229	PEARL GLAZE SATIN SAFETY BLUE 4L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PBS9233	PEARL GLAZE SATIN SAFETY BLUE 1L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3610,7 +3668,7 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 1PSC9229	PEARL GLAZE SATIN CATERPILLAR YELLOW 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PSC9233	PEARL GLAZE SATIN CATERPILLAR YELLOW 1L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PSC966D	PAINTER'S BUDDY SKIMCOAT GRAY	02	CRN RD24-CR027	L14 - L14 SKIM COAT	L14	L14 - L14 SKIM COAT	L14	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-1PSG9229	TO OPTIMIZE BATCHING	03	\N	L01 LABELING/CODING	L01	L01 LABELING/CODING	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+1PSG9229	TO OPTIMIZE BATCHING	03	\N	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PSG9233	PEARL GLAZE GLOSS SAFETY GREEN 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PSO9229	PEARL GLAZE GLOSS SAFETY ORANGE 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1PSO9233	PEARL GLAZE GLOSS SAFETY ORANGE 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3634,35 +3692,34 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 1QDE1A5E42	QUICK DRY ENAMEL CHELSEA GREEN 4L	01	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1QDE1A5E43	QUICK DRY ENAMEL SEENSAM CREAM IVORY 3305 4L	01	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1QDE1A5E44	QUICK DRY ENAMEL BAGUIO GREEN 4L	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-1S010000	EPS P-TYPE 1.0-1 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S020000	EPS P-TYPE 1.0-2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S010000	EPS P-TYPE 1.0-1 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S020000	EPS P-TYPE 1.0-2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 1S025000	EPS P-TYPE 1.0-25 X 4 X 8	01	PHASE 2 APM PACKAGE	L09 - L9 EPS - BLOCKS	L09	L09 - L9 EPS - BLOCKS	L09	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S0A0000	EPS P-TYPE 1.0-1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S0B0000	EPS P-TYPE 1.0-3/4 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S0C0000	EPS P-TYPE 1.0-1 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S110000	EPS F-TYPE 1.0-1 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S110204	EPS F-Type 1.0 - 1 x 2 x 4	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S120000	EPS F-TYPE 1.0-2 X 4 X 8	02	CRN RD25-CR032	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S140000	EPS F-TYPE 1.0-4 X 4 X 8	02	CRN RD25-CR032	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S1A0000	EPS F-TYPE 1.0-1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S1C0000	EPS F-TYPE 1.0-1 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S1Z0000	EPS F-TYPE 1.0-25 X 4 X 8	03	CRN RD25-CR032	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S220000	EPS F-TYPE 1.5-2 X 4 X 8	00	0	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S240000	EPS F-TYPE 1.5-4 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S420000	EPS P-TYPE 1.5-2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S430000	EPS P-TYPE 1.5-3 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S4C0000	EPS P-TYPE 1.5-1 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S4E0000	EPS P-TYPE 1.5-2 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1S5A0000	EPS P-TYPE 2.0-1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S0A0000	EPS P-TYPE 1.0-1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S0B0000	EPS P-TYPE 1.0-3/4 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S0C0000	EPS P-TYPE 1.0-1 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S110000	EPS F-TYPE 1.0-1 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S110204	EPS F-Type 1.0 - 1 x 2 x 4	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S120000	EPS F-TYPE 1.0-2 X 4 X 8	02	CRN RD25-CR032	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S140000	EPS F-TYPE 1.0-4 X 4 X 8	02	CRN RD25-CR032	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S1C0000	EPS F-TYPE 1.0-1 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S1Z0000	EPS F-TYPE 1.0-25 X 4 X 8	03	CRN RD25-CR032	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S220000	EPS F-TYPE 1.5-2 X 4 X 8	00	0	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S240000	EPS F-TYPE 1.5-4 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S420000	EPS P-TYPE 1.5-2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S430000	EPS P-TYPE 1.5-3 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S4C0000	EPS P-TYPE 1.5-1 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S4E0000	EPS P-TYPE 1.5-2 1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1S5A0000	EPS P-TYPE 2.0-1/2 X 4 X 8	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 1S860000	EPS P-TYPE 1.5-25 X 4 X 8	01	PHASE 2 APM PACKAGE	L09 - L9 EPS - BLOCKS	L09	L09 - L9 EPS - BLOCKS	L09	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 1SEC2009	STRUCTURAL EPOXY GALLON	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1SF00064	EPS F-TYPE 2.0 25" X 4' X 8'	02	CRN RD24-CR004	L09 - L9 EPS - BLOCKS	L09	L09 - L9 EPS - BLOCKS	L09	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 1SF25000	EPS F-TYPE 1.5-25 X 4 X 8	02	CRN RD24-CR004	L09 - L9 EPS - BLOCKS	L09	L09 - L9 EPS - BLOCKS	L09	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1SF54000	EPS F-TYPE 2.0 2" X 4 X 8`	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1SF90001	EPS F-TYPE 1.5- 6" x 4' X 8'	00	PSBSI	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1ST20000	EPS F-TYPE 1.0-2" X 2` X 4`	02	CRN RD25-CR032	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1ST30000	EPS F-TYPE 1.0-3 X 2 X 4	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-1ST40000	EPS F-TYPE 1.0 - 4 X 2 X 4	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1SF54000	EPS F-TYPE 2.0 2" X 4 X 8`	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1SF90001	EPS F-TYPE 1.5- 6" x 4' X 8'	00	PSBSI	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1ST20000	EPS F-TYPE 1.0-2" X 2` X 4`	02	CRN RD25-CR032	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1ST30000	EPS F-TYPE 1.0-3 X 2 X 4	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+1ST40000	EPS F-TYPE 1.0 - 4 X 2 X 4	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 1SUW202L	PSBSI SATURANT UNDERWATER	02	CRN RD25-CR018	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1TAD7723-IH	TILE ADHESIVE IN HOUSE	00	CRN RD24-CR027	L14 - L14 SKIM COAT	L14	L14 - L14 SKIM COAT	L14	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1VTS951W	VIETSEAL 123 - 300ML	03	PCMR-25-001	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3684,11 +3741,12 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 2BPA434L	BONDCRETE 400	02	CRN RD25-CR021	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 2BYG434L	PAINTERS BUDDY BARRICADE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 2CAC6107	FINISHER 611	01	PHASE 2 APM PACKAGE	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-2EPF4B2501	EPS F-TYPE 1.0 PCF 113MM X 4' X 8'	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-2EPF4B6501	EPS F-TYPE 1.0  2" X  16" X 16"	00	0	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-2EPF4B6601	F-Type D 1.0  1in X 8in X 40 in (25.4mm X 203mm X 1016mm)	00	0	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-2EPF4B9A01	EPS F-TYPE 1.0 PCF 188MM X 4' X 8'	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-2EPF4B9A02	EPS F-TYPE 1.0 PCF 88MM X 4' X 8'	01	PHASE 2 APM PACKAGE	L09A - L9A EPS - CUTTING	L09A	L09A - L9A EPS - CUTTING	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+2EPF4B2501	EPS F-TYPE 1.0 PCF 113MM X 4' X 8'	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+2EPF4B6501	EPS F-TYPE 1.0  2" X  16" X 16"	00	0	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+2EPF4B6601	F-Type D 1.0  1in X 8in X 40 in (25.4mm X 203mm X 1016mm)	00	0	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+5ECP7A1M01	PIONEER EPOXY CLAY ALL PURPOSE 3"	SC00	INGTAT	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+2EPF4B9A01	EPS F-TYPE 1.0 PCF 188MM X 4' X 8'	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+2EPF4B9A02	EPS F-TYPE 1.0 PCF 88MM X 4' X 8'	01	PHASE 2 APM PACKAGE	\N	L09A	\N	L09A	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 2EPF4B9A03	EPS F-TYPE D 1.0 50" x 4' X 8'	00	0	L09 - L9 EPS - BLOCKS	L09	L09 - L9 EPS - BLOCKS	L09	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 2EPF4B9A04	EPS F-TYPE D 1.5  50" x 4' X 8'	00	0	L09 - L9 EPS - BLOCKS	L09	L09 - L9 EPS - BLOCKS	L09	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 2FCW020K	WATER-TITE 102	01	PHASE 2 APM PACKAGE	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3727,15 +3785,13 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 3CY13B1M01	CYNO (100 CPS)50G W/ LABEL	00	PT PAI	L02 - L2 CYANO BOTTLE FILLING	L02	L02 - L2 CYANO BOTTLE FILLING	L02	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3CY23B1H01	CYNO (2 CPS) - 20G.	00	PT PAI	L02 - L2 CYANO BOTTLE FILLING	L02	L02 - L2 CYANO BOTTLE FILLING	L02	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3CY23B1M01	CYNO (2 CPS) - 50G.	00	PT PAI	L02 - L2 CYANO BOTTLE FILLING	L02	L02 - L2 CYANO BOTTLE FILLING	L02	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3D5F1B1G01	DURASTEEL FIVE EPOXY 15G TUBE STRIP	SC00	_	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3D5F1B1L01	DURASTEEL FIVE EPOXY 35G TUBE	SC00	_	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3DFA1354	GIP-DURASTEEL 5 35G A NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3DFA1462	GIP-DURASTEEL 5 15G A NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3DFB1354	GIP-DURASTEEL 5 35G B NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3DFB1462	GIP-DURASTEEL 5 15G B NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3ECP003N	GIP-EPOXYCLAY ALL PURPOSE 3"	01	PHASE 2 APM PACKAGE	L05 - L5 EPOXY CLAY	L05	L05 - L5 EPOXY CLAY	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-3EPA1354	GIP-ALL PURPOSE 35G A NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3EPB1354	GIP-ALL PURPOSE 35G B NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3DFA1354	GIP-DURASTEEL 5 35G A NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3DFA1462	GIP-DURASTEEL 5 15G A NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3DFB1354	GIP-DURASTEEL 5 35G B NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3DFB1462	GIP-DURASTEEL 5 15G B NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3ECP003N	GIP-EPOXYCLAY ALL PURPOSE 3"	01	PHASE 2 APM PACKAGE	\N	L05	\N	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3EPA1354	GIP-ALL PURPOSE 35G A NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3EPB1354	GIP-ALL PURPOSE 35G B NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3ESC6A3U01	INITIAL BOM - PT PAI	00	\N	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3ESC6A3X01	INITIAL BOM - PT PAI	00	\N	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3ETF6A1N01	ELASTOSEAL PISILITO	00	PT PAI	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3748,40 +3804,39 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 3GYO0004	BM-GF 200 YELLOW OXIDE TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 3GYT0003	BM-GF 200 YELLOW TINT KG	01	CRN RD23-CR043	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 3IET1A2H01	INJECTABLE EPOXY TH 3.8KG SET	00	PT PAI	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MB41169	GIP-M.BOND 3G FLAG TYPE	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MBA1B1C01	INITIAL  BOM	00	PT PAI	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MBH1B1C01	MIGHTY BOND SHOES 3G	SC00	_	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MBR1B1C01	MIGHTY BOND 3G FLAG TYPE	SC00	_	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MBS0000	GIP-MIGHTY BOND SHOT 1GM W/O	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MBX109D	GIP-MIGHTY BOND XTREME 3G	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MBX1B1C01	MIGHTY BOND XTREME 3G	SC00	_	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MBH1B1C01	MIGHTY BOND SHOES 3G	SC00	_	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MBR1B1C01	MIGHTY BOND 3G FLAG TYPE	SC00	_	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MBS0000	GIP-MIGHTY BOND SHOT 1GM W/O	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MBX109D	GIP-MIGHTY BOND XTREME 3G	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MBX1B1C01	MIGHTY BOND XTREME 3G	SC00	_	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MFS6000	BM-MODAFLOW RESIN SOLUTION	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 3MGB163M	GIP-MIGHTY GASKET BLACK 30G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MGB1B1N01	MIGHTY GASKET BLACK 30G	SC01	CRN RD23-CR055	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MGB1B1N02	PIONEER MIGHTY GASKET BLACK 85G	SC00	_	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MGB1B1N01	MIGHTY GASKET BLACK 30G	SC01	CRN RD23-CR055	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MGB1B1N02	PIONEER MIGHTY GASKET BLACK 85G	SC00	_	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MGB9449	GIP-MIGHTY GASKET BLACK 85G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MGG163M	GIP-MIGHTY GASKET GREY 30G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MGR163M	GIP-MIGHTY GASKET RED 30G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MGR1B1N01	MIGHTY GASKET RED 85G	SC01	CRN RD23-CR055	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MGR1B1N02	MIGHTY GASKET RED 30G	SC01	CRN RD23-CR055	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MGR1B1N01	MIGHTY GASKET RED 85G	SC01	CRN RD23-CR055	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3MGR1B1N02	MIGHTY GASKET RED 30G	SC01	CRN RD23-CR055	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MGR9449	GIP-MIGHTY GASKET RED 85G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MNC1049	GIP-MIGHTY SEAL CLEAR 85G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3MR0337C	GIP-MIGHTY REMOVER 7.5ML	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3MR0337C	GIP-MIGHTY REMOVER 7.5ML	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 3MSM1A1A01	MAESTRO MARINE EPOXY GALLON	03	CRN RD23-CR053_PT PAI	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MSM1A2A01	MAESTRO MARINE EPOXY QUART	03	CRN RD23-CR053_PT PAI	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MSM1A3A01	MAESTRO MARINE EPOXY PINT	03	CRN RD23-CR053_PT PAI	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MSM1A4A01	MAESTRO MARINE EPOXY 1/2 PINT	03	CRN RD23-CR053_PT PAI	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MSM1A5A01	MAESTRO MARINE EPOXY 1/4 PINT	04	CRN RD25-CR019	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3MSW105B	GIP-MIGHTY SEAL WINDSCREEN &	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3P5A1362	GIP-PLUS 5 CLEAR 15G A NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3P5A1473	GIP-PLUS 5 CLEAR 6G A NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3P5B1362	GIP-PLUS 5 CLEAR 15G B NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3P5B1473	GIP-PLUS 5 CLEAR 6G B NP	01	PHASE 2 APM PACKAGE	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-3PEA002T	GIP-EPOXYCLAY AQUA 1.5"	01	PHASE 2 APM PACKAGE	L05 - L5 EPOXY CLAY	L05	L05 - L5 EPOXY CLAY	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-3PEA003N	GIP-EPOXYCLAY AQUA 3"	01	PHASE 2 APM PACKAGE	L05 - L5 EPOXY CLAY	L05	L05 - L5 EPOXY CLAY	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3P5A1362	GIP-PLUS 5 CLEAR 15G A NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3P5A1473	GIP-PLUS 5 CLEAR 6G A NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3P5B1362	GIP-PLUS 5 CLEAR 15G B NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3P5B1473	GIP-PLUS 5 CLEAR 6G B NP	01	PHASE 2 APM PACKAGE	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+3PEA002T	GIP-EPOXYCLAY AQUA 1.5"	01	PHASE 2 APM PACKAGE	\N	L05	\N	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3PEA003N	GIP-EPOXYCLAY AQUA 3"	01	PHASE 2 APM PACKAGE	\N	L05	\N	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 3PER7000	BM-EPOXY REDUCER KG	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-3PES002T	GIP-EPOXYCLAY STEEL 1.5"	01	PHASE 2 APM PACKAGE	L05 - L5 EPOXY CLAY	L05	L05 - L5 EPOXY CLAY	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
-3PES003N	GIP-EPOXYCLAY STEEL 3"	01	PHASE 2 APM PACKAGE	L05 - L5 EPOXY CLAY	L05	L05 - L5 EPOXY CLAY	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3PES002T	GIP-EPOXYCLAY STEEL 1.5"	01	PHASE 2 APM PACKAGE	\N	L05	\N	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
+3PES003N	GIP-EPOXYCLAY STEEL 3"	01	PHASE 2 APM PACKAGE	\N	L05	\N	L05	Other / Intermediate	\N	\N	\N	\N	\N	\N	\N	\N
 3PGE7000	BM-PG GLOSS TINT YELLOW OXIDE	02	CRN RD23-CR040	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 3PGG1A5D21	PG GLOSS LEAF GREEN 1L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 3PGG1A5D25	PEARL GLAZE GLOSS DEEP GRAY 1L	00	PT PAI	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3808,24 +3863,22 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 4BRB2A9A01	BUILDERS BOND RESIN BLEND 20 KGS	00	PAPL	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 4ERB2A9A01	ELASTOSEAL RESIN BLEND 20 KGS	00	PAPL	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 4ETF4A8A01	ELASTOSEAL INDIA 180L	00	1. TEMPORARY ARRANGEMENT ONLY\n2. STEEL DRUM OPEN TYPE 200L NOT PART OF THE BOM (Recycled drum to be used, ex. Silicone Drum)	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-4ETF6A1I01	ELASTOSEAL 25G SAMPLE	00	PAPL	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 4WPF5A5E01	WATER-TITE POWERFLEX 4L	00	PAPL	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 4WPF5A5I01	WATER-TITE POWERFLEX 16L	00	PAPL	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5APE1A1A01	ALL PURPOSE EPOXY GALLON_ING TAT MALAYSIA	01	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5APE1A1L01	ALL PURPOSE EPOXY TUBE 35G	SC00	ING TAT	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5APE1A1L01	ALL PURPOSE EPOXY TUBE 35G	SC00	ING TAT	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5APE1A2A01	ALL PURPOSE EPOXY QUART_ING TAT MALAYSIA	01	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5APE1A3A01	ALL PURPOSE EPOXY PINT_ING TAT MALAYSIA	02	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5APE1A4A01	ALL PURPOSE EPOXY 1/2 PINT_ING TAT MALAYSIA	02	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5APE1A5A01	ALL PURPOSE EPOXY 1/4 PINT_ING TAT MALAYSIA	02	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5BBA6A1O01	BUILDERS BOND 100G	00	PACIFIC INTERNATIONAL-IMG	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5CBA1B3S01	CONTACT BOND-50 ML BLISTERED	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5D5F1B1L01	EPOXYTUBE-DURASTEEL FIVE 35G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5D5F8A1G01	DURASTEEL FIVE STRIP 15G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5ECA7A7B01	EPOXYCLAY AQUA - 1.5"	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5ECA7A7C01	EPOXYCLAY AQUA 3"	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5ECP7A1M01	PIONEER EPOXY CLAY ALL PURPOSE 3"	SC00	INGTAT	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5ECS7A1M01	PIONEER EPOXY CLAY STEEL 3"	SC00	INGTAT	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5ECS7A7B01	EPOXYCLAY STEEL 1.5"	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5CBA1B3S01	CONTACT BOND-50 ML BLISTERED	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5D5F1B1L01	EPOXYTUBE-DURASTEEL FIVE 35G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5D5F8A1G01	DURASTEEL FIVE STRIP 15G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5ECA7A7B01	EPOXYCLAY AQUA - 1.5"	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5ECA7A7C01	EPOXYCLAY AQUA 3"	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5ECS7A1M01	PIONEER EPOXY CLAY STEEL 3"	SC00	INGTAT	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5ECS7A7B01	EPOXYCLAY STEEL 1.5"	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5EPP1A5E01	EPOXY PRIMER GRAY 4 LITERS	00	IMG	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5ESC3A3Z01	ELASTOSEAL CLEAR 300ML	00	PACIFIC INTERNATIONAL-IMG	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5ESC6A3U01	ELASTOSEAL CLEAR 65ML	00	PACIFIC INTERNATIONAL-IMG	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3843,19 +3896,19 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 5MAE1A3A01	MARINE EPOXY - PINT SET	00	PACIFIC INTERNATIONAL-IMG	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5MAE1A4A01	MARINE EPOXY - 1/2 PINT SET	00	PACIFIC INTERNATIONAL-IMG	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5MAE1A5A01	MARINE EPOXY - 1/4 PINT SET	01	CRN RD25-CR019	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MBH1B1C01	MIGHTY BOND SHOES 3G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MBR1B1C01	PIONEER MIGHTY BOND 3G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MBR8A1C01	M. BOND - STRIP, 5 X 3 GMS.	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MBX1B1C01	MIGHTY BOND XTREME 3G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGB1B1K01	MIGHTY GASKET BLACK 30G	SC00	IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGB1B1N01	MIGHTY GASKET BLACK - 85G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGG1B1G01	PIONEER AUTOMOTO-MIGHTY GASKET GREY15G	00	IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGG1B1K01	PIONEER AUTOMOTO-MIGHTY GASKET GREY 30 G	SC00	IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGG1B1N01	PIONEER MIGHTY GASKET GREY 85G	SC00	IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGR1B1K01	MIGHTY GASKET RED 30G	SC00	IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MGR1B1N01	MIGHTY GASKET RED - 85G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MBH1B1C01	MIGHTY BOND SHOES 3G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MBR1B1C01	PIONEER MIGHTY BOND 3G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MBR8A1C01	M. BOND - STRIP, 5 X 3 GMS.	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MBX1B1C01	MIGHTY BOND XTREME 3G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGB1B1K01	MIGHTY GASKET BLACK 30G	SC00	IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGB1B1N01	MIGHTY GASKET BLACK - 85G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGG1B1G01	PIONEER AUTOMOTO-MIGHTY GASKET GREY15G	00	IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGG1B1K01	PIONEER AUTOMOTO-MIGHTY GASKET GREY 30 G	SC00	IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGG1B1N01	PIONEER MIGHTY GASKET GREY 85G	SC00	IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGR1B1K01	MIGHTY GASKET RED 30G	SC00	IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MGR1B1N01	MIGHTY GASKET RED - 85G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5MSB3A3Z01	MIGHTY SEAL BIOCIDE CLEAR 300 ML	00	PACIFIC INTERNATIONAL-IMG	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5MSG1B1N01	MIGHTY SEAL TRANSLUCENT 85G	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5MSG1B1N01	MIGHTY SEAL TRANSLUCENT 85G	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5MSM1A1A01	MAESTRO EPOXY 1 YEAR GALLON	00	PACIFIC INTERNATIONAL-IMG	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5MSM1A2A01	MAESTRO EPOXY 1YEAR QUART	00	PACIFIC INTERNATIONAL-IMG	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5MSM1A3A01	MAESTRO EPOXY 1 YEAR PINT	00	PACIFIC INTERNATIONAL-IMG	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3866,7 +3919,7 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 5NSE1A3A01	PIONEER NON-SAG EPOXY PINT	00	ING TAT	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5NSE1A4A01	PIONEER NON-SAG EPOXY 1/2 PINT	00	ING TAT	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5NSE1A5A01	PIONEER NON-SAG EPOXY 1/4 PINT	00	ING TAT	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-5P5E1B1G01	PLUS FIVE EPOXY - TUBES 15 GMS	SC00	PACIFIC INTERNATIONAL-IMG	SUBCON - SUBCON	Subcon	SUBCON - SUBCON	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+5P5E1B1G01	PLUS FIVE EPOXY - TUBES 15 GMS	SC00	PACIFIC INTERNATIONAL-IMG	\N	Subcon	\N	Subcon	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5PGG1A5D01	PEARL GLAZE GLOSS FLANNEL GRAY 1L	00	DIREX-IMG	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5PGG1A5E01	PEARL GLAZE GLOSS FLANNEL GRAY 4LITERS	00	IMG	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 5RC11A3W01	RC1 LUBRICATING SPRAY 100ML	00	IMG	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3893,7 +3946,6 @@ B35000008	BULKMIX- ELASTOSEAL INDIA RESIN BLEND	01	CRN RD24-CR030	L13 - L13 SPEC
 B50000013	BULKMIX - WATERTITE 401	00	CRN RD23-CR022	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 B50000014	BULKMIX BONDCRETE 400	00	0	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 B60000025	BULKMIX QUICK DRY ENAMEL SEENSAM CREAM IVORY  3305	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-B60000053	BULKMIX QDE SILVER GREY	00	REPROCESS	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 B60000059	BM - PG GLOSS SAFETY BLUE PART A	02	CRN RD22-CR038	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 B60000071	BULKMIX GF 200 GATEWAY GRAY PART A	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 B60000085	BULKMIX - EPOXY ENAMEL SIGNAL VIOLET	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4002,7 +4054,7 @@ BM000051	BULKMIX- MELVEST LAMINATING A	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL 
 BM000052	BULKMIX- MELVEST LAMINATING B	02	CRN RD23-CR043	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000053	BULK MIX - NON SAG EPOXY A	03	CRN RD23-CR041	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000054	BULK MIX - NON SAG EPOXY B	02	CRN RD23-CR041	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-BM000055	OPTIMIZED BM MIXING PROCESS FOR PAPE PART A – Line 6	05	\N	L06 MIXING	L06	L06 MIXING	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+BM000055	OPTIMIZED BM MIXING PROCESS FOR PAPE PART A – Line 6	05	\N	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000056	BULK MIX - ALL PURPOSE EPOXY B	02	CRN RD23-CR041	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000057	BULK MIX - MARINE EPOXY  A	03	CRN RD23-CR045	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000058	BULK MIX - MARINE EPOXY  B	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4060,7 +4112,6 @@ FGI00047	PB ACRYLIC GAP SEALANT 100G	02	CRN RD23-CR055	L11 - L11 SILICONE FILLIN
 FGI00048	CONCRETE EPOXY 10HV 2.5KG	02	CRN RD23-CR055	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00049	PPRO ELASTOSEAL 300ML X 24	02	CRN RD23-CR055	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00057	PG ANTI-FOULING PAINT RED-1L	01	CRN RD23-CR032	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGI00062	PG ANTI FOULING PAINT BLUE 4L	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00063	PG ANTI FOULING PAINT BLUE 1L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00068	EPOXY PRIMER LIGHT GRAY 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00069	EPOXY PRIMER LIGHT GRAY 1L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4117,52 +4168,6 @@ FGP00031	LCRB Epoxy-UNLABELLED 3.8 KG	01	0	L12 - L12 SPECIAL PRODUCTS - EPOXY BA
 FGP00032	LCRB Epoxy-UNLABELLED 3.0 KG	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGP00045	SATURANT UNDERWATER LV 3KG KIT	03	CRN RD25-CR018	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGP00051	LATEX PAINT FLAT WHITE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGP00055	LATEX PAINT SEMGLOSS WHITE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGP00060	LATEX PAINT SG CLEAR BASE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00031	MAESTRO EPOXY GALLON	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00032	MAESTRO EPOXY QUART	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00033	MAESTRO EPOXY PINT	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00034	MAESTRO EPOXY 1/2 PINT	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00035	MAESTRO EPOXY 1/4 PINT	02	CRN RD25-CR019	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00065	PEARL GLAZE ANTI-FOULING PAINT 4L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00066	PEARL GLAZE ANTI-FOULING PAINT 1L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00092-IH	PAINTER'S BUDDY SKIMCOAT WHITE IN HOUSE	00	CRN RD24-CR027	L14 - L14 SKIM COAT	L14	L14 - L14 SKIM COAT	L14	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00103	PVC SOLVENT CEMENT 85ML	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00104	CONTACT BOND BOTTLE 50ML TWIN	01	PHASE 2 APM PACKAGE	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00105	CONTACT BOND 1L	02	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00106	CONTACT BOND 1 GALLON	02	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00111	PIPE JOINTING EPOXY PUTTY 1/2 PINT	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00114	CONTACT BOND 300ML BOTTLE	02	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00117	ELASTOSEAL CLEAR PISILITO	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00118	ELASTOSEAL CLEAR PISIL	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00119	ELASTOSEAL CLEAR CARTRIDGE	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00122	MIGHTY SEAL BIOCIDE 300ML	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00128	GF200 SPL COLOR  LIGHT GRAY HONDA ILOILO 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00129	GF200 SPL COLOR  LIGHT BEIGE HONDA ILOILO 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00141	ELASTOKWIK 4L	01	PHASE 2 APM PACKAGE	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00142	ELASTOKWIK 1L	01	PHASE 2 APM PACKAGE	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00143	ELASTOKWIK 1/2L	02	CRN RD23-CR025	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00144	ELASTOKWIK 1/4L	01	PHASE 2 APM PACKAGE	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00145	ELASTOKWIK 30 ML	01	PHASE 2 APM PACKAGE	L04C - L4C ATO FILLING	L04C	L04C - L4C ATO FILLING	L04C	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00146	ELASTOKWIK PISILITO	01	PHASE 2 APM PACKAGE	L04C - L4C ATO FILLING	L04C	L04C - L4C ATO FILLING	L04C	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00147	ELASTOKWIK PISIL	01	PHASE 2 APM PACKAGE	L04C - L4C ATO FILLING	L04C	L04C - L4C ATO FILLING	L04C	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00148	GF300 STD COLOR  WHITE 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00155	GF200 STD COLOR  TOYOTA DARK GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00158	GF200 SPL COLOR  TOYOTA YELLOW 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00159	CONTACT BOND 10ML SACHET	03	CRN RD25-CR001	L10 - L10 CONTACT BOND	L10	L10 - L10 CONTACT BOND	L10	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00164	TRANSFORMER ADHESIVE PART A - RESIN	02	CRN RD25-CR028 (FOR REVIEW)	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00165	TRANSFORMER ADHESIVE PART B - HARDENER	02	CRN RD25-CR028 (FOR REVIEW)	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00167	GF300 SPL COLOR  GINEBRA GREEN	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00169	GF200 SPL COLOR  LIGHT GRAY ULTRADE 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00175	EPOXY STEEL PRIMER GRAY 1L	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00176	EPOXY STEEL PRIMER GRAY 4L	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00177	EPOXY STEEL PRIMER WHITE 4L	02	CRN RD23-CR043	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00178	EPOXY STEEL PRIMER WHITE 1L	02	CRN RD23-CR043	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00182	GF300 SPL COLOR  SULPICIO GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00185	GF200 SPL COLOR  NEON GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00186	EPOXY REDUCER 300ML BOTTLE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00187	EPOXY REDUCER 1L	02	CRN RD25-CR010	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00188	FRP ADHESIVE - COMPONENT B	01	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00193	MULTI-FILLA 2.16KG	01	PHASE 2 APM PACKAGE	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00208	GF 300 LS PILOT BLUE 4L	01	PHASE 2 APM PACKAGE-INACTIVE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00210	GF300 SPL COLOR  TOYOTA YELLOW 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4174,7 +4179,7 @@ FGT00215	PEARL GLAZE SATIN VISMIN ULTRAMARINE BLUE 4L	03	CRN RD25-CR035 (FOR REV
 FGT00216	PEARL GLAZE SATIN VISMIN ULTRAMARINE BLUE 1L	03	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00217	GF 300 TOYOTA NILE GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00221	PG SATIN SIGNAL GREEN 4L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGT00222	SEPERATE THE ITEM CODE OF COAXIAL CARTRIDGE AND PISTON RING	02	\N	L12 LABELING/CODING	L12	L12 LABELING/CODING	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+FGT00222	SEPERATE THE ITEM CODE OF COAXIAL CARTRIDGE AND PISTON RING	02	\N	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00224	LIQUID SKIMCOAT	03	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00237	MARINE QUICK DRY ENAMEL SAFETY RED 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00249	PG SATIN NANCY GRAY 4L	02	CRN RD25-CR035 (FOR REVIEW)	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4266,11 +4271,11 @@ FGT00549	QDE FRENCH GREY 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COA
 FGT00553	QDE CREAM IVORY 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGT00555	QDE BOOTTOPING RED 4L	02	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000005	GIP-MIGHTY SEAL TRANSLUCENT	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000041	GIP-CLEAR EPOXY SYRINGE 6ML	02	CRN RD25-CR011	L07 - L7 EPOXY TUBE FILLING	L07	L07 - L7 EPOXY TUBE FILLING	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000049	GIP-MIGHTY BOND XTREME 1G	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000041	GIP-CLEAR EPOXY SYRINGE 6ML	02	CRN RD25-CR011	\N	L07	\N	L07	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000049	GIP-MIGHTY BOND XTREME 1G	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000050	GIP-MIGHTY GASKET BLACK 15G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000051	GIP-MIGHTY GASKET GREY 15G	01	PHASE 2 APM PACKAGE	L11 - L11 SILICONE FILLING LINE	L11	L11 - L11 SILICONE FILLING LINE	L11	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000053	GIP-MIGHTY BOND SHOES 3G	01	PHASE 2 APM PACKAGE	L03 - L3 CYANO TUBE FILLING	L03	L03 - L3 CYANO TUBE FILLING	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000053	GIP-MIGHTY BOND SHOES 3G	01	PHASE 2 APM PACKAGE	\N	L03	\N	L03	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000058	BM-GF 300 BLACK TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000059	BM-GF 300 YELLOW OXIDE TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000060	BM-PG GLOSS GREEN TINT	02	CRN RD23-CR018	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4300,23 +4305,6 @@ GIP000097	BM-GF 100 WHITE TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 
 GIP000107	BM-PU MIX SOLVENTS	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000108	BM-GF 200 RED TINT	02	CRN RD23-CR040	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000109	BM-BENTONE GEL F2	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000115	BM-PU BLACK TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000116	BM-PU YELLOW OXIDE TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000117	BM-PU WHITE BASE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000129	BM-PU YELLOW 74 TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000130	BM-PU SCARLET RED TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000143	BM-PU ORANGE RL70 TINT	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000147	BULKMIX - PG SATIN CLEAR BASE	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000148	BULKMIX -  ENAMEL CHOCO BROWN F8660	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000149	BULK MIX-ENAMEL PERMANENT RED R170	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-1KPH5A5J01	FG_KOPHENOL HIGHWAY YELLOW	00	PACKAGING MATERIAL: REUSE THE TIN PAIL OF KOPHENOL CREAM	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-1KRT5A9A12	KORETHAN TC UT6581 RAL 5011 URETHANE TOPCOAT SOLVENT BASED BLUE 16L	01	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-2101934	PG ANTI FOULING PAINT RED 4L	02	CRN RD23-CR055	L4A ELASTO MIXING	L04A	L4A ELASTO MIXING	L04A	Finished Good (FG)	4	\N	\N	\N	\N	\N	\N	\N
-1M2C2009	MARINE EPOXY GALLON	02	PHASE 2 APM PACKAGE	L6 EPOXY LINE	L06	L6 EPOXY LINE	L06	Finished Good (FG)	1	\N	\N	\N	\N	\N	\N	\N
-1ENC2019	NON-SAG EPOXY 1/4 PINT	04	CRN RD25-CR019	Line 06 EPOXY LINE	L06	Line 06 EPOXY LINE	L06	Finished Good (FG)	1	\N	\N	\N	\N	\N	\N	\N
-9090	ALL PURPOSE EPOXY  QUART	02	CRN RD25-CR020	Line 04A ELASTO MIXING	L04A	Line 04A ELASTO MIXING	L04A	Finished Good (FG)	1	16	28	116	0	28	16	16
-555	PG ANTI FOULING PAINT RED 4L	01	PHASE 2 APM PACKAGE	Line 04A ELASTO MIXING	L04A	Line 04A ELASTO MIXING	L04A	Finished Good (FG)	1	372	768	1320	0	768	372	372
-8080	ALL PURPOSE EPOXY  QUART	03	CRN RD25-CR020	Line 04A ELASTO MIXING	L04A	Line 04A ELASTO MIXING	L04A	Finished Good (FG)	1	21	62	160	0	62	21	21
 \.
 
 
@@ -4325,13 +4313,13 @@ GIP000149	BULK MIX-ENAMEL PERMANENT RED R170	01	PHASE 2 APM PACKAGE	L01 - L1 COA
 --
 
 COPY public.users (id, username, password_hash, role, is_active, created_at, updated_at) FROM stdin;
-1	admin	$argon2id$v=19$m=65536,t=3,p=4$MTIzNDU2Nzg5MGFiY2RlZg$ fakeplaceholder_donotuse	admin	t	2026-06-18 15:20:16.628133+08	2026-06-18 15:20:16.628133+08
-2	dell	$argon2id$v=19$m=65536,t=3,p=4$gnPaeY1Kz0g/BywRj9eYPw$gFdnesLRnt3jWqBaOqaRgszHADxBTzWdBs4ybHMBCtU	admin	t	2026-06-18 15:34:24.750689+08	2026-06-18 15:34:24.750689+08
-4	macky	$argon2id$v=19$m=65536,t=3,p=4$1k7II7us7fbuXGu/3ALzqg$2vBLFYTP2dv3bUJC7sSlFK1qtvYfm4vMxNxxcGxvse0	superuser	t	2026-06-18 16:16:45.624111+08	2026-06-18 16:16:45.624111+08
-6	Eson	$argon2id$v=19$m=65536,t=3,p=4$x/gAML0TW07HRAeu3Am50w$qcBFKxO71LZ+bi/oShJ/fCW1zxJgKASw6DMiNHMg6Gs	superuser	t	2026-06-22 13:42:13.017756+08	2026-06-22 13:42:13.017756+08
-9	wendellpogi	$argon2id$v=19$m=65536,t=3,p=4$Uy2W+2joC2/tjYIeOdtMww$ksexMF1sULAvpLPMB0slxxJQ/7Cvr14VdA40We5p70k	admin	t	2026-06-26 08:48:35.42537+08	2026-06-26 08:48:35.42537+08
-5	eson	$argon2id$v=19$m=65536,t=3,p=4$vgy3/BCkOaicNmUcPLo4bA$/h7JIqFDuF9TJfehKtJebsiuhp4Z/E4mwWFeoCVxZ0A	user	t	2026-06-22 09:27:05.753881+08	2026-06-26 08:55:58.192524+08
-7	Aerial	$argon2id$v=19$m=65536,t=3,p=4$I/7UeKipgoG4qhxy0KZNjQ$+bH7rWfL2unv1jU7TnHgJtXNgjD4BYy4sBd4q8AhIjI	user	f	2026-06-23 09:09:40.506552+08	2026-06-26 09:11:05.6355+08
+1	admin	$argon2id$v=19$m=65536,t=3,p=4$MTIzNDU2Nzg5MGFiY2RlZg$ fakeplaceholder_donotuse	admin	t	2026-06-18 07:20:16.628133+00	2026-06-18 07:20:16.628133+00
+2	dell	$argon2id$v=19$m=65536,t=3,p=4$gnPaeY1Kz0g/BywRj9eYPw$gFdnesLRnt3jWqBaOqaRgszHADxBTzWdBs4ybHMBCtU	admin	t	2026-06-18 07:34:24.750689+00	2026-06-18 07:34:24.750689+00
+4	macky	$argon2id$v=19$m=65536,t=3,p=4$1k7II7us7fbuXGu/3ALzqg$2vBLFYTP2dv3bUJC7sSlFK1qtvYfm4vMxNxxcGxvse0	superuser	t	2026-06-18 08:16:45.624111+00	2026-06-18 08:16:45.624111+00
+6	Eson	$argon2id$v=19$m=65536,t=3,p=4$x/gAML0TW07HRAeu3Am50w$qcBFKxO71LZ+bi/oShJ/fCW1zxJgKASw6DMiNHMg6Gs	superuser	t	2026-06-22 05:42:13.017756+00	2026-06-22 05:42:13.017756+00
+9	wendellpogi	$argon2id$v=19$m=65536,t=3,p=4$Uy2W+2joC2/tjYIeOdtMww$ksexMF1sULAvpLPMB0slxxJQ/7Cvr14VdA40We5p70k	admin	t	2026-06-26 00:48:35.42537+00	2026-06-26 00:48:35.42537+00
+5	eson	$argon2id$v=19$m=65536,t=3,p=4$vgy3/BCkOaicNmUcPLo4bA$/h7JIqFDuF9TJfehKtJebsiuhp4Z/E4mwWFeoCVxZ0A	user	t	2026-06-22 01:27:05.753881+00	2026-06-26 00:55:58.192524+00
+7	Aerial	$argon2id$v=19$m=65536,t=3,p=4$I/7UeKipgoG4qhxy0KZNjQ$+bH7rWfL2unv1jU7TnHgJtXNgjD4BYy4sBd4q8AhIjI	user	f	2026-06-23 01:09:40.506552+00	2026-06-26 01:11:05.6355+00
 \.
 
 
@@ -4339,14 +4327,14 @@ COPY public.users (id, username, password_hash, role, is_active, created_at, upd
 -- Name: activities_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.activities_id_seq', 5527, true);
+SELECT pg_catalog.setval('public.activities_id_seq', 5528, true);
 
 
 --
 -- Name: activity_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.activity_logs_id_seq', 348, true);
+SELECT pg_catalog.setval('public.activity_logs_id_seq', 354, true);
 
 
 --
@@ -4532,5 +4520,5 @@ ALTER TABLE ONLY public.line_activities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict c6YTJpluoXSCfa9acyfJb4yzz22iRGium9fHdYtYyw6Ire04imXfHeQWXUHf0hZ
+\unrestrict 3KDLJ9sFCX5udVk4MCig952ZYcsXWUevoYcnwa5Zi8wd191DpHCUdcwhMIu9NLS
 
