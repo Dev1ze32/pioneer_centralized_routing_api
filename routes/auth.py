@@ -247,6 +247,57 @@ def me():
     return jsonify(g.current_user.to_dict()), 200
 
 
+# ── POST /api/auth/verify-password ────────────────────────────────────────────
+
+@auth_bp.post("/verify-password")
+@require_auth
+@limiter.limit(Config.RATE_LIMIT_LOGIN)
+def verify_password_endpoint():
+    """
+    Verify the currently authenticated user's password without issuing a new token.
+    Used for confirming identity before destructive actions.
+
+    ---
+    tags:
+      - Authentication
+    security:
+      - Bearer: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [password]
+          properties:
+            password:
+              type: string
+              example: SecurePass123!
+    responses:
+      200:
+        description: Password verified
+      400:
+        description: Missing password
+      401:
+        description: Invalid password or missing token
+      429:
+        description: Too many attempts
+    """
+    body = request.get_json(force=True, silent=True)
+    if not body:
+        return jsonify({"error": "Invalid or missing JSON body"}), 400
+
+    password = body.get("password") or ""
+    if not password:
+        return jsonify({"error": "password is required"}), 400
+
+    user = g.current_user
+    if not verify_password(password, user.password_hash):
+        return jsonify({"error": "Incorrect password"}), 401
+
+    return jsonify({"message": "Password verified"}), 200
+
+
 # ── GET /api/auth/users ───────────────────────────────────────────────────────
 
 @auth_bp.get("/users")
