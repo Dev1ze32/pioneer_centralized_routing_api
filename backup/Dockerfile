@@ -1,7 +1,8 @@
-FROM alpine:3.19
+FROM postgres:18-alpine
 
-# Install PostgreSQL client tools, gzip for compression, tzdata for timezone, and dos2unix for line ending fixes
-RUN apk add --no-cache postgresql-client gzip tzdata dos2unix
+# Install gzip for compression, tzdata for timezone, and dos2unix for line ending fixes
+# (postgresql-client is already included in the postgres base image)
+RUN apk add --no-cache gzip tzdata dos2unix
 
 # Set timezone to Philippines
 ENV TZ=Asia/Manila
