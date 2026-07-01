@@ -8,7 +8,8 @@ Rate limits (applied per remote IP via Flask-Limiter):
 
 import logging
 
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request, g, send_file, abort
+import os
 
 from extension import limiter          # ← extension.py, not app.py
 from config import Config
@@ -481,4 +482,29 @@ def delete_user(user_id):
         )
 
         session.delete(user)
-        return jsonify({"message": f"User '{user.username}' deleted successfully"}), 200
+        session.commit()
+        return jsonify({"message": "User deleted"}), 200
+
+# ── GET /api/auth/docs/deployment ─────────────────────────────────────────────
+
+@auth_bp.get("/docs/deployment")
+@_require_admin
+def download_deployment_manual():
+    """
+    Securely download the deployment and maintenance manual.
+    Must be an authenticated Admin.
+    """
+    # The file is in the root directory, one level up from the 'routes' folder
+    root_dir = os.path.dirname(os.path.dirname(__file__))
+    file_path = os.path.join(root_dir, "ACU_Routing_Deployment_Maintenance_Manual.pdf")
+    
+    if not os.path.exists(file_path):
+        logger.error(f"Manual not found at {file_path}")
+        return jsonify({"error": "Manual file is missing from the server"}), 404
+
+    return send_file(
+        file_path,
+        as_attachment=True,
+        download_name="ACU_Routing_Deployment_Maintenance_Manual.pdf",
+        mimetype="application/pdf"
+    )
