@@ -22,6 +22,7 @@ All write endpoints require authentication. Read endpoints require a valid token
    - [Logs](#logs)
 7. [Error Responses](#7-error-responses)
 8. [Rate Limiting](#8-rate-limiting)
+9. [Docker & Backups](#9-docker--backups)
 
 ---
 
@@ -33,11 +34,13 @@ routing_api/
 ├── config.py                   # All configuration (DB, JWT, pool, rate limits, waitress)
 ├── db.py                       # SQLAlchemy connection pool helper
 ├── server.py          # Waitress production server entry point
-├── schema.sql                  # Creates all tables
-├── load_data.py                # Loads acu_routing_parsed.json into the database
+├── init-db/                    # Initial database schema and seeded data
 ├── requirements.txt            # Python dependencies
 ├── .env.example                # Copy to .env and fill in values
 ├── acu_routing_parsed.json     # Source data exported by parser.py
+├── docker-compose.yml          # Docker deployment configuration
+├── backup.sh                   # Database automated backup script
+├── frontend/                   # Client-side web interface
 └── routes/
     ├── __init__.py             # Blueprint registration
     ├── auth.py                 # POST /api/auth/register, /login, GET /api/auth/me
@@ -92,6 +95,7 @@ Six tables total. Four for routing data, two for auth and auditing.
 |---|---|
 | production_line_code (PK) | varchar(20) |
 | production_line_name | text |
+| canonical_line_text | text |
 
 **line_activities** — one row per activity template on a line, FK → production_lines
 | Column | Type |
@@ -185,16 +189,20 @@ WAITRESS_PORT=5000
 
 ### c) Create the database and load data
 
-```bash
-createdb routing_db
-python load_data.py acu_routing_parsed.json
-```
+Since the database is now running in Docker, the initialization script (`init-db/01-init.sql`) automatically creates the schema and seeds all the routing data the very first time the `db` container starts up. You do not need to manually create the database or run any load scripts.
 
 ---
 
 ## 4. Running the Server
 
-**Development** (single-threaded, do not use in production):
+**Docker (Recommended for Production)**:
+The entire stack (API + Database + Backups) can be run easily via Docker Compose.
+```bash
+docker compose up -d
+```
+Logs can be viewed with `docker compose logs -f api` or `docker compose logs -f db`.
+
+**Development (Local Python)**:
 ```bash
 python app.py
 ```
@@ -1083,3 +1091,25 @@ Rate limits are applied per IP address. Limits are configurable via `.env`.
 | All other endpoints | 300 requests / minute |
 
 When a limit is exceeded the API returns `429 Too Many Requests`. Wait for the current minute window to pass before retrying.
+
+---
+
+## 9. Docker & Backups
+
+The system includes a fully containerized deployment setup utilizing `docker-compose.yml`.
+
+### Architecture
+- **API**: The Flask backend, exposed on port 5000 (running waitress).
+- **DB**: A PostgreSQL 16 container holding the `routing_db` database.
+- **Backup**: An automated Alpine cron container that securely connects to the DB container and runs `backup.sh` to generate snapshot archives.
+
+### Automated Backups
+Database backups are fully automated via the `backup` container.
+- **Frequency**: Daily at midnight, and weekly on Sundays.
+- **Location**: Backups are mounted to the host machine in the `./backups/` directory.
+- **Retention**: Daily backups are kept for 7 days, and weekly backups are kept for 90 days.
+
+To manually trigger a backup at any time:
+```bash
+docker compose exec backup /app/backup.sh manual
+```
