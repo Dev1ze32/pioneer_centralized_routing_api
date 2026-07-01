@@ -229,10 +229,10 @@ def cleanup_logs():
     """
     try:
         days = int(request.args.get("days", 90))
-        if days < 1:
+        if days < 0:
             raise ValueError
     except (ValueError, TypeError):
-        return jsonify({"error": "days must be a positive integer"}), 400
+        return jsonify({"error": "days must be a non-negative integer"}), 400
 
     deleted = purge_old_logs(days=days)
 
