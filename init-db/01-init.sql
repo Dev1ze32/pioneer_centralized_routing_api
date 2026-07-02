@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict BrRBcb2UpljeXQzCgsFZqrfcbUxexeZ5P0XFALgEVWU3Bxx23bq0Rk69ThyluoN
+\restrict eWSV0PMe8kT03OFdncsSvOM2gDZY3YWrAiEcZM6f5bXstEcPammdoTnl3O0NflN
 
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
@@ -20,21 +20,50 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: sync_production_line_text(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION public.sync_production_line_text() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    bm_text varchar(100);
+    fg_text varchar(100);
+BEGIN
+    IF NEW.bm_production_line_code IS NOT NULL THEN
+        SELECT canonical_line_text INTO bm_text
+        FROM production_lines WHERE production_line_code = NEW.bm_production_line_code;
+        IF bm_text IS NOT NULL THEN
+            NEW.bm_production_line := bm_text;
+        END IF;
+    END IF;
+
+    IF NEW.fg_production_line_code IS NOT NULL THEN
+        SELECT canonical_line_text INTO fg_text
+        FROM production_lines WHERE production_line_code = NEW.fg_production_line_code;
+        IF fg_text IS NOT NULL THEN
+            NEW.fg_production_line := fg_text;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.sync_production_line_text() OWNER TO postgres;
+
+--
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
 CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
-
 BEGIN
-
     NEW.updated_at = NOW();
-
     RETURN NEW;
-
 END;
-
 $$;
 
 
@@ -3100,8 +3129,6 @@ COPY public.activities (id, inventory_id, type, item_id, activity_name, class, c
 --
 
 COPY public.activity_logs (id, logged_at, user_id, username, user_role, action, description, target_type, target_id, ip_address, extra) FROM stdin;
-359	2026-07-01 13:32:25.631113+08	2	dell	admin	Added line activity	'dell' added activity 'PACKING/PALLETIZING' (ID 851) to production line 'Subcon' at sort_order 1.	production_line	Subcon	192.168.50.94	{"sort_order": 1, "activity_id": 851, "activity_name": "PACKING/PALLETIZING"}
-360	2026-07-01 13:33:11.022689+08	2	dell	admin	Added line activity	'dell' added activity 'SUBCON' (ID 852) to production line 'Subcon' at sort_order 2.	production_line	Subcon	192.168.50.94	{"sort_order": 2, "activity_id": 852, "activity_name": "SUBCON"}
 \.
 
 
@@ -3113,17 +3140,6 @@ COPY public.line_activities (id, production_line_code, activity_name, sort_order
 689	L01	MIXING	1	BM
 690	L01	MILLING	2	BM
 691	L01	LETDOWN	3	BM
-692	L01	TINTING	4	BM
-693	L01	CODING	5	FG
-694	L01	LABELING	6	FG
-695	L01	BOX PREPARATION	7	FG
-696	L01	MANUAL TRANSFER BM TO FILLING TANK	8	BM
-697	L01	FILLING	9	FG
-698	L01	CAPPING	10	FG
-699	L01	PACKING/PALLETIZING	11	FG
-700	L01	LABELING/CODING	12	FG
-701	L01	NITROGEN PURGING	13	BM
-702	L01	PACKING/PALLETIZ	14	FG
 703	L02	STICKERING	1	FG
 704	L02	CODING	2	FG
 705	L02	FILLING	3	FG
@@ -3210,10 +3226,8 @@ COPY public.line_activities (id, production_line_code, activity_name, sort_order
 786	L10	BOX PREPARATION	3	FG
 787	L10	FILLING	4	FG
 788	L10	CAPPING	5	FG
-789	L10	PACKING/PALLETIZING	6	FG
 790	L10	LABELING/CODING	7	FG
 791	L10	PACKING/PALLETI	8	FG
-792	L10	PACKING/PALLETIZ	9	FG
 793	L11	CODING	1	FG
 794	L11	FILLING	2	FG
 795	L11	SCOOPING	3	FG
@@ -3273,6 +3287,10 @@ COPY public.line_activities (id, production_line_code, activity_name, sort_order
 849	SIPS	PANEL ASSEMBLY	5	FG
 851	Subcon	PACKING/PALLETIZING	1	\N
 852	Subcon	SUBCON	2	\N
+857	LEGACY	ASD	1	\N
+859	LEGACY	TEST	2	\N
+860	L10	ASDWASD	9	\N
+865	LEGACY	ZXCZXC	3	\N
 \.
 
 
@@ -3289,6 +3307,8 @@ COPY public.product_revisions (id, inventory_id, revision, snapshot, archived_by
 --
 
 COPY public.production_lines (production_line_code, production_line_name, canonical_line_text) FROM stdin;
+LEGACY	Legacy line	\N
+L04A	Line 04A ELASTO MIXING WOW	L04A - L4A ELASTO MIXING
 Subcon	Subcon	\N
 L057	123	\N
 L089	ASDKJK	\N
@@ -3297,7 +3317,6 @@ L08	Line08	\N
 L01	Line 01 COATINGS	L01 - L1 COATINGS
 L02	Line 02 CYANO BOTTLE FILLING	L02 - L2 CYANO BOTTLE FILLING
 L03	Line 03 CYANO TUBE FILLING	\N
-L04A	Line 04A ELASTO MIXING	L04A - L4A ELASTO MIXING
 L04B	Line 04B SEMI AUTO FILLING	L04B - L4B SEMI AUTO FILLING
 L04C	Line 04C AUTO FILLING	L04C - L4C ATO FILLING
 L05	Line 05 EPOXY CLAY	\N
@@ -3319,6 +3338,7 @@ SIPS	STRUCTURAL INSULATED PANEL	\N
 --
 
 COPY public.products (inventory_id, revision_descr, revision, notes, bm_production_line, bm_production_line_code, fg_production_line, fg_production_line_code, product_type, quantity, total_run_time, total_labor_min, total_mc_min, total_dl_units, total_dl, total_voh, total_foh) FROM stdin;
+BM000185	BM - QDE SKY BLUE	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 1AF2202L	PG ANTI FOULING PAINT RED 4L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1AF29233	PG ANTI FOULING PAINT RED 1L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1APC2009	ALL PURPOSE EPOXY  GALLON	00	CRN RD23-CR055	L06 - L6 EPOXY LINE	L06	L06 - L6 EPOXY LINE	L06	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3352,6 +3372,7 @@ COPY public.products (inventory_id, revision_descr, revision, notes, bm_producti
 1COD1A1A01	CONCRETE DENSIFIER GALLON	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1CTA610N	SANDBLAST 621 (CAC 621)	00	PHASE 2 APM PACKAGE	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	L13 - L13 SPECIAL PRODUCTS - WATER BASED	L13	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1DSC2009	DURASTEEL EPOXY GALLON	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
+GIP000108	BM-GF 200 RED TINT	00	CRN RD23-CR040	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 1DSC2010	DURASTEEL EPOXY QUART	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1E2M2029	LITHOGRAPH CAN	00	PCMR-26-011	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 1E2M2033	LITHOGRAPH CAN	00	PCMR-26-011	L04B - L4B SEMI AUTO FILLING	L04B	L04B - L4B SEMI AUTO FILLING	L04B	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3913,6 +3934,7 @@ BM000044	BULK MIX - LCRB A	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - E
 BM000045	BULK MIX - LCRB B	00	CRN RD23-CR043	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000047	BULK MIX-PILE SPLICING EPOXY A	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000048	BULK MIX-PILE SPLICING EPOXY B	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
+FGI00149	PG GLOSS SAFETY RED 1 LITER	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000049	BULK MIX - PIPE JOINTING PUTTY A	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000050	BULK MIX - PIPE JOINTING PUTTY B	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000051	BULKMIX- MELVEST LAMINATING A	00	PHASE 2 APM PACKAGE	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	L12 - L12 SPECIAL PRODUCTS - EPOXY BASED	L12	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -3960,7 +3982,6 @@ BM000180	BULKMIX QUICK DRY ENAMEL JADE GREEN	00	REPROCESS	L01 - L1 COATINGS	L01	
 BM000181	BM- QDE SAFETY BLUE	00	CRN RD25-CR033, CRN RD23-CR005	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000182	BM - QDE SAFETY GREEN	00	CRN RD25-CR017	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000183	BM- QDE SAFETY ORANGE	00	CRN RD25-CR033, CRN RD23-CR005	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-BM000185	BM - QDE SKY BLUE	00	0	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000187	BULKMIX - QDE CATERPILLAR YELLOW	00	CRN RD25-CR033, CRN RD23-CR005	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000188	BULKMIX - PG GLOSS SAND IVORY	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 BM000189	BM- PG GLOSS LEAF GREEN A	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4010,7 +4031,6 @@ FGI00145	PG GLOSS SAFETY GREEN 1L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - 
 FGI00146	PG GLOSS SAFETY GREEN 4L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00147	PG GLOSS SAFETY ORANGE 1L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00148	PG GLOSS SAFETY ORANGE 4L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
-FGI00149	PG GLOSS SAFETY RED 1 LITER	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00150	PG GLOSS SAFETY RED 4L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00151	PG GLOSS SAFETY YELLOW 1L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
 FGI00152	PG GLOSS SAFETY YELLOW 4L	00	CRN RD23-CR055	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Finished Good (FG)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4215,7 +4235,6 @@ GIP000095	BM-PG SATIN WHITE BASE	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L0
 GIP000096	BM-GF 300 FAST BLUE TINT	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000097	BM-GF 100 WHITE TINT	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000107	BM-PU MIX SOLVENTS	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
-GIP000108	BM-GF 200 RED TINT	00	CRN RD23-CR040	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000109	BM-BENTONE GEL F2	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000115	BM-PU BLACK TINT	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
 GIP000116	BM-PU YELLOW OXIDE TINT	00	PHASE 2 APM PACKAGE	L01 - L1 COATINGS	L01	L01 - L1 COATINGS	L01	Base Material (BM)	\N	\N	\N	\N	\N	\N	\N	\N
@@ -4236,14 +4255,11 @@ GIP000149	BULK MIX-ENAMEL PERMANENT RED R170	00	PHASE 2 APM PACKAGE	L01 - L1 COA
 --
 
 COPY public.users (id, username, password_hash, role, is_active, created_at, updated_at) FROM stdin;
-1	admin	$argon2id$v=19$m=65536,t=3,p=4$MTIzNDU2Nzg5MGFiY2RlZg$ fakeplaceholder_donotuse	admin	t	2026-06-18 15:20:16.628133+08	2026-06-18 15:20:16.628133+08
 2	dell	$argon2id$v=19$m=65536,t=3,p=4$gnPaeY1Kz0g/BywRj9eYPw$gFdnesLRnt3jWqBaOqaRgszHADxBTzWdBs4ybHMBCtU	admin	t	2026-06-18 15:34:24.750689+08	2026-06-18 15:34:24.750689+08
 4	macky	$argon2id$v=19$m=65536,t=3,p=4$1k7II7us7fbuXGu/3ALzqg$2vBLFYTP2dv3bUJC7sSlFK1qtvYfm4vMxNxxcGxvse0	superuser	t	2026-06-18 16:16:45.624111+08	2026-06-18 16:16:45.624111+08
-6	Eson	$argon2id$v=19$m=65536,t=3,p=4$x/gAML0TW07HRAeu3Am50w$qcBFKxO71LZ+bi/oShJ/fCW1zxJgKASw6DMiNHMg6Gs	superuser	t	2026-06-22 13:42:13.017756+08	2026-06-22 13:42:13.017756+08
-9	wendellpogi	$argon2id$v=19$m=65536,t=3,p=4$Uy2W+2joC2/tjYIeOdtMww$ksexMF1sULAvpLPMB0slxxJQ/7Cvr14VdA40We5p70k	admin	t	2026-06-26 08:48:35.42537+08	2026-06-26 08:48:35.42537+08
 5	eson	$argon2id$v=19$m=65536,t=3,p=4$vgy3/BCkOaicNmUcPLo4bA$/h7JIqFDuF9TJfehKtJebsiuhp4Z/E4mwWFeoCVxZ0A	user	t	2026-06-22 09:27:05.753881+08	2026-06-26 08:55:58.192524+08
 7	Aerial	$argon2id$v=19$m=65536,t=3,p=4$I/7UeKipgoG4qhxy0KZNjQ$+bH7rWfL2unv1jU7TnHgJtXNgjD4BYy4sBd4q8AhIjI	user	f	2026-06-23 09:09:40.506552+08	2026-06-26 09:11:05.6355+08
-10	Panda	$argon2id$v=19$m=65536,t=3,p=4$fLceD59naAJZsdBNM6egcg$vMXiLySRuzfmSoxtLzKO2KdBVUmnADVRljyGxDqaGMk	user	t	2026-07-01 09:36:23.034773+08	2026-07-01 09:36:23.034773+08
+29	Eson	$argon2id$v=19$m=65536,t=3,p=4$CqPBGcmvGFU2XA8BSSiNCw$txNuegZJvlViUM4ASUWBIveVaZH0DTOUagO+v1hqJVs	superuser	t	2026-07-02 13:37:32.291962+08	2026-07-02 13:37:32.291962+08
 \.
 
 
@@ -4258,14 +4274,14 @@ SELECT pg_catalog.setval('public.activities_id_seq', 2754, true);
 -- Name: activity_logs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.activity_logs_id_seq', 360, true);
+SELECT pg_catalog.setval('public.activity_logs_id_seq', 1, false);
 
 
 --
 -- Name: line_activities_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.line_activities_id_seq', 852, true);
+SELECT pg_catalog.setval('public.line_activities_id_seq', 866, true);
 
 
 --
@@ -4279,7 +4295,7 @@ SELECT pg_catalog.setval('public.product_revisions_id_seq', 1, false);
 -- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.users_id_seq', 10, true);
+SELECT pg_catalog.setval('public.users_id_seq', 29, true);
 
 
 --
@@ -4352,13 +4368,6 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_username_key UNIQUE (username);
-
-
---
--- Name: idx_products_inventory_id_upper; Type: INDEX; Schema: public; Owner: postgres
---
-
-CREATE UNIQUE INDEX idx_products_inventory_id_upper ON public.products (UPPER(inventory_id));
 
 
 --
@@ -4451,5 +4460,5 @@ ALTER TABLE ONLY public.line_activities
 -- PostgreSQL database dump complete
 --
 
-\unrestrict BrRBcb2UpljeXQzCgsFZqrfcbUxexeZ5P0XFALgEVWU3Bxx23bq0Rk69ThyluoN
+\unrestrict eWSV0PMe8kT03OFdncsSvOM2gDZY3YWrAiEcZM6f5bXstEcPammdoTnl3O0NflN
 
