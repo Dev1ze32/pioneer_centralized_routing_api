@@ -26,7 +26,7 @@ from routes.utils.log_utils import log_action
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 
 
-@items_bp.get("/items/<item_code>")
+@items_bp.get("/items/<path:item_code>")
 @require_auth
 def get_item(item_code):
     """

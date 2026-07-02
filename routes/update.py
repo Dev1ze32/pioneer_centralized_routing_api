@@ -156,7 +156,7 @@ def _build_set_clause(fields: dict) -> str:
 
 # ── 1. Update product metadata ────────────────────────────────────────────────
 
-@update_bp.patch("/items/<item_code>")
+@update_bp.patch("/items/<path:item_code>")
 @require_superuser_or_admin
 def update_product_metadata(item_code):
     """
@@ -289,7 +289,7 @@ def update_product_metadata(item_code):
 
 # ── 2. Add a single activity ──────────────────────────────────────────────────
 
-@update_bp.post("/items/<item_code>/activities")
+@update_bp.post("/items/<path:item_code>/activities")
 @require_superuser_or_admin
 def add_activity(item_code):
     """
@@ -441,7 +441,7 @@ def add_activity(item_code):
 
 # ── 3. Update a single activity ───────────────────────────────────────────────
 
-@update_bp.patch("/items/<item_code>/activities/<int:activity_id>")
+@update_bp.patch("/items/<path:item_code>/activities/<int:activity_id>")
 @require_superuser_or_admin
 def update_activity(item_code, activity_id):
     """
@@ -578,7 +578,7 @@ def update_activity(item_code, activity_id):
 
 # ── 4. Delete a single activity ───────────────────────────────────────────────
 
-@update_bp.delete("/items/<item_code>/activities/<int:activity_id>")
+@update_bp.delete("/items/<path:item_code>/activities/<int:activity_id>")
 @require_superuser_or_admin
 def delete_activity(item_code, activity_id):
     """
@@ -679,7 +679,7 @@ def delete_activity(item_code, activity_id):
 
 # ── 5. Delete an entire product ───────────────────────────────────────────────
 
-@update_bp.delete("/items/<item_code>")
+@update_bp.delete("/items/<path:item_code>")
 @require_superuser_or_admin
 def delete_product(item_code):
     """
@@ -758,7 +758,7 @@ def delete_product(item_code):
 
 # ── 6. Bulk Update (Solves Concurrency & Rate Limiting) ───────────────────────
 
-@update_bp.put("/items/<item_code>/bulk")
+@update_bp.put("/items/<path:item_code>/bulk")
 @require_superuser_or_admin
 def bulk_update_item(item_code):
     """

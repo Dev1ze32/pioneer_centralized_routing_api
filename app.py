@@ -83,6 +83,7 @@ def _init_database():
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.url_map.merge_slashes = False
 
     # ── Database — create tables + seed admin on first run ─────────────────────
     _init_database()

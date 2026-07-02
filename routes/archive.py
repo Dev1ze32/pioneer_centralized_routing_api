@@ -40,7 +40,7 @@ archive_bp = Blueprint("archive", __name__, url_prefix="/api")
 
 # ── GET /api/items/<item_code>/revisions ──────────────────────────────────────
 
-@archive_bp.get("/items/<item_code>/revisions")
+@archive_bp.get("/items/<path:item_code>/revisions")
 @require_superuser_or_admin
 def list_revisions(item_code):
     """
@@ -170,7 +170,7 @@ def list_revisions(item_code):
 
 # ── GET /api/items/<item_code>/revisions/<revision> ───────────────────────────
 
-@archive_bp.get("/items/<item_code>/revisions/<revision>")
+@archive_bp.get("/items/<path:item_code>/revisions/<revision>")
 @require_superuser_or_admin
 def get_revision(item_code, revision):
     """
