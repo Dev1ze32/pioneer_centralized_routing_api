@@ -320,8 +320,11 @@ def get_users():
       403:
         description: Admin access required
     """
+    limit  = min(request.args.get("limit", 50, type=int), 200)
+    offset = max(request.args.get("offset", 0, type=int), 0)
+
     with managed_db_session() as session:
-        users = session.query(User).order_by(User.username).all()
+        users = session.query(User).order_by(User.username).limit(limit).offset(offset).all()
         # BUG-04 FIX: Expunge all ORM objects before the session closes so
         # that to_dict() cannot lazy-load anything after session teardown.
         # This prevents DetachedInstanceError if relationships are ever added.

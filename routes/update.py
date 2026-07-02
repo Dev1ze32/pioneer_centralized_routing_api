@@ -812,6 +812,35 @@ def bulk_update_item(item_code):
     activities_updated = body.get("activities_updated", [])
     activities_deleted = body.get("activities_deleted", [])
 
+    # Pre-flight input validation (Fixes QA Findings #1 and #4)
+    if not isinstance(product_updates, dict):
+        return jsonify({"error": "product_updates must be an object"}), 400
+    if not isinstance(activities_added, list) or not isinstance(activities_updated, list) or not isinstance(activities_deleted, list):
+        return jsonify({"error": "activities_* must be arrays"}), 400
+
+    if "quantity" in product_updates and product_updates["quantity"] is not None:
+        try:
+            q = float(product_updates["quantity"])
+            if q != int(q):
+                return jsonify({"error": "quantity must be a whole number"}), 400
+            product_updates["quantity"] = q
+        except (TypeError, ValueError):
+            return jsonify({"error": "quantity must be a number"}), 400
+
+    for idx, act in enumerate(activities_added):
+        aname = act.get("activity_name")
+        altname = act.get("activities")
+        if (aname is None or not str(aname).strip()) and (altname is None or not str(altname).strip()):
+            return jsonify({"error": f"Activity in activities_added at index {idx} is missing a non-empty activity_name"}), 400
+
+    for idx, act_id in enumerate(activities_deleted):
+        if not isinstance(act_id, int):
+            # Attempt coercion if it's a string digit
+            try:
+                activities_deleted[idx] = int(act_id)
+            except (ValueError, TypeError):
+                return jsonify({"error": f"Activity ID in activities_deleted at index {idx} must be an integer"}), 400
+
     try:
         with managed_connection() as conn:
             # 1. Fetch and Lock the product row
@@ -838,9 +867,6 @@ def bulk_update_item(item_code):
             # 4. Update Product Metadata (if any)
             valid_updates = {k: v for k, v in product_updates.items() if k in UPDATABLE_PRODUCT_FIELDS}
             if valid_updates:
-                if "quantity" in valid_updates and valid_updates["quantity"] is not None:
-                    valid_updates["quantity"] = float(valid_updates["quantity"])
-                
                 # BUG-05 FIX: Use _build_set_clause() for product metadata to
                 # stay consistent with the single-update path and handle any
                 # reserved SQL word columns safely.
@@ -881,9 +907,7 @@ def bulk_update_item(item_code):
                 )
 
             for i, act in enumerate(activities_added, start=1):
-                activity_name = act.get("activity_name", "").strip()
-                if not activity_name:
-                    activity_name = act.get("activities", "").strip()
+                activity_name = str(act.get("activity_name") or act.get("activities") or "").strip()
                 
                 conn.execute(
                     text(

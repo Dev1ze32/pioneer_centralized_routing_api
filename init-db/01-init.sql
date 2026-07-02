@@ -20,63 +20,6 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: sync_production_line_text(); Type: FUNCTION; Schema: public; Owner: postgres
---
-
-CREATE FUNCTION public.sync_production_line_text() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-
-DECLARE
-
-    bm_text varchar(100);
-
-    fg_text varchar(100);
-
-BEGIN
-
-    IF NEW.bm_production_line_code IS NOT NULL THEN
-
-        SELECT canonical_line_text INTO bm_text
-
-        FROM production_lines WHERE production_line_code = NEW.bm_production_line_code;
-
-        IF bm_text IS NOT NULL THEN
-
-            NEW.bm_production_line := bm_text;
-
-        END IF;
-
-    END IF;
-
-
-
-    IF NEW.fg_production_line_code IS NOT NULL THEN
-
-        SELECT canonical_line_text INTO fg_text
-
-        FROM production_lines WHERE production_line_code = NEW.fg_production_line_code;
-
-        IF fg_text IS NOT NULL THEN
-
-            NEW.fg_production_line := fg_text;
-
-        END IF;
-
-    END IF;
-
-
-
-    RETURN NEW;
-
-END;
-
-$$;
-
-
-ALTER FUNCTION public.sync_production_line_text() OWNER TO postgres;
-
---
 -- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
 --
 
@@ -4409,6 +4352,13 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
+-- Name: idx_products_inventory_id_upper; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX idx_products_inventory_id_upper ON public.products (UPPER(inventory_id));
 
 
 --

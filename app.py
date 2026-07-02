@@ -3,7 +3,7 @@ ACU Routing API — application factory.
 
 Production entry point
 ----------------------
-    python waitress_server.py
+    python server.py
 
 Development entry point (single-threaded, do NOT use in production)
 --------------------------------------------------------------------

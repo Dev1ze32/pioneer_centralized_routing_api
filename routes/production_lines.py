@@ -305,7 +305,7 @@ def create_production_line():
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    line_code = (body.get("production_line_code") or "").strip()
+    line_code = (body.get("production_line_code") or "").strip().upper()
     line_name = (body.get("production_line_name") or "").strip()
 
     if not line_code or not line_name:

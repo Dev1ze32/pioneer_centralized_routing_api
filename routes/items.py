@@ -162,7 +162,7 @@ def create_item():
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    inventory_id = (body.get("inventory_id") or "").strip()
+    inventory_id = (body.get("inventory_id") or "").strip().upper()
     if not inventory_id:
         return jsonify({"error": "inventory_id is required"}), 400
 

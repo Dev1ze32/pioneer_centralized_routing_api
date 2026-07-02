@@ -85,5 +85,5 @@ serve(
     url_scheme="http",
     channel_timeout=120,
     max_request_header_size=131072,
-    max_request_body_size=1048576,
+    max_request_body_size=5242880,  # 5MB to handle large bulk updates
 )
