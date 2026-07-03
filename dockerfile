@@ -43,7 +43,7 @@ EXPOSE 5000
 # Health check — Docker marks container unhealthy if this fails 3× in a row.
 # Unhealthy containers are restarted automatically by Docker Compose.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/health')"
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://localhost:{os.environ.get(\"WAITRESS_PORT\", \"5000\")}/api/health')"
 
 # Entrypoint: server.py reads all config from environment variables via Config
 CMD ["python", "server.py"]
