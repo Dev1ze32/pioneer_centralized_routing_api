@@ -82,14 +82,8 @@ def _init_database():
 
 
 def create_app() -> Flask:
-    import os
-    frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "frontend", "asd")
-    app = Flask(__name__, static_folder=frontend_dir, static_url_path="/")
+    app = Flask(__name__)
     app.url_map.merge_slashes = False
-
-    @app.route("/")
-    def serve_index():
-        return app.send_static_file("index.html")
 
     # ── Database — create tables + seed admin on first run ─────────────────────
     _init_database()
