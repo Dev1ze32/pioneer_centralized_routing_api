@@ -15,7 +15,8 @@ env/
 ENV/
 env.bak/
 venv.bak/
-
+.agents/
+skills-lock.json
 # =========================
 # Environment Variables
 # =========================
