@@ -56,7 +56,8 @@ def get_item(item_code):
                        bm_production_line, bm_production_line_code,
                        fg_production_line, fg_production_line_code,
                        total_run_time, total_labor_min, total_mc_min,
-                       total_dl_units, total_dl, total_voh, total_foh
+                       total_dl_units, total_dl, total_voh, total_foh,
+                       created_at, updated_at
                 FROM products
                 WHERE UPPER(inventory_id) = UPPER(:item_code)
                 """
@@ -219,12 +220,14 @@ def create_item():
                          fg_production_line, fg_production_line_code,
                          bm_production_line, bm_production_line_code, notes,
                          total_run_time, total_labor_min, total_mc_min,
-                         total_dl_units, total_dl, total_voh, total_foh)
+                         total_dl_units, total_dl, total_voh, total_foh,
+                         created_at, updated_at)
                     VALUES (:inventory_id, :revision_descr, :revision, :quantity, :product_type,
                             :fg_production_line, :fg_production_line_code,
                             :bm_production_line, :bm_production_line_code, :notes,
                             :total_run_time, :total_labor_min, :total_mc_min,
-                            :total_dl_units, :total_dl, :total_voh, :total_foh)
+                            :total_dl_units, :total_dl, :total_voh, :total_foh,
+                            NOW(), NOW())
                     """
                 ),
                 {

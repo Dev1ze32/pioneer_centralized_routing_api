@@ -210,6 +210,47 @@ ALTER SEQUENCE public.line_activities_id_seq OWNED BY public.line_activities.id;
 
 
 --
+-- Name: pending_approvals; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.pending_approvals (
+    id integer NOT NULL,
+    inventory_id character varying(50) NOT NULL,
+    action character varying(10) NOT NULL,
+    requested_by character varying(50) NOT NULL,
+    status character varying(20) DEFAULT 'PENDING'::character varying NOT NULL,
+    payload jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    resolved_at timestamp with time zone,
+    resolved_by character varying(50)
+);
+
+
+ALTER TABLE public.pending_approvals OWNER TO postgres;
+
+--
+-- Name: pending_approvals_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.pending_approvals_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.pending_approvals_id_seq OWNER TO postgres;
+
+--
+-- Name: pending_approvals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.pending_approvals_id_seq OWNED BY public.pending_approvals.id;
+
+
+--
 -- Name: product_revisions; Type: TABLE; Schema: public; Owner: postgres
 --
 
@@ -281,7 +322,9 @@ CREATE TABLE public.products (
     total_dl_units double precision,
     total_dl double precision,
     total_voh double precision,
-    total_foh double precision
+    total_foh double precision,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
 );
 
 
@@ -346,6 +389,12 @@ ALTER TABLE ONLY public.activity_logs ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.line_activities ALTER COLUMN id SET DEFAULT nextval('public.line_activities_id_seq'::regclass);
+
+--
+-- Name: pending_approvals id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pending_approvals ALTER COLUMN id SET DEFAULT nextval('public.pending_approvals_id_seq'::regclass);
 
 
 --
@@ -4332,6 +4381,14 @@ ALTER TABLE ONLY public.line_activities
 
 
 --
+-- Name: pending_approvals pending_approvals_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pending_approvals
+    ADD CONSTRAINT pending_approvals_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: product_revisions product_revisions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -4439,6 +4496,13 @@ CREATE INDEX idx_users_username ON public.users USING btree (username);
 --
 
 CREATE TRIGGER trigger_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: products set_products_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER set_products_updated_at BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 
 --

@@ -134,7 +134,11 @@ def _fetch_product(conn: Connection, item_code: str, for_update: bool = False):
 def _bump_revision(conn: Connection, canonical_id: str, old_revision: str) -> str:
     new_revision = _increment_revision(old_revision)
     conn.execute(
-        text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
+        text(
+            "UPDATE products "
+            "SET revision = :new_revision, updated_at = NOW() "
+            "WHERE inventory_id = :canonical_id"
+        ),
         {"new_revision": new_revision, "canonical_id": canonical_id},
     )
     return new_revision

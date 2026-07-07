@@ -1,7 +1,7 @@
 import os
 import tempfile
 import openpyxl
-from flask import Blueprint, send_file, after_this_request, current_app, jsonify
+from flask import Blueprint, send_file, after_this_request, current_app, jsonify, request
 from routes.utils.decorators import require_superuser_or_admin
 from sqlalchemy import text
 from db import managed_connection
@@ -71,13 +71,57 @@ _COUNT_QUERY = text("""
     LEFT JOIN activities a ON p.inventory_id = a.inventory_id
 """)
 
+# Single-item variants (same columns, filtered to one inventory_id)
+_EXPORT_QUERY_ITEM = text("""
+    SELECT
+        p.inventory_id              AS "Inventory ID",
+        p.revision_descr            AS "Revision Descr.",
+        p.revision                  AS "Revision",
+        p.quantity                  AS "Qty",
+        p.product_type              AS "Product Type",
+        p.fg_production_line        AS "FG Production Line",
+        p.fg_production_line_code   AS "FG Production Line Code",
+        p.bm_production_line        AS "BM Production Line",
+        p.bm_production_line_code   AS "BM Production Line Code",
+        p.notes                     AS "Notes",
+        a.activity_name             AS "Activities",
+        a.pax                       AS "Pax",
+        a.machine                   AS "Machine",
+        a.time_min                  AS "Time (min)",
+        a.run_time                  AS "Run Time",
+        a.labor_min                 AS "Total Labor (min)",
+        a.mc_min                    AS "Total MC (min)",
+        a.dl_units                  AS "DL (UNITS/1 MIN)",
+        a.dl                        AS "DL",
+        a.voh                       AS "VOH",
+        a.foh                       AS "FOH",
+        a.type                      AS "Type",
+        a."class"                   AS "CLASS",
+        a.class_1                   AS "CLASS.1",
+        a.item_id                   AS "Item ID",
+        p.total_run_time            AS "Total Run Time",
+        p.total_labor_min           AS "Total Labor (min) [Sum]",
+        p.total_mc_min              AS "Total MC (min) [Sum]",
+        p.total_dl                  AS "Total DL [Sum]",
+        p.total_voh                 AS "Total VOH [Sum]",
+        p.total_foh                 AS "Total FOH [Sum]"
+    FROM products p
+    LEFT JOIN activities a ON p.inventory_id = a.inventory_id
+    WHERE UPPER(p.inventory_id) = UPPER(:item_code)
+    ORDER BY a.sort_order
+""")
+
 
 @export_bp.route('/api/export', methods=['GET'])
 @require_superuser_or_admin
-@limiter.limit("2/minute")
+@limiter.limit("5/minute")
 def export_excel():
     """
-    Export all products and their activities to an Excel file.
+    Export products and their activities to an Excel file.
+
+    Optional query param:
+      ?item_code=XXX  — export only that single product (Lookup tab)
+      (omit)          — export the full database (View All Data tab)
 
     Column order mirrors the website table exactly:
       Product Info → Routing Details (per activity) → BOM Details (per activity) → Product Totals
@@ -87,26 +131,36 @@ def export_excel():
     The xlsx is written to a temp file on disk and streamed, so the full
     serialised file is never held in a BytesIO buffer in RAM.
     """
+    item_code = (request.args.get('item_code') or '').strip().upper() or None
+
     try:
         with managed_connection() as conn:
-            # 1. Count first — refuse if the dataset is too large.
-            total_rows = conn.execute(_COUNT_QUERY).mappings().first()["total"]
-            if total_rows > _ROW_CAP:
-                return jsonify({
-                    "error": (
-                        f"Export refused: {total_rows:,} rows exceed the "
-                        f"{_ROW_CAP:,}-row safety limit. "
-                        "Please contact your system administrator to perform "
-                        "a direct database backup instead."
-                    ),
-                    "total_rows": total_rows,
-                    "row_cap":    _ROW_CAP,
-                }), 400
+            if item_code:
+                # Single-item export: no row-cap check needed (always tiny).
+                result   = conn.execute(_EXPORT_QUERY_ITEM, {"item_code": item_code})
+                colnames = list(result.keys())
+                rows     = [tuple(row) for row in result.all()]
+                if not rows:
+                    return jsonify({"error": f"No record found for item code '{item_code}'."}), 404
+            else:
+                # 1. Count first — refuse if the dataset is too large.
+                total_rows = conn.execute(_COUNT_QUERY).mappings().first()["total"]
+                if total_rows > _ROW_CAP:
+                    return jsonify({
+                        "error": (
+                            f"Export refused: {total_rows:,} rows exceed the "
+                            f"{_ROW_CAP:,}-row safety limit. "
+                            "Please contact your system administrator to perform "
+                            "a direct database backup instead."
+                        ),
+                        "total_rows": total_rows,
+                        "row_cap":    _ROW_CAP,
+                    }), 400
 
-            # 2. Fetch rows (safe now that we know it's within the cap).
-            result   = conn.execute(_EXPORT_QUERY)
-            colnames = list(result.keys())
-            rows     = [tuple(row) for row in result.all()]
+                # 2. Fetch rows (safe now that we know it's within the cap).
+                result   = conn.execute(_EXPORT_QUERY)
+                colnames = list(result.keys())
+                rows     = [tuple(row) for row in result.all()]
 
         # ── Build Workbook ─────────────────────────────────────────────────────
         wb = openpyxl.Workbook()
@@ -201,11 +255,17 @@ def export_excel():
                     pass
                 return response
 
+            # Use item-specific filename when exporting a single product
+            dl_name = (
+                f'Pioneer_Routing_{item_code}.xlsx'
+                if item_code else
+                'acu_routing_export.xlsx'
+            )
             return send_file(
                 tmp_path,
                 mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 as_attachment=True,
-                download_name='acu_routing_export.xlsx',
+                download_name=dl_name,
             )
         except Exception:
             # Clean up temp file on any error path as well
