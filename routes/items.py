@@ -22,6 +22,7 @@ from sqlalchemy.exc import IntegrityError
 from db import managed_connection
 from routes.utils.decorators import require_auth, require_superuser_or_admin
 from routes.utils.log_utils import log_action
+from routes.utils.validators import validate_product_payload
 
 items_bp = Blueprint("items", __name__, url_prefix="/api")
 
@@ -163,46 +164,19 @@ def create_item():
     if not body:
         return jsonify({"error": "Invalid or missing JSON body"}), 400
 
-    inventory_id = (body.get("inventory_id") or "").strip().upper()
-    if not inventory_id:
-        return jsonify({"error": "inventory_id is required"}), 400
-
-    revision_descr = body.get("revision_descr", "")
-    product_type   = body.get("product_type", "")
-    quantity       = body.get("quantity")
-
-    if quantity in (None, ""):
-        quantity = 0.0
-    else:
-        try:
-            quantity = float(quantity)
-        except (TypeError, ValueError):
-            return jsonify({"error": "quantity must be a number"}), 400
-    if quantity != int(quantity):
-        return jsonify({"error": "quantity must be a whole number"}), 400
-
-    # Validate activities before touching the DB
-    raw_activities = body.get("activities", [])
-    for idx, act in enumerate(raw_activities):
-        if not (act.get("activity_name") or "").strip():
-            return jsonify({
-                "error": f"Activity at index {idx} is missing a non-empty activity_name"
-            }), 400
-
-    # FIX #2: managed_connection() guarantees rollback + pool return on any
-    # early return or exception — no more leaked open transactions.
+    # Use centralized validation for quantity, activities, and production lines
     try:
         with managed_connection() as conn:
-            # Validate production line codes against the production_lines table
-            for code_field in ("fg_production_line_code", "bm_production_line_code"):
-                code = body.get(code_field)
-                if code:
-                    row = conn.execute(
-                        text("SELECT 1 FROM production_lines WHERE production_line_code = :c"),
-                        {"c": code},
-                    ).first()
-                    if not row:
-                        return jsonify({"error": f"{code_field} '{code}' does not exist"}), 400
+            cleaned_body, error_msg, status_code = validate_product_payload(body, conn)
+            if error_msg:
+                return jsonify({"error": error_msg}), status_code
+
+            body = cleaned_body
+            inventory_id = body["inventory_id"]
+            quantity = body["quantity"]
+            revision_descr = body.get("revision_descr", "")
+            product_type = body.get("product_type", "")
+            raw_activities = body.get("activities", [])
 
             # Check for duplicate inventory_id
             result = conn.execute(

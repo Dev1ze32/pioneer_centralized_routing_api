@@ -22,6 +22,7 @@ from routes.utils.auth_utils import (
 from routes.utils.decorators import require_auth, require_role
 from routes.utils.log_utils import log_action
 from routes.models import User, managed_db_session
+from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +115,11 @@ def register():
             role=requested_role,
             is_active=True,
         )
-        session.add(new_user)
-        session.flush()
+        try:
+            session.add(new_user)
+            session.flush()
+        except IntegrityError:
+            return jsonify({"error": "Username already exists", "username": username}), 409
 
         user_id   = new_user.id
         user_role = new_user.role

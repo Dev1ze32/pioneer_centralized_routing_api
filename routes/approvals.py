@@ -18,6 +18,7 @@ from sqlalchemy import text
 
 from db import managed_connection
 from routes.utils.decorators import require_superuser_or_admin, require_admin
+from routes.utils.validators import validate_product_payload
 from routes.utils.log_utils import log_action
 
 # Import update helpers for the approve logic
@@ -112,6 +113,13 @@ def submit_approval():
 
     try:
         with managed_connection() as conn:
+            if action == "ADD":
+                cleaned_payload, error_msg, status_code = validate_product_payload(payload, conn)
+                if error_msg:
+                    return jsonify({"error": error_msg}), status_code
+                payload = cleaned_payload
+                # Ensure the outer inventory_id matches the cleaned payload
+                inventory_id = payload["inventory_id"]
             # Check if there is already a pending approval for this inventory_id
             existing = conn.execute(
                 text("SELECT id FROM pending_approvals WHERE inventory_id = :iid AND status = 'PENDING'"),
@@ -290,6 +298,11 @@ def approve_request(approval_id):
             
             # --- APPLY TO LIVE TABLES ---
             if action == "ADD":
+                cleaned_payload, error_msg, status_code = validate_product_payload(payload, conn)
+                if error_msg:
+                    return jsonify({"error": f"Cannot approve ADD: {error_msg}"}), status_code
+                payload = cleaned_payload
+                
                 # Make sure it doesn't already exist
                 check = conn.execute(
                     text("SELECT inventory_id FROM products WHERE UPPER(inventory_id) = UPPER(:iid)"),
