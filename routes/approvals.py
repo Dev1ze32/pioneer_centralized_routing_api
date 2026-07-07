@@ -11,7 +11,9 @@ POST /api/approvals/<id>/reject  Reject a pending request
 
 import json
 import logging
-from flask import Blueprint, jsonify, request, g
+import queue
+import threading
+from flask import Blueprint, jsonify, request, g, Response, stream_with_context
 from sqlalchemy import text
 
 from db import managed_connection
@@ -27,6 +29,65 @@ from routes.update import (
 logger = logging.getLogger(__name__)
 
 approvals_bp = Blueprint("approvals", __name__, url_prefix="/api")
+
+
+# -- SSE: real-time pending-approval notifications for admins --------------
+#
+# In-memory pub/sub: every connected admin dashboard registers a Queue here.
+# Whenever an approval is submitted / approved / rejected, we push the fresh
+# pending count into every subscriber's queue and the generator in
+# approvals_stream() writes it out as an SSE "data:" line.
+#
+# NOTE: this is process-local. It works because the app runs as a single
+# Waitress process (single in-memory rate limiter, single ORM engine -- see
+# extension.py / db.py). If this app is ever scaled to multiple processes or
+# machines, this pub/sub needs to move to something shared (e.g. Redis
+# pub/sub), the same way Flask-Limiter's storage_uri would need to change.
+#
+# Also note: each open SSE connection holds one Waitress worker thread for
+# its lifetime. With the default WAITRESS_THREADS=8, keep an eye on this if
+# many admins keep the dashboard open at once -- bump WAITRESS_THREADS in
+# .env if needed.
+
+_sse_subscribers = set()
+_sse_lock = threading.Lock()
+_SSE_HEARTBEAT_SECONDS = 25
+
+
+def _get_pending_approvals_count():
+    """Read the current PENDING count directly from the DB."""
+    with managed_connection() as conn:
+        row = conn.execute(
+            text("SELECT COUNT(*) AS cnt FROM pending_approvals WHERE status = 'PENDING'")
+        ).mappings().first()
+        return row["cnt"] if row else 0
+
+
+def _broadcast_approvals_changed():
+    """
+    Push the fresh pending-approvals count to every connected SSE client.
+
+    Called after every mutation (submit / approve / reject) so open admin
+    dashboards update their badge instantly instead of waiting on a poll.
+    Never raises -- a broadcast failure should never break the API response.
+    """
+    try:
+        count = _get_pending_approvals_count()
+    except Exception:
+        logger.exception("Failed to compute pending approvals count for SSE broadcast")
+        return
+
+    message = json.dumps({"type": "approvals_changed", "count": count})
+
+    with _sse_lock:
+        dead = []
+        for client_queue in _sse_subscribers:
+            try:
+                client_queue.put_nowait(message)
+            except queue.Full:
+                dead.append(client_queue)
+        for client_queue in dead:
+            _sse_subscribers.discard(client_queue)
 
 
 @approvals_bp.post("/approvals")
@@ -86,6 +147,9 @@ def submit_approval():
                 extra={"inventory_id": inventory_id, "action": action}
             )
 
+        # SSE: notify any connected admin dashboards that the pending count changed.
+        _broadcast_approvals_changed()
+
         return jsonify({"message": "Approval request submitted successfully", "id": new_id}), 201
 
     except Exception as e:
@@ -119,6 +183,90 @@ def list_approvals():
     except Exception as e:
         logger.exception("Error listing approvals")
         return jsonify({"error": "Internal server error"}), 500
+
+
+@approvals_bp.get("/approvals/stream")
+@require_admin
+def approvals_stream():
+    """
+    Server-Sent Events stream of pending-approval count updates. Admin only.
+
+    Emits one event immediately on connect (current count), then one more
+    event any time an approval is submitted, approved, or rejected by anyone.
+    Sends a heartbeat comment every ~25s on top of that to keep the
+    connection alive through proxies/load balancers.
+
+    Only admins can approve/reject, so only admins are meaningfully served
+    by this stream -- hence @require_admin rather than
+    @require_superuser_or_admin.
+    ---
+    tags:
+      - Approvals
+    security:
+      - Bearer: []
+    responses:
+      200:
+        description: >
+          text/event-stream. Each event's `data` field is a JSON object:
+          {"type": "approvals_changed", "count": <int>}
+      401:
+        description: Missing or invalid token
+      403:
+        description: Admin access required
+    """
+    client_queue = queue.Queue(maxsize=50)
+    with _sse_lock:
+        _sse_subscribers.add(client_queue)
+
+    def generate():
+        try:
+            # Send the current count right away so the badge is correct the
+            # instant the connection opens, without waiting for a change.
+            #
+            # IMPORTANT: this must never raise. An exception here happens
+            # mid-WSGI-iteration (before any bytes are flushed), which
+            # bypasses Flask's normal error handlers entirely and just
+            # kills the connection with a bare 500 -- the client then sees
+            # a failed connect and retries in a loop. So on any DB hiccup
+            # we log it and degrade to count 0 instead of raising.
+            try:
+                initial_count = _get_pending_approvals_count()
+            except Exception:
+                logger.exception("SSE: failed to read initial pending count")
+                initial_count = 0
+
+            initial = json.dumps({"type": "approvals_changed", "count": initial_count})
+            yield f"data: {initial}\n\n"
+
+            while True:
+                try:
+                    message = client_queue.get(timeout=_SSE_HEARTBEAT_SECONDS)
+                    yield f"data: {message}\n\n"
+                except queue.Empty:
+                    yield ": heartbeat\n\n"
+        except GeneratorExit:
+            raise
+        except Exception:
+            # Catch-all: never let an unhandled exception escape the
+            # generator once the stream is open -- log it and end the
+            # stream cleanly. The client's reconnect loop will retry.
+            logger.exception("SSE: approvals_stream generator crashed")
+        finally:
+            with _sse_lock:
+                _sse_subscribers.discard(client_queue)
+
+    return Response(
+        stream_with_context(generate()),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            # NOTE: do NOT set "Connection" here -- it's a hop-by-hop header
+            # per PEP 3333, and Waitress raises an AssertionError if a WSGI
+            # app tries to set it directly (Waitress manages it itself).
+            # Disable buffering if this app is ever put behind nginx.
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @approvals_bp.post("/approvals/<int:approval_id>/approve")
@@ -301,7 +449,10 @@ def approve_request(approval_id):
                 target_type="approval",
                 target_id=str(approval_id),
             )
-            
+
+        # SSE: pending count just dropped by one — push the update.
+        _broadcast_approvals_changed()
+
         return jsonify({"message": "Approval processed successfully"}), 200
 
     except Exception as e:
@@ -340,6 +491,9 @@ def reject_approval(approval_id):
                 target_type="approval",
                 target_id=str(approval_id),
             )
+
+        # SSE: pending count just dropped by one — push the update.
+        _broadcast_approvals_changed()
 
         return jsonify({"message": "Approval rejected successfully"}), 200
 
