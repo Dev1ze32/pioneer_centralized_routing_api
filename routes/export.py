@@ -2,7 +2,7 @@ import os
 import tempfile
 import openpyxl
 from flask import Blueprint, send_file, after_this_request, current_app, jsonify, request
-from routes.utils.decorators import require_superuser_or_admin
+from routes.utils.decorators import require_auth
 from sqlalchemy import text
 from db import managed_connection
 from extension import limiter
@@ -113,7 +113,7 @@ _EXPORT_QUERY_ITEM = text("""
 
 
 @export_bp.route('/api/export', methods=['GET'])
-@require_superuser_or_admin
+@require_auth
 @limiter.limit("5/minute")
 def export_excel():
     """
