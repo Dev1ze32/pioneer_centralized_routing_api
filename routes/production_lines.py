@@ -201,7 +201,7 @@ def update_production_line(line_code):
             result = conn.execute(
                 text(
                     "SELECT production_line_code, production_line_name FROM production_lines "
-                    "WHERE production_line_code = :line_code"
+                    "WHERE production_line_code = :line_code FOR UPDATE"
                 ),
                 {"line_code": line_code},
             )
