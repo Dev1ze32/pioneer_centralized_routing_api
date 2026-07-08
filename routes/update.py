@@ -736,8 +736,20 @@ def delete_product(item_code):
                 {"canonical_id": canonical_id},
             )
 
+            # FIX C3: Auto-reject any PENDING approvals for this item so they
+            # don't sit in the queue as ghost requests that fail on approval.
             actor      = getattr(g, "current_user", None)
             actor_name = actor.username if actor else "unknown"
+            conn.execute(
+                text("""
+                    UPDATE pending_approvals
+                    SET status = 'REJECTED', resolved_at = NOW(), resolved_by = :actor
+                    WHERE inventory_id = :canonical_id AND status = 'PENDING'
+                """),
+                {"canonical_id": canonical_id, "actor": actor_name},
+            )
+
+
             log_action(
                 action="Deleted product",
                 description=(

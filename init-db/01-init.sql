@@ -4440,6 +4440,24 @@ ALTER TABLE ONLY public.users
 
 CREATE INDEX idx_activities_inventory_id ON public.activities USING btree (inventory_id);
 
+--
+-- Name: idx_pending_approvals_status; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_pending_approvals_status ON public.pending_approvals USING btree (status);
+
+--
+-- Name: idx_pending_approvals_inventory_status; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_pending_approvals_inventory_status ON public.pending_approvals USING btree (inventory_id, status);
+
+--
+-- Name: idx_pending_approvals_resolved_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_pending_approvals_resolved_at ON public.pending_approvals USING btree (resolved_at) WHERE status IN ('APPROVED', 'REJECTED');
+
 
 --
 -- Name: idx_activity_logs_logged_at; Type: INDEX; Schema: public; Owner: postgres

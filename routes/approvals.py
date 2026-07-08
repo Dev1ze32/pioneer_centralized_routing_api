@@ -294,7 +294,16 @@ def approve_request(approval_id):
                 
             inventory_id = existing["inventory_id"]
             action = existing["action"]
-            payload = existing["payload"]
+            raw_payload = existing["payload"]
+
+            # FIX I4: Guard against double-encoded JSONB. psycopg3 auto-
+            # deserialises JSONB → dict, but if the INSERT used json.dumps()
+            # the column may contain a JSON string literal. Normalise here
+            # so downstream .get() calls always work on a real dict.
+            if isinstance(raw_payload, str):
+                payload = json.loads(raw_payload)
+            else:
+                payload = raw_payload
             
             # --- APPLY TO LIVE TABLES ---
             if action == "ADD":
@@ -385,7 +394,19 @@ def approve_request(approval_id):
                 product = _fetch_product(conn, inventory_id, for_update=True)
                 if not product:
                     return jsonify({"error": f"Cannot approve UPDATE: item {inventory_id} not found."}), 404
-                
+
+                # FIX C2: Validate production line codes still exist at approval time.
+                # Between submission and approval, a line code could have been deleted.
+                for code_field in ("fg_production_line_code", "bm_production_line_code"):
+                    code = payload.get(code_field)
+                    if code:
+                        row = conn.execute(
+                            text("SELECT 1 FROM production_lines WHERE production_line_code = :c"),
+                            {"c": code},
+                        ).first()
+                        if not row:
+                            return jsonify({"error": f"Cannot approve UPDATE: {code_field} '{code}' no longer exists."}), 400
+
                 old_revision = product["revision"]
                 new_revision = _increment_revision(old_revision)
                 
@@ -405,9 +426,11 @@ def approve_request(approval_id):
                         params,
                     )
                 
-                # Update revision
+                # FIX C1: Update revision AND updated_at to match the direct-edit
+                # path in update.py's _bump_revision(), so approved products don't
+                # keep a stale timestamp.
                 conn.execute(
-                    text("UPDATE products SET revision = :new_revision WHERE inventory_id = :canonical_id"),
+                    text("UPDATE products SET revision = :new_revision, updated_at = NOW() WHERE inventory_id = :canonical_id"),
                     {"new_revision": new_revision, "canonical_id": inventory_id},
                 )
                 
@@ -480,9 +503,11 @@ def reject_approval(approval_id):
     username = getattr(getattr(g, "current_user", None), "username", "unknown")
     try:
         with managed_connection() as conn:
-            # Check if exists and is pending
+            # FIX I1: Add FOR UPDATE to prevent double-reject race.
+            # Without it, two simultaneous reject clicks both see PENDING,
+            # both update to REJECTED, and both return 200.
             existing = conn.execute(
-                text("SELECT id FROM pending_approvals WHERE id = :id AND status = 'PENDING'"),
+                text("SELECT id FROM pending_approvals WHERE id = :id AND status = 'PENDING' FOR UPDATE"),
                 {"id": approval_id}
             ).fetchone()
             
