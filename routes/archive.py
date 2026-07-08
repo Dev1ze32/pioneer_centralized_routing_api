@@ -143,6 +143,7 @@ def list_revisions(item_code):
                     inventory_id,
                     revision,
                     archived_by,
+                    approved_by,
                     TO_CHAR(archived_at AT TIME ZONE 'UTC',
                             'YYYY-MM-DD HH24:MI:SS UTC') AS archived_at
                 FROM product_revisions
@@ -247,6 +248,7 @@ def get_revision(item_code, revision):
                         revision,
                         snapshot,
                         archived_by,
+                        approved_by,
                         TO_CHAR(archived_at AT TIME ZONE 'UTC',
                                 'YYYY-MM-DD HH24:MI:SS UTC') AS archived_at
                     FROM product_revisions
@@ -269,6 +271,7 @@ def get_revision(item_code, revision):
                         revision,
                         snapshot,
                         archived_by,
+                        approved_by,
                         TO_CHAR(archived_at AT TIME ZONE 'UTC',
                                 'YYYY-MM-DD HH24:MI:SS UTC') AS archived_at
                     FROM product_revisions

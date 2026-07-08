@@ -113,13 +113,14 @@ def submit_approval():
 
     try:
         with managed_connection() as conn:
-            if action == "ADD":
-                cleaned_payload, error_msg, status_code = validate_product_payload(payload, conn)
-                if error_msg:
-                    return jsonify({"error": error_msg}), status_code
-                payload = cleaned_payload
-                # Ensure the outer inventory_id matches the cleaned payload
-                inventory_id = payload["inventory_id"]
+            # FIX M3: Both ADD and UPDATE payloads represent a full replacement
+            # of the product data and activities, so both should be validated.
+            cleaned_payload, error_msg, status_code = validate_product_payload(payload, conn)
+            if error_msg:
+                return jsonify({"error": error_msg}), status_code
+            payload = cleaned_payload
+            # Ensure the outer inventory_id matches the cleaned payload
+            inventory_id = payload["inventory_id"]
             # Check if there is already a pending approval for this inventory_id
             existing = conn.execute(
                 text("SELECT id FROM pending_approvals WHERE inventory_id = :iid AND status = 'PENDING'"),
@@ -152,7 +153,8 @@ def submit_approval():
                 description=f"Submitted {action} request for {inventory_id}",
                 target_type="approval",
                 target_id=str(new_id),
-                extra={"inventory_id": inventory_id, "action": action}
+                extra={"inventory_id": inventory_id, "action": action},
+                conn=conn
             )
 
         # SSE: notify any connected admin dashboards that the pending count changed.
@@ -285,7 +287,7 @@ def approve_request(approval_id):
     try:
         with managed_connection() as conn:
             existing = conn.execute(
-                text("SELECT inventory_id, action, payload FROM pending_approvals WHERE id = :id AND status = 'PENDING' FOR UPDATE"),
+                text("SELECT inventory_id, action, payload, requested_by FROM pending_approvals WHERE id = :id AND status = 'PENDING' FOR UPDATE"),
                 {"id": approval_id}
             ).mappings().fetchone()
             
@@ -295,6 +297,7 @@ def approve_request(approval_id):
             inventory_id = existing["inventory_id"]
             action = existing["action"]
             raw_payload = existing["payload"]
+            requested_by = existing["requested_by"]
 
             # FIX I4: Guard against double-encoded JSONB. psycopg3 auto-
             # deserialises JSONB → dict, but if the INSERT used json.dumps()
@@ -411,7 +414,7 @@ def approve_request(approval_id):
                 new_revision = _increment_revision(old_revision)
                 
                 # Snapshot before applying
-                snapshot_product(conn, inventory_id, old_revision, archived_by=username)
+                snapshot_product(conn, inventory_id, old_revision, archived_by=requested_by, approved_by=username)
                 
                 # Update product metadata
                 updates = {k: v for k, v in payload.items() if k in UPDATABLE_PRODUCT_FIELDS}
@@ -481,9 +484,10 @@ def approve_request(approval_id):
             
             log_action(
                 action="approve_request",
-                description=f"Approved {action} request for {inventory_id}",
+                description=f"Admin {username} approved {action} request for {inventory_id} authored by {requested_by}",
                 target_type="approval",
                 target_id=str(approval_id),
+                conn=conn
             )
 
         # SSE: pending count just dropped by one — push the update.
@@ -528,6 +532,7 @@ def reject_approval(approval_id):
                 description=f"Rejected approval request {approval_id}",
                 target_type="approval",
                 target_id=str(approval_id),
+                conn=conn
             )
 
         # SSE: pending count just dropped by one — push the update.

@@ -38,6 +38,7 @@ def log_action(
     user_id: Optional[int] = None,
     username: Optional[str] = None,
     user_role: Optional[str] = None,
+    conn=None,
 ) -> None:
     """
     Write one audit entry to activity_logs. Never raises.
@@ -50,6 +51,8 @@ def log_action(
     target_id   : The affected object's identifier.
     extra       : Optional dict stored as JSONB.
     user_id / username / user_role : Override g.current_user when needed.
+    conn        : Optional open database connection. If provided, the audit log
+                  shares the caller's transaction.
     """
     try:
         current_user = getattr(g, "current_user", None)
@@ -66,8 +69,8 @@ def log_action(
 
         extra_json = json.dumps(extra) if extra else None
 
-        with managed_connection() as conn:
-            conn.execute(
+        def _execute_log(connection):
+            connection.execute(
                 text(
                     """
                     INSERT INTO activity_logs
@@ -94,6 +97,12 @@ def log_action(
                     "extra":       extra_json,
                 },
             )
+
+        if conn is not None:
+            _execute_log(conn)
+        else:
+            with managed_connection() as managed_conn:
+                _execute_log(managed_conn)
 
     except Exception as exc:
         logger.error("audit log write failed: %s", exc, exc_info=True)

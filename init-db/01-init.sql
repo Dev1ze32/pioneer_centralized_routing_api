@@ -260,6 +260,7 @@ CREATE TABLE public.product_revisions (
     revision character varying(10) NOT NULL,
     snapshot jsonb NOT NULL,
     archived_by character varying(50),
+    approved_by character varying(50),
     archived_at timestamp with time zone DEFAULT now() NOT NULL
 );
 

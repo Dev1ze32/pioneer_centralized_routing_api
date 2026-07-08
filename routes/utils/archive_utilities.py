@@ -37,6 +37,7 @@ def snapshot_product(
     inventory_id: str,
     revision: str,
     archived_by: str | None = None,
+    approved_by: str | None = None,
 ) -> None:
     """
     Write a full snapshot of *inventory_id* at *revision* into product_revisions.
@@ -48,7 +49,8 @@ def snapshot_product(
     revision     : The revision string currently on the product (before bump).
     archived_by  : Username of the actor triggering the change (stored for
                    audit purposes; may be None if called outside a request
-                   context).
+                   context). When an approval flow is used, this is the author/requester.
+    approved_by  : Username of the admin who approved the change. Null for direct edits.
 
     Raises
     ------
@@ -106,9 +108,9 @@ def snapshot_product(
         text(
             """
             INSERT INTO product_revisions
-                (inventory_id, revision, snapshot, archived_by)
+                (inventory_id, revision, snapshot, archived_by, approved_by)
             VALUES
-                (:inventory_id, :revision, :snapshot, :archived_by)
+                (:inventory_id, :revision, :snapshot, :archived_by, :approved_by)
             """
         ),
         {
@@ -116,6 +118,7 @@ def snapshot_product(
             "revision":     revision,
             "snapshot":     json.dumps(snapshot),
             "archived_by":  archived_by,
+            "approved_by":  approved_by,
         },
     )
 
@@ -137,6 +140,6 @@ def snapshot_product(
     )
 
     logger.debug(
-        "Archived snapshot for '%s' rev %s (by %s) and cleaned old revisions.",
-        inventory_id, revision, archived_by or "unknown",
+        "Archived snapshot for '%s' rev %s (by %s, approved by %s) and cleaned old revisions.",
+        inventory_id, revision, archived_by or "unknown", approved_by or "none"
     )
