@@ -52,6 +52,18 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+# Waitress logs a full traceback as ERROR when a client closes their browser 
+# tab during an SSE stream (Connection timed out / Broken pipe). We filter these out.
+class SilenceWaitressDisconnects(logging.Filter):
+    def filter(self, record):
+        if "Socket error" in record.getMessage() and record.exc_info:
+            err = str(record.exc_info[1])
+            if "timed out" in err or "reset by peer" in err or "Broken pipe" in err:
+                return False
+        return True
+
+logging.getLogger("waitress").addFilter(SilenceWaitressDisconnects())
+
 # ── App factory ───────────────────────────────────────────────────────────────
 app = create_app()
 
