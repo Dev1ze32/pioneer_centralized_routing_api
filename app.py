@@ -144,8 +144,8 @@ def create_app() -> Flask:
 
     @app.after_request
     def log_request(response):
-        # Skip logging health checks so they don't spam the terminal
-        if request.path == "/api/health":
+        # Skip logging health checks and browser favicon requests so they don't spam the terminal
+        if request.path in ("/api/health", "/favicon.ico"):
             return response
             
         logging.getLogger("access").info(
