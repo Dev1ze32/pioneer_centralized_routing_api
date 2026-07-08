@@ -88,6 +88,10 @@ def create_app() -> Flask:
     # ── Database — create tables + seed admin on first run ─────────────────────
     _init_database()
 
+    # ── Background Tasks ───────────────────────────────────────────────────────
+    from helpers.cleanup import start_cleanup_thread
+    start_cleanup_thread()
+
     # ── CORS ──────────────────────────────────────────────────────────────────
     CORS(app)
 
